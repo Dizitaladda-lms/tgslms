@@ -22,6 +22,28 @@ router.get("/dashboard", (req, res) => {
 });
 
 // ==========================
+// 1.1 SYNC FULL DATABASE (ADMIN ACTION)
+// ==========================
+router.post("/sync-database", async (req, res, next) => {
+  try {
+    const { syncDatabase } = require("../db/syncAllToDb");
+    const activePool = pool.getRealPool ? pool.getRealPool() : null;
+    const stats = await syncDatabase(activePool);
+    res.status(200).json({
+      success: true,
+      message: "Database successfully synced with all 12 courses, 88 modules & 252 lectures! 🚀",
+      stats,
+    });
+  } catch (error) {
+    console.error("Admin DB Sync error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Database sync failed: " + error.message,
+    });
+  }
+});
+
+// ==========================
 // 2. GET ALL TEACHERS
 // ==========================
 router.get("/teachers", async (req, res, next) => {

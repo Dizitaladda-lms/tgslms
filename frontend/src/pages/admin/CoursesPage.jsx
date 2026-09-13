@@ -7,12 +7,15 @@ import {
   FaEdit,
   FaTrash,
   FaVideo,
+  FaSyncAlt,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 
 import api from "../../lib/api";
 function Courses() {
-const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const fetchCourses = async () => {
     try {
       const response = await api.get("/api/courses");
@@ -26,62 +29,78 @@ const [courses, setCourses] = useState([]);
     fetchCourses();
   }, []);
 
-const handleDelete = async (id) => {
+  const handleSyncDatabase = async () => {
+    try {
+      setIsSyncing(true);
+      const response = await api.post("/api/admin/sync-database");
+      alert(
+        response.data?.message ||
+          "All LMS courses, modules and lectures synced to Database successfully! 🚀"
+      );
+      fetchCourses();
+    } catch (error) {
+      console.error("Sync error:", error);
+      alert("Database sync failed: " + (error.response?.data?.message || error.message));
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
-  try {
-
-    const response = await api.delete(`/api/admin/delete-course/${id}`);
-
-    alert(response.data.message);
-
-    fetchCourses();
-
-  }
-
-  catch (error) {
-
-    console.log(error);
-
-    alert("Delete Failed");
-
-  }
-
-};
-  
+  const handleDelete = async (id) => {
+    try {
+      const response = await api.delete(`/api/admin/delete-course/${id}`);
+      alert(response.data.message);
+      fetchCourses();
+    } catch (error) {
+      console.log(error);
+      alert("Delete Failed");
+    }
+  };
 
   return (
-
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-black text-white p-10">
-
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-6xl font-black">
+          <h1 className="text-4xl md:text-6xl font-black">
             Course Management 📚
           </h1>
-          <p className="text-slate-400 text-xl mt-4">
-            Manage all LMS courses, teachers and students.
+          <p className="text-slate-400 text-lg md:text-xl mt-4">
+            Manage all LMS courses, modules, teachers and curriculum.
           </p>
         </div>
-        <Link
-         to="/admin/add-course"
-         className="bg-cyan-500 hover:bg-cyan-400 transition px-8 py-5 rounded-3xl text-xl font-bold flex items-center gap-4 shadow-2xl"
-        >
-         <FaPlus />
-          Add New Course
-        </Link>
+        <div className="flex flex-wrap items-center gap-4">
+          <button
+            onClick={handleSyncDatabase}
+            disabled={isSyncing}
+            className={`transition px-6 py-4 rounded-2xl text-lg font-bold flex items-center gap-3 shadow-2xl ${
+              isSyncing
+                ? "bg-amber-600/80 cursor-not-allowed text-white animate-pulse"
+                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/40"
+            }`}
+          >
+            <FaSyncAlt className={isSyncing ? "animate-spin" : ""} />
+            {isSyncing ? "Syncing to DB..." : "Sync All Data to DB 🔄"}
+          </button>
+          <Link
+            to="/admin/add-course"
+            className="bg-cyan-500 hover:bg-cyan-400 transition px-6 py-4 rounded-2xl text-lg font-bold flex items-center gap-3 shadow-2xl"
+          >
+            <FaPlus />
+            Add New Course
+          </Link>
+        </div>
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-4 gap-8 mt-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
         <div className="bg-cyan-500/10 border border-cyan-400/20 rounded-[35px] p-8">
           <FaBookOpen className="text-5xl text-cyan-400" />
           <h2 className="text-slate-300 mt-5">
             Total Courses
           </h2>
           <p className="text-5xl font-black mt-4">
-            24
+            {courses.length}
           </p>
         </div>
 

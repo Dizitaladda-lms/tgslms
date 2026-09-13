@@ -10,6 +10,7 @@
     "lint:frontend": "npm --prefix frontend run lint",
     "db:migrate": "node backend/src/db/migrate.js",
     "db:seed": "node backend/src/db/seed.js",
+    "db:sync": "node backend/src/db/syncAllToDb.js",
     "start:backend": "npm --prefix backend start"
   },
   "keywords": ["lms", "react", "nodejs", "express", "postgresql"],

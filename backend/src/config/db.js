@@ -46,6 +46,27 @@ if (connectionString) {
         isPostgresAvailable = true;
         console.log("PostgreSQL Database Connected Successfully ✅");
         client.release();
+
+        // Auto-check and synchronize full store if database is empty or missing courses
+        setTimeout(async () => {
+          try {
+            const check = await realPool.query("SELECT COUNT(*) FROM courses");
+            const count = parseInt(check.rows[0].count, 10);
+            if (count < 12) {
+              console.log(`📦 Database has ${count} courses (< 12). Auto-synchronizing full LMS database...`);
+              const { syncDatabase } = require("../db/syncAllToDb");
+              await syncDatabase(realPool);
+            }
+          } catch (autoSyncErr) {
+            console.log("ℹ️ Tables uninitialized in PostgreSQL. Executing schema & initial sync...");
+            try {
+              const { syncDatabase } = require("../db/syncAllToDb");
+              await syncDatabase(realPool);
+            } catch (err2) {
+              console.warn("⚠️ Auto-sync notice:", err2.message);
+            }
+          }
+        }, 1500);
       })
       .catch((error) => {
         isPostgresAvailable = false;
@@ -68,6 +89,7 @@ if (connectionString) {
 // Unified Resilient Pool Interface
 const pool = {
   isPostgres: () => isPostgresAvailable,
+  getRealPool: () => (isPostgresAvailable ? realPool : null),
 
   async query(text, params = []) {
     if (isPostgresAvailable && realPool) {
