@@ -1006,8 +1006,7 @@ px-4
 
 </Link>
     {/* SKILLING */}
-    <Link
-      to="/skilling"
+    <div
       className="
       bg-white
       border
@@ -1020,54 +1019,67 @@ px-4
       block
       "
     >
-      <div className="bg-[#0B1220] text-white text-center py-4 border-b-4 border-[#D4A017]">
-
-        <p className="text-xs tracking-widest text-orange-300">
+      <Link
+        to="/skilling"
+        className="bg-[#0B1220] text-white text-center py-4 border-b-4 border-[#D4A017] block hover:bg-[#121c33] transition"
+      >
+        <p className="text-xs tracking-widest text-orange-300 uppercase">
           Career in
         </p>
-
         <h3 className="text-xl font-bold mt-1">
           Skilling
         </h3>
+      </Link>
 
-      </div>
-
-      <div>
+      <div className="divide-y divide-slate-200">
         {[
-          "Artificial Intelligence & ML",
-          "Full Stack Development Program",
-          "Data Science & Analytics",
-          "Digital Marketing & Branding",
-          "Cyber Security Training",
-          "Cloud Computing",
-          "Business Analytics",
-          "UI UX Design",
-          "Graphic Designing",
-          "Video Editing",
-          "Leadership Development",
-          "Communication Skills",
-          "Startup Development",
-          "Placement Readiness",
-          "Future Technology Skills",
+          { title: "Diploma in Gen AI & Prompt Engineering", duration: "12 Months", domain: "ai-prompt-engineering", durationId: "12-months" },
+          { title: "Advanced Gen AI & Prompt Engineering", duration: "6 Months", domain: "ai-prompt-engineering", durationId: "6-months" },
+          { title: "Gen AI & Prompt Engineering for Professionals", duration: "3 Months", domain: "ai-prompt-engineering", durationId: "3-months" },
+          { title: "Expert in Cyber Security & Ethical Hacking", duration: "12 Months", domain: "cyber-security", durationId: "12-months" },
+          { title: "Advanced Cyber Security & Ethical Hacking", duration: "6 Months", domain: "cyber-security", durationId: "6-months" },
+          { title: "Foundation in Cyber Security & Hacking", duration: "4 Months", domain: "cyber-security", durationId: "4-months" },
+          { title: "Digital Forensic & Cyber Investigation", duration: "4 Months", domain: "cyber-security", durationId: "4-months" },
+          { title: "Expert Training in Bug Bounty & Pentesting", duration: "4 Months", domain: "cyber-security", durationId: "4-months" },
+          { title: "Diploma in Data Science & AI (NIDADS)", duration: "12 Months", domain: "data-science", durationId: "12-months", track: "data-science" },
+          { title: "Advanced Data Science & AI Program", duration: "6 Months", domain: "data-science", durationId: "6-months", track: "data-science" },
+          { title: "Diploma in Data Analytics & AI (NIDADS)", duration: "12 Months", domain: "data-science", durationId: "12-months", track: "data-analytics" },
+          { title: "Advanced Data Analytics & AI Program", duration: "6 Months", domain: "data-science", durationId: "6-months", track: "data-analytics" },
+          { title: "Certification in Data Analytics & AI", duration: "3 Months", domain: "data-science", durationId: "3-months", track: "data-analytics" },
+          { title: "Expert in Digital Marketing Master Course", duration: "12 Months", domain: "digital-marketing", durationId: "12-months" },
+          { title: "Advanced Digital Marketing Course", duration: "6 Months", domain: "digital-marketing", durationId: "6-months" },
+          { title: "Digital Marketing for Working Professionals", duration: "4 Months", domain: "digital-marketing", durationId: "4-months" },
+          { title: "Digital Marketing for Beginners Course", duration: "3 Months", domain: "digital-marketing", durationId: "3-months" },
         ].map((item, index) => (
-          <div
+          <Link
             key={index}
+            to={`/skilling?domain=${item.domain}&duration=${item.durationId}${item.track ? `&track=${item.track}` : ''}`}
             className="
             px-3
             py-2
-            border-b
-            border-slate-200
             hover:bg-slate-50
+            hover:text-[#7C2D12]
             text-[#1E3A8A]
-            text-sm
+            text-xs sm:text-sm
             font-medium
+            transition
+            cursor-pointer
+            flex
+            items-center
+            justify-between
+            gap-2
+            group
             "
+            title={`${item.title} (${item.duration})`}
           >
-            {item}
-          </div>
+            <span className="truncate group-hover:underline">{item.title}</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-[#7C2D12] border border-[#D4A017]/40 shrink-0">
+              {item.duration}
+            </span>
+          </Link>
         ))}
       </div>
-    </Link>
+    </div>
 
   </div>
 

@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   FaShieldAlt,
@@ -1526,6 +1526,50 @@ function Skilling() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedDuration, setSelectedDuration] = useState(null);
   const [selectedDataTrack, setSelectedDataTrack] = useState("data-analytics");
+  const [searchParams] = useSearchParams();
+
+  // Support direct deep-linking from Landing Page Skilling card
+  useEffect(() => {
+    const domainId = searchParams.get("domain");
+    const durationId = searchParams.get("duration");
+    const trackId = searchParams.get("track");
+
+    if (domainId) {
+      const dom = DOMAINS.find((d) => d.id === domainId);
+      if (dom) {
+        setSelectedDomain(dom);
+        const activeTrack =
+          trackId ||
+          (dom.hasSpecializations ? dom.specializationTracks[0]?.id : "data-analytics");
+        if (dom.hasSpecializations) {
+          setSelectedDataTrack(activeTrack);
+        }
+
+        if (durationId) {
+          let coursesList = [];
+          if (dom.hasSpecializations) {
+            coursesList =
+              dom.specializationsByDuration?.[activeTrack]?.[durationId] || [];
+          } else {
+            coursesList = dom.coursesByDuration?.[durationId] || [];
+          }
+
+          if (coursesList && coursesList.length > 0) {
+            setSelectedCourse(coursesList[0]);
+            const dur =
+              DURATION_OPTIONS.find((d) => d.id === durationId) ||
+              DURATION_OPTIONS[0];
+            setSelectedDuration(dur);
+            setStep(3);
+            setTimeout(() => window.scrollTo({ top: 350, behavior: "smooth" }), 150);
+            return;
+          }
+        }
+        setStep(2);
+        setTimeout(() => window.scrollTo({ top: 350, behavior: "smooth" }), 150);
+      }
+    }
+  }, [searchParams]);
 
   // Step 3 Interactive Tabs & Deep Dive State
   const [activeDetailTab, setActiveDetailTab] = useState("curriculum"); // curriculum | projects | aiTools | journey | whoCanJoin | fees
