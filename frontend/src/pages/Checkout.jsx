@@ -279,7 +279,7 @@ const Checkout = () => {
       if (error.response?.data?.message) {
         userFriendlyMsg = error.response.data.message;
       } else if (error.code === "ERR_NETWORK" || error.message?.includes("Network Error")) {
-        userFriendlyMsg = "Unable to connect to LMS backend server. Please verify the backend service is running on port 5000.";
+        userFriendlyMsg = "Unable to connect to LMS live backend server. Please check your internet connection or try again in a few moments.";
       } else if (error.message) {
         userFriendlyMsg = error.message;
       }

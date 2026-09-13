@@ -201,6 +201,18 @@
       "avatar": "https://ui-avatars.com/api/?name=Pooja%20Scientist&background=0B1220&color=D4A017&bold=true",
       "created_at": "2026-09-11T08:01:37.959Z",
       "updated_at": "2026-09-11T08:03:10.492Z"
+    },
+    {
+      "id": 17,
+      "name": "Divyanshu Kumar",
+      "full_name": "Divyanshu Kumar",
+      "email": "test_student_1789283500758@dizitaladda.com",
+      "password": "$2b$10$/XqsWGT64zG50dJbQMxScO6Wwf8ZaF5jA1GSeUNNoWcX5QECL8SbC",
+      "role": "student",
+      "phone": "9876543210",
+      "status": "Active",
+      "avatar": "https://ui-avatars.com/api/?name=Divyanshu%20Kumar&background=0B1220&color=D4A017&bold=true",
+      "created_at": "2026-09-13T07:11:40.846Z"
     }
   ],
   "courses": [
@@ -4167,6 +4179,21 @@
       "batch": "Regular 2026",
       "status": "Active",
       "created_at": "2026-09-11T08:02:17.076Z"
+    },
+    {
+      "id": 13,
+      "user_id": 17,
+      "student_id": "DA-STU-50084916",
+      "course_id": 4,
+      "course_code": "dm-beginners",
+      "name": "Divyanshu Kumar",
+      "email": "test_student_1789283500758@dizitaladda.com",
+      "password": "$2b$10$/XqsWGT64zG50dJbQMxScO6Wwf8ZaF5jA1GSeUNNoWcX5QECL8SbC",
+      "phone": "9876543210",
+      "course": "Digital Marketing for Beginners Course in Delhi",
+      "batch": "Regular 2026",
+      "status": "Active",
+      "created_at": "2026-09-13T07:11:40.849Z"
     }
   ],
   "orders": [
@@ -4983,6 +5010,17 @@
       "currency": "INR",
       "status": "created",
       "created_at": "2026-09-12T09:45:20.702Z"
+    },
+    {
+      "id": 75,
+      "user_id": 17,
+      "student_id": 13,
+      "course_id": 4,
+      "razorpay_order_id": "order_test_1789283500758",
+      "amount": 25000,
+      "currency": "INR",
+      "status": "created",
+      "created_at": "2026-09-13T07:11:40.853Z"
     }
   ],
   "enrollments": [
@@ -5150,6 +5188,18 @@
       "payment_status": "Paid",
       "progress": 0,
       "created_at": "2026-09-11T08:03:10.498Z"
+    },
+    {
+      "id": 16,
+      "user_id": 17,
+      "student_id": 13,
+      "course_id": 4,
+      "course_code": null,
+      "enrollment_date": "2026-09-13T07:11:40.858Z",
+      "status": "Active",
+      "payment_status": "Paid",
+      "progress": 0,
+      "created_at": "2026-09-13T07:11:40.858Z"
     }
   ],
   "notifications": [],
@@ -5764,6 +5814,30 @@
       "notes": "",
       "status": "Submitted",
       "created_at": "2026-09-11T06:59:15.586Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": 1,
+      "user_id": 17,
+      "student_id": 13,
+      "course_id": 4,
+      "razorpay_payment_id": "pay_test_1789283500758",
+      "razorpay_order_id": "order_test_1789283500758",
+      "razorpay_signature": "test_mock_signature",
+      "amount": 25000,
+      "status": "Success",
+      "created_at": "2026-09-13T07:11:40.855Z"
+    }
+  ],
+  "activities": [
+    {
+      "id": 1,
+      "user_id": 17,
+      "title": "Student enrolled in Digital Marketing for Beginners Course in Delhi (Code: dm-beginners)",
+      "description": "",
+      "type": "General",
+      "created_at": "2026-09-13T07:11:40.861Z"
     }
   ]
 }

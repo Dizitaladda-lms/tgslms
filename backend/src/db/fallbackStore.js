@@ -1825,14 +1825,90 @@ class FallbackStore {
       return { rows: order ? [order] : [], rowCount: order ? 1 : 0 };
     }
 
+    // 5b. PAYMENTS QUERIES
+    if (upperQ.includes("INSERT INTO PAYMENTS")) {
+      if (!this.data.payments) this.data.payments = [];
+      const newPayment = {
+        id: this.data.payments.length + 1,
+        user_id: params[0] ? Number(params[0]) : null,
+        student_id: params[1] ? Number(params[1]) : null,
+        course_id: params[2] ? Number(params[2]) : null,
+        razorpay_payment_id: params[3] || ("pay_" + Date.now()),
+        razorpay_order_id: params[4] || null,
+        razorpay_signature: params[5] || null,
+        amount: Number(params[6]) || 0,
+        status: "Success",
+        created_at: new Date().toISOString(),
+      };
+      this.data.payments.push(newPayment);
+      this.saveToDisk();
+      return { rows: [newPayment], rowCount: 1 };
+    }
+
+    if (upperQ.includes("UPDATE PAYMENTS")) {
+      if (!this.data.payments) this.data.payments = [];
+      const rzpPaymentId = String(params[params.length - 1]);
+      const payment = this.data.payments.find((p) => p.razorpay_payment_id === rzpPaymentId);
+      if (payment) {
+        payment.status = "Success";
+        if (params[0] !== undefined) payment.student_id = Number(params[0]);
+        if (params[1] !== undefined) payment.course_id = Number(params[1]);
+        payment.updated_at = new Date().toISOString();
+        this.saveToDisk();
+      }
+      return { rows: payment ? [payment] : [], rowCount: payment ? 1 : 0 };
+    }
+
+    if (upperQ.includes("FROM PAYMENTS")) {
+      if (!this.data.payments) this.data.payments = [];
+      return { rows: this.data.payments, rowCount: this.data.payments.length };
+    }
+
+    // 5c. ACTIVITIES QUERIES
+    if (upperQ.includes("INSERT INTO ACTIVITIES")) {
+      if (!this.data.activities) this.data.activities = [];
+      const newActivity = {
+        id: this.data.activities.length + 1,
+        user_id: Number(params[0]),
+        title: params[1] || "Activity",
+        description: params[2] || "",
+        type: params[3] || "General",
+        created_at: new Date().toISOString(),
+      };
+      this.data.activities.push(newActivity);
+      this.saveToDisk();
+      return { rows: [newActivity], rowCount: 1 };
+    }
+
     // 6. ENROLLMENTS QUERIES
+    if (upperQ.includes("FROM ENROLLMENTS") && upperQ.includes("USER_ID = $1") && upperQ.includes("COURSE_ID = $2")) {
+      const uId = Number(params[0]);
+      const cId = Number(params[1]);
+      const matched = (this.data.enrollments || []).filter(
+        (e) => Number(e.user_id) === uId && Number(e.course_id) === cId
+      );
+      return { rows: matched, rowCount: matched.length };
+    }
+
+    if (upperQ.includes("UPDATE ENROLLMENTS")) {
+      const enrollId = Number(params[params.length - 1]);
+      const enroll = (this.data.enrollments || []).find((e) => e.id === enrollId);
+      if (enroll) {
+        enroll.status = "Active";
+        if (params[0] !== undefined) enroll.student_id = Number(params[0]);
+        enroll.updated_at = new Date().toISOString();
+        this.saveToDisk();
+      }
+      return { rows: enroll ? [enroll] : [], rowCount: enroll ? 1 : 0 };
+    }
+
     if (upperQ.includes("INSERT INTO ENROLLMENTS")) {
       const newEnrollment = {
         id: this.data.enrollments.length + 1,
         user_id: Number(params[0]),
         student_id: Number(params[1]),
         course_id: Number(params[2]),
-        course_code: params[3],
+        course_code: params[3] || null,
         enrollment_date: params[4] || new Date().toISOString(),
         status: params[5] || "Active",
         payment_status: params[6] || "Paid",
