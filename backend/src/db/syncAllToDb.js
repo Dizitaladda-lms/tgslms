@@ -71,71 +71,73 @@ async function syncDatabase(providedPool = null) {
     console.log("🚀 STARTING UNIVERSAL LMS POSTGRESQL DATABASE SYNC");
     console.log("==================================================");
 
-    // 0. PRE-FLIGHT LEGACY SCHEMA UPGRADE
-    // Ensures any legacy tables created without newer columns (e.g. course_id) get upgraded
-    // so that subsequent index creation and relations succeed cleanly.
-    console.log("🔧 Pre-flight check: Upgrading legacy PostgreSQL schema columns...");
-    const upgradeStatements = [
-      "ALTER TABLE courses ADD COLUMN IF NOT EXISTS course_id VARCHAR(100);",
-      "ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT true;",
-      "ALTER TABLE courses ADD COLUMN IF NOT EXISTS total_lectures INTEGER DEFAULT 0;",
-      "ALTER TABLE courses ADD COLUMN IF NOT EXISTS total_students INTEGER DEFAULT 0;",
-      "ALTER TABLE courses ADD COLUMN IF NOT EXISTS rating NUMERIC(3, 2) DEFAULT 4.9;",
-      "UPDATE courses SET course_id = 'course-' || id WHERE course_id IS NULL;",
-
-      "ALTER TABLE students ADD COLUMN IF NOT EXISTS course_id INTEGER;",
-      "ALTER TABLE students ADD COLUMN IF NOT EXISTS course_code VARCHAR(100);",
-      "ALTER TABLE students ADD COLUMN IF NOT EXISTS batch VARCHAR(100) DEFAULT 'Regular 2026';",
-      "ALTER TABLE students ADD COLUMN IF NOT EXISTS image TEXT;",
-      "ALTER TABLE students ADD COLUMN IF NOT EXISTS teacher VARCHAR(255);",
-      "ALTER TABLE students ADD COLUMN IF NOT EXISTS teacher_id INTEGER;",
-
-      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS student_id INTEGER;",
-      "ALTER TABLE payments ADD COLUMN IF NOT EXISTS student_id INTEGER;",
-      "ALTER TABLE payments ADD COLUMN IF NOT EXISTS razorpay_signature VARCHAR(500);",
-      "ALTER TABLE activities ADD COLUMN IF NOT EXISTS student_id INTEGER;",
-
-      "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS student_id INTEGER;",
-      "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS enrollment_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;",
-      "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'completed';",
-      "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS progress NUMERIC(5, 2) DEFAULT 0;",
-      "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS course_code VARCHAR(100);",
-
-      "ALTER TABLE video_progress ADD COLUMN IF NOT EXISTS student_id INTEGER;",
-      "ALTER TABLE video_progress ADD COLUMN IF NOT EXISTS course_id INTEGER;",
-
-      "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS passing_score INTEGER DEFAULT 60;",
-      "ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS options JSONB;",
-
-      "ALTER TABLE assignments ADD COLUMN IF NOT EXISTS max_marks INTEGER DEFAULT 100;",
-      "ALTER TABLE assignments ADD COLUMN IF NOT EXISTS resource_url TEXT;",
-      "ALTER TABLE assignment_submissions ADD COLUMN IF NOT EXISTS notes TEXT;",
-      "ALTER TABLE assignment_submissions ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Submitted';",
-    ];
-
-    for (const sql of upgradeStatements) {
-      try {
-        await client.query(sql);
-      } catch (err) {
-        // Harmless if table does not exist yet (schema.sql creates it next)
+    // 0. CHECK FOR INCOMPATIBLE LEGACY DATABASE TABLES
+    // If PostgreSQL has old broken tables from previous runs (e.g. 'courses' missing 'category' or 'course_id'),
+    // we drop them with CASCADE so schema.sql creates the pristine production schema.
+    let needsCleanRebuild = false;
+    try {
+      const tableCheck = await client.query(
+        "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'courses'"
+      );
+      if (tableCheck.rows.length > 0) {
+        const colCheck = await client.query(
+          "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'courses' AND column_name IN ('category', 'course_id')"
+        );
+        if (colCheck.rows.length < 2) {
+          console.log("⚠️ Legacy incompatible 'courses' table detected (missing 'category' or 'course_id'). Triggering clean rebuild...");
+          needsCleanRebuild = true;
+        }
       }
+    } catch (checkErr) {
+      console.warn("Table inspection notice:", checkErr.message);
     }
 
-    try {
+    if (needsCleanRebuild) {
+      console.log("🧹 Dropping old incompatible tables to build clean LMS schema...");
       await client.query(`
-        DO $$
-        BEGIN
-          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'courses') THEN
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_constraint WHERE conname = 'courses_course_id_key'
-            ) THEN
-              ALTER TABLE courses ADD CONSTRAINT courses_course_id_key UNIQUE (course_id);
-            END IF;
-          END IF;
-        END $$;
+        DROP TABLE IF EXISTS test_results, doubts, activities, certificates, quiz_attempts,
+        quiz_questions, quizzes, assignment_submissions, assignments, video_progress,
+        enrollments, payments, orders, lectures, sections, students, courses, users CASCADE;
       `);
-    } catch (err) {
-      // ignore
+      console.log("✅ Old incompatible tables dropped. Initializing pristine tables...");
+    } else {
+      // Safe evolution statements for existing compatible schemas
+      const upgradeStatements = [
+        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS course_id VARCHAR(100);",
+        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT 'General';",
+        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT true;",
+        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS total_lectures INTEGER DEFAULT 0;",
+        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS total_students INTEGER DEFAULT 0;",
+        "ALTER TABLE courses ADD COLUMN IF NOT EXISTS rating NUMERIC(3, 2) DEFAULT 4.9;",
+        "ALTER TABLE students ADD COLUMN IF NOT EXISTS course_id INTEGER;",
+        "ALTER TABLE students ADD COLUMN IF NOT EXISTS course_code VARCHAR(100);",
+        "ALTER TABLE students ADD COLUMN IF NOT EXISTS batch VARCHAR(100) DEFAULT 'Regular 2026';",
+        "ALTER TABLE students ADD COLUMN IF NOT EXISTS image TEXT;",
+        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS student_id INTEGER;",
+        "ALTER TABLE payments ADD COLUMN IF NOT EXISTS student_id INTEGER;",
+        "ALTER TABLE payments ADD COLUMN IF NOT EXISTS razorpay_signature VARCHAR(500);",
+        "ALTER TABLE activities ADD COLUMN IF NOT EXISTS student_id INTEGER;",
+        "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS student_id INTEGER;",
+        "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS enrollment_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;",
+        "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'completed';",
+        "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS progress NUMERIC(5, 2) DEFAULT 0;",
+        "ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS course_code VARCHAR(100);",
+        "ALTER TABLE video_progress ADD COLUMN IF NOT EXISTS student_id INTEGER;",
+        "ALTER TABLE video_progress ADD COLUMN IF NOT EXISTS course_id INTEGER;",
+        "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS passing_score INTEGER DEFAULT 60;",
+        "ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS options JSONB;",
+        "ALTER TABLE assignments ADD COLUMN IF NOT EXISTS max_marks INTEGER DEFAULT 100;",
+        "ALTER TABLE assignments ADD COLUMN IF NOT EXISTS resource_url TEXT;",
+        "ALTER TABLE assignment_submissions ADD COLUMN IF NOT EXISTS notes TEXT;",
+        "ALTER TABLE assignment_submissions ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Submitted';",
+      ];
+      for (const sql of upgradeStatements) {
+        try {
+          await client.query(sql);
+        } catch (err) {
+          // ignore
+        }
+      }
     }
 
     // 1. EXECUTE SCHEMA MIGRATIONS
