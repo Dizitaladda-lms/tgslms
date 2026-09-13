@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS courses (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS course_id VARCHAR(100);
 CREATE INDEX IF NOT EXISTS idx_courses_course_id ON courses(course_id);
 CREATE INDEX IF NOT EXISTS idx_courses_category ON courses(category);
 CREATE INDEX IF NOT EXISTS idx_courses_teacher_id ON courses(teacher_id);
@@ -66,6 +67,8 @@ CREATE TABLE IF NOT EXISTS students (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE students ADD COLUMN IF NOT EXISTS course_id INTEGER;
+ALTER TABLE students ADD COLUMN IF NOT EXISTS course_code VARCHAR(100);
 CREATE INDEX IF NOT EXISTS idx_students_student_id ON students(student_id);
 CREATE INDEX IF NOT EXISTS idx_students_user_id ON students(user_id);
 CREATE INDEX IF NOT EXISTS idx_students_course_id ON students(course_id);
@@ -113,6 +116,7 @@ CREATE TABLE IF NOT EXISTS orders (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS student_id INTEGER;
 CREATE INDEX IF NOT EXISTS idx_orders_razorpay_order ON orders(razorpay_order_id);
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_student ON orders(student_id);
@@ -134,6 +138,7 @@ CREATE TABLE IF NOT EXISTS payments (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS student_id INTEGER;
 CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
 CREATE INDEX IF NOT EXISTS idx_payments_student ON payments(student_id);
 CREATE INDEX IF NOT EXISTS idx_payments_course ON payments(course_id);
@@ -149,6 +154,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     UNIQUE(user_id, course_id)
 );
 
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS student_id INTEGER;
 CREATE INDEX IF NOT EXISTS idx_enrollments_user_course ON enrollments(user_id, course_id);
 CREATE INDEX IF NOT EXISTS idx_enrollments_student ON enrollments(student_id);
 
@@ -165,6 +171,8 @@ CREATE TABLE IF NOT EXISTS video_progress (
     UNIQUE(user_id, lecture_id)
 );
 
+ALTER TABLE video_progress ADD COLUMN IF NOT EXISTS student_id INTEGER;
+ALTER TABLE video_progress ADD COLUMN IF NOT EXISTS course_id INTEGER;
 CREATE INDEX IF NOT EXISTS idx_video_progress_user ON video_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_video_progress_course ON video_progress(course_id);
 CREATE INDEX IF NOT EXISTS idx_video_progress_lecture ON video_progress(lecture_id);
