@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   createSection,
   getSections,
+  updateSection,
   deleteSection,
 } = require("../controllers/section.controller");
 
@@ -20,6 +21,14 @@ router.post(
   verifyToken,
   checkRole("admin", "teacher"),
   createSection
+);
+
+// Update section (Admin / Teacher)
+router.put(
+  "/:id",
+  verifyToken,
+  checkRole("admin", "teacher"),
+  updateSection
 );
 
 // Delete section (Admin / Teacher)

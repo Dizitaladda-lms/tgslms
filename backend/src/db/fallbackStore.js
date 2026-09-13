@@ -1580,7 +1580,7 @@ class FallbackStore {
     }
 
     // 2e. Course Lectures (supports courseId numeric or slug)
-    if (upperQ.includes("FROM LECTURES")) {
+    if (upperQ.includes("FROM LECTURES") && !upperQ.includes("DELETE")) {
       let filtered = this.data.lectures;
       if (params.length > 0 && params[0] !== undefined) {
         const courseIdStr = String(params[0]);
@@ -1616,6 +1616,42 @@ class FallbackStore {
       this.data.courses.push(newCourse);
       this.saveToDisk();
       return { rows: [newCourse], rowCount: 1 };
+    }
+
+    if (upperQ.includes("UPDATE COURSES")) {
+      const targetId = String(params[params.length - 1]);
+      const course = this.data.courses.find(
+        (c) => String(c.id) === targetId || c.course_id === targetId
+      );
+      if (course) {
+        if (params[0] !== null && params[0] !== undefined) course.title = params[0];
+        if (params[1] !== null && params[1] !== undefined) course.description = params[1];
+        if (params[2] !== null && params[2] !== undefined) course.price = Number(params[2]);
+        if (params[3] !== null && params[3] !== undefined) course.original_price = Number(params[3]);
+        if (params[4] !== null && params[4] !== undefined) course.duration = params[4];
+        if (params[5] !== null && params[5] !== undefined) course.level = params[5];
+        if (params[6] !== null && params[6] !== undefined) course.category = params[6];
+        if (params[7] !== null && params[7] !== undefined) course.teacher = params[7];
+        if (params[8] !== null && params[8] !== undefined) course.thumbnail = params[8];
+        if (params[9] !== null && params[9] !== undefined) course.is_published = Boolean(params[9]);
+        if (params[10] !== null && params[10] !== undefined) course.course_id = params[10];
+        course.updated_at = new Date().toISOString();
+        this.saveToDisk();
+      }
+      return { rows: course ? [course] : [], rowCount: course ? 1 : 0 };
+    }
+
+    if (upperQ.includes("DELETE FROM COURSES")) {
+      const targetId = String(params[0]);
+      const idx = this.data.courses.findIndex(
+        (c) => String(c.id) === targetId || c.course_id === targetId
+      );
+      let removed = null;
+      if (idx !== -1) {
+        removed = this.data.courses.splice(idx, 1)[0];
+        this.saveToDisk();
+      }
+      return { rows: removed ? [removed] : [], rowCount: removed ? 1 : 0 };
     }
 
     // 3. USERS QUERIES
@@ -1858,14 +1894,19 @@ class FallbackStore {
     }
 
     // ----------------------------------------------------
-    // SECTIONS MANAGEMENT (INSERT, SELECT & DELETE)
+    // SECTIONS MANAGEMENT (INSERT, SELECT, UPDATE & DELETE)
     // ----------------------------------------------------
     if (upperQ.includes("INSERT INTO SECTIONS")) {
+      const targetCourseId = Number(params[1]);
+      const calcOrder = params[2] !== undefined && params[2] !== null
+        ? Number(params[2])
+        : this.data.sections.filter(s => Number(s.course_id) === targetCourseId).length + 1;
+
       const newSec = {
         id: this.data.sections.length + 1,
         title: params[0] || "New Module",
-        course_id: Number(params[1]),
-        order_num: this.data.sections.filter(s => Number(s.course_id) === Number(params[1])).length + 1,
+        course_id: targetCourseId,
+        order_num: calcOrder,
         created_at: new Date().toISOString(),
       };
       this.data.sections.push(newSec);
@@ -1873,7 +1914,19 @@ class FallbackStore {
       return { rows: [newSec], rowCount: 1 };
     }
 
-    if (upperQ.includes("FROM SECTIONS")) {
+    if (upperQ.includes("UPDATE SECTIONS")) {
+      const targetId = Number(params[params.length - 1]);
+      const section = this.data.sections.find((s) => Number(s.id) === targetId);
+      if (section) {
+        if (params[0] !== null && params[0] !== undefined) section.title = params[0];
+        if (params[1] !== null && params[1] !== undefined) section.order_num = Number(params[1]);
+        section.updated_at = new Date().toISOString();
+        this.saveToDisk();
+      }
+      return { rows: section ? [section] : [], rowCount: section ? 1 : 0 };
+    }
+
+    if (upperQ.includes("FROM SECTIONS") && !upperQ.includes("DELETE")) {
       let list = this.data.sections || [];
       if (params.length > 0 && params[0] !== undefined) {
         const cid = Number(params[0]);
@@ -1888,6 +1941,9 @@ class FallbackStore {
       let removed = null;
       if (idx !== -1) {
         removed = this.data.sections.splice(idx, 1)[0];
+        if (this.data.lectures) {
+          this.data.lectures = this.data.lectures.filter(l => Number(l.section_id) !== targetId);
+        }
         this.saveToDisk();
       }
       return { rows: removed ? [removed] : [], rowCount: removed ? 1 : 0 };
@@ -1910,7 +1966,7 @@ class FallbackStore {
       return { rows: [newQuiz], rowCount: 1 };
     }
 
-    if (upperQ.includes("FROM QUIZZES")) {
+    if (upperQ.includes("FROM QUIZZES") && !upperQ.includes("DELETE")) {
       if (!this.data.quizzes) this.data.quizzes = [];
       let list = this.data.quizzes;
       if (params.length > 0 && params[0] !== undefined) {
@@ -2006,7 +2062,7 @@ class FallbackStore {
       return { rows: [newAssignment], rowCount: 1 };
     }
 
-    if (upperQ.includes("FROM ASSIGNMENTS")) {
+    if (upperQ.includes("FROM ASSIGNMENTS") && !upperQ.includes("DELETE")) {
       if (!this.data.assignments) this.data.assignments = [];
       let list = this.data.assignments;
       if (params.length > 0 && params[0] !== undefined) {

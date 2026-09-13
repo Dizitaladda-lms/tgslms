@@ -170,13 +170,17 @@ router.put("/edit-course/:id", async (req, res, next) => {
       description,
       price,
       originalPrice,
+      original_price,
       duration,
       level,
       category,
       teacher,
       thumbnail,
       is_published,
+      course_id,
     } = req.body;
+
+    const finalOriginalPrice = originalPrice !== undefined ? originalPrice : original_price;
 
     const result = await pool.query(
       `UPDATE courses
@@ -191,21 +195,23 @@ router.put("/edit-course/:id", async (req, res, next) => {
          teacher = COALESCE($8, teacher),
          thumbnail = COALESCE($9, thumbnail),
          is_published = COALESCE($10, is_published),
+         course_id = COALESCE($11, course_id),
          updated_at = CURRENT_TIMESTAMP
-       WHERE id = $11
+       WHERE id::text = $12 OR course_id = $12
        RETURNING *`,
       [
-        title,
-        description,
-        price !== undefined ? Number(price) : null,
-        originalPrice !== undefined ? Number(originalPrice) : null,
-        duration,
-        level,
-        category,
-        teacher,
-        thumbnail,
-        is_published,
-        id,
+        title !== undefined && title !== null ? String(title).trim() : null,
+        description !== undefined && description !== null ? String(description).trim() : null,
+        price !== undefined && price !== null && price !== "" ? Number(price) : null,
+        finalOriginalPrice !== undefined && finalOriginalPrice !== null && finalOriginalPrice !== "" ? Number(finalOriginalPrice) : null,
+        duration !== undefined && duration !== null ? String(duration).trim() : null,
+        level !== undefined && level !== null ? String(level).trim() : null,
+        category !== undefined && category !== null ? String(category).trim() : null,
+        teacher !== undefined && teacher !== null ? String(teacher).trim() : null,
+        thumbnail !== undefined && thumbnail !== null ? String(thumbnail).trim() : null,
+        is_published !== undefined && is_published !== null ? Boolean(is_published) : null,
+        course_id !== undefined && course_id !== null ? String(course_id).trim() : null,
+        String(id),
       ]
     );
 
