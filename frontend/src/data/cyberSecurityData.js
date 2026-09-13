@@ -9,8 +9,8 @@
 // -------------------------------------------------------------
 export const FOUNDATION_CYBER_SECURITY_DETAILS = {
   id: "cs-4m-found",
-  backendCourseId: "cyber-advanced",
-  courseId: 6,
+  backendCourseId: "cyber-foundation",
+  courseId: 9,
   title: "Foundation in Cyber Security and Ethical Hacking",
   subtitle: "4 Months Foundation • Python, Networking, Linux & Ethical Hacking Basics",
   duration: "4 Months",
@@ -631,8 +631,8 @@ export const FOUNDATION_CYBER_SECURITY_DETAILS = {
 // -------------------------------------------------------------
 export const ADVANCED_CYBER_SECURITY_DETAILS = {
   id: "cs-6m-ceh",
-  backendCourseId: "cyber-advanced",
-  courseId: 6,
+  backendCourseId: "cyber-intermediate",
+  courseId: 10,
   title: "Advanced Certification in Cyber Security and Ethical Hacking",
   subtitle: "6 Months Intensive • Professional VAPT, Web App Pentesting & Digital Forensics",
   duration: "6 Months",
@@ -2569,8 +2569,8 @@ export const EXPERT_CYBER_SECURITY_DETAILS = {
 // -------------------------------------------------------------------------
 export const DIGITAL_FORENSICS_DETAILS = {
   id: "cs-4m-forensics",
-  backendCourseId: "cyber-advanced",
-  courseId: 6,
+  backendCourseId: "cyber-forensics",
+  courseId: 11,
   title: "Certification in Digital Forensic and Cyber Investigation",
   subtitle: "4 Months Specialization • Disk Imaging, Memory Forensics & Cybercrime Investigation",
   duration: "4 Months",
@@ -2931,8 +2931,8 @@ export const DIGITAL_FORENSICS_DETAILS = {
 // -------------------------------------------------------------------------
 export const BUG_BOUNTY_DETAILS = {
   id: "cs-4m-bugbounty",
-  backendCourseId: "cyber-advanced",
-  courseId: 6,
+  backendCourseId: "cyber-bugbounty",
+  courseId: 12,
   title: "Expert Training in Bug Bounty",
   subtitle: "4 Months Intensive • Web App Hacking, API Security, OWASP Top 10 & Bug Hunting",
   duration: "4 Months",

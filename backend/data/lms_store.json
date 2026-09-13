@@ -349,6 +349,78 @@
       "total_lectures": 43,
       "total_students": 460,
       "created_at": "2026-09-11T07:46:53.069Z"
+    },
+    {
+      "id": 9,
+      "course_id": "cyber-foundation",
+      "title": "Foundation in Cyber Security and Ethical Hacking",
+      "description": "4-month foundation course in cybersecurity, Python automation, Linux system hardening, and ethical hacking methodology with Dr. Gulshan Kumar.",
+      "price": 30000,
+      "original_price": 40000,
+      "duration": "4 Months",
+      "level": "Beginner",
+      "category": "Cyber Security",
+      "teacher": "Dr. Gulshan Kumar & Senior Security Architects",
+      "teacher_id": 2,
+      "thumbnail": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop",
+      "is_published": true,
+      "total_lectures": 16,
+      "total_students": 230,
+      "created_at": "2026-09-13T06:30:25.720Z"
+    },
+    {
+      "id": 10,
+      "course_id": "cyber-intermediate",
+      "title": "Advanced Certification in Cyber Security and Ethical Hacking",
+      "description": "6-month intensive training in enterprise VAPT, web application pentesting, OWASP Top 10, digital forensics, and CEH certification prep.",
+      "price": 45000,
+      "original_price": 60000,
+      "duration": "6 Months",
+      "level": "Advanced",
+      "category": "Cyber Security",
+      "teacher": "Dr. Gulshan Kumar & Senior Security Architects",
+      "teacher_id": 2,
+      "thumbnail": "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop",
+      "is_published": true,
+      "total_lectures": 24,
+      "total_students": 310,
+      "created_at": "2026-09-13T06:30:25.722Z"
+    },
+    {
+      "id": 11,
+      "course_id": "cyber-forensics",
+      "title": "Certification in Digital Forensic and Cyber Investigation",
+      "description": "4-month specialization in cybercrime investigation, bit-stream disk imaging (FTK Imager), volatile memory forensics (Volatility), and court evidence dossiers.",
+      "price": 35000,
+      "original_price": 50000,
+      "duration": "4 Months",
+      "level": "Intermediate",
+      "category": "Cyber Security",
+      "teacher": "Dr. Gulshan Kumar & Senior Security Architects",
+      "teacher_id": 2,
+      "thumbnail": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop",
+      "is_published": true,
+      "total_lectures": 16,
+      "total_students": 180,
+      "created_at": "2026-09-13T06:30:25.722Z"
+    },
+    {
+      "id": 12,
+      "course_id": "cyber-bugbounty",
+      "title": "Expert Training in Bug Bounty",
+      "description": "4-month intensive training in bug bounty hunting, OWASP Top 10 exploits (IDOR, SSRF, SQLi), API security, and HackerOne / Bugcrowd report writing.",
+      "price": 35000,
+      "original_price": 50000,
+      "duration": "4 Months",
+      "level": "Advanced",
+      "category": "Cyber Security",
+      "teacher": "Dr. Gulshan Kumar & Senior Security Architects",
+      "teacher_id": 2,
+      "thumbnail": "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=800&auto=format&fit=crop",
+      "is_published": true,
+      "total_lectures": 16,
+      "total_students": 195,
+      "created_at": "2026-09-13T06:30:25.722Z"
     }
   ],
   "sections": [
@@ -765,6 +837,114 @@
       "course_id": 6,
       "title": "Month 12: Endpoint Security, SIEM & SOC Operations",
       "order_num": 12
+    },
+    {
+      "id": 70,
+      "course_id": 9,
+      "title": "Month 1: Foundation of Cyber Security & Python Automation",
+      "order_num": 1
+    },
+    {
+      "id": 71,
+      "course_id": 9,
+      "title": "Month 2: Enterprise Networking & Packet Sniffing with Wireshark",
+      "order_num": 2
+    },
+    {
+      "id": 72,
+      "course_id": 9,
+      "title": "Month 3: Linux for Cybersecurity & System Hardening",
+      "order_num": 3
+    },
+    {
+      "id": 73,
+      "course_id": 9,
+      "title": "Month 4: Ethical Hacking Fundamentals, Footprinting & Password Attacks",
+      "order_num": 4
+    },
+    {
+      "id": 74,
+      "course_id": 10,
+      "title": "Month 1: Cyber Security Landscape & Advanced Python Security Tooling",
+      "order_num": 1
+    },
+    {
+      "id": 75,
+      "course_id": 10,
+      "title": "Month 2: Enterprise Networking, Routing & Wireshark Triage",
+      "order_num": 2
+    },
+    {
+      "id": 76,
+      "course_id": 10,
+      "title": "Month 3: Linux Security Auditing & Shell Scripting for Pentesters",
+      "order_num": 3
+    },
+    {
+      "id": 77,
+      "course_id": 10,
+      "title": "Month 4: Offensive Ethical Hacking & Active Directory Recon",
+      "order_num": 4
+    },
+    {
+      "id": 78,
+      "course_id": 10,
+      "title": "Month 5: Vulnerability Assessment & Penetration Testing (VAPT)",
+      "order_num": 5
+    },
+    {
+      "id": 79,
+      "course_id": 10,
+      "title": "Month 6: Digital & Cyber Forensic Investigation (DFIR) & Placement",
+      "order_num": 6
+    },
+    {
+      "id": 80,
+      "course_id": 11,
+      "title": "Month 1: Fundamentals of Digital Forensics & Evidence Seizure",
+      "order_num": 1
+    },
+    {
+      "id": 81,
+      "course_id": 11,
+      "title": "Month 2: File System Analysis & Deleted Artifact Carving",
+      "order_num": 2
+    },
+    {
+      "id": 82,
+      "course_id": 11,
+      "title": "Month 3: Memory Forensics (Volatility) & Network Triage",
+      "order_num": 3
+    },
+    {
+      "id": 83,
+      "course_id": 11,
+      "title": "Month 4: Mobile Forensics, Cloud Artifacts & Expert Witness Reporting",
+      "order_num": 4
+    },
+    {
+      "id": 84,
+      "course_id": 12,
+      "title": "Month 1: Advanced Reconnaissance & Target Surface Mapping",
+      "order_num": 1
+    },
+    {
+      "id": 85,
+      "course_id": 12,
+      "title": "Month 2: Mastering OWASP Top 10 Exploitation",
+      "order_num": 2
+    },
+    {
+      "id": 86,
+      "course_id": 12,
+      "title": "Month 3: API Security Testing & Authentication Flaws",
+      "order_num": 3
+    },
+    {
+      "id": 87,
+      "course_id": 12,
+      "title": "Month 4: Mobile Pentesting, Automation & Responsible Disclosure",
+      "order_num": 4
     }
   ],
   "lectures": [

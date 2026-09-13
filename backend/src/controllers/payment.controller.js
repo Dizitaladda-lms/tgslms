@@ -43,7 +43,18 @@ const createOrder = async (req, res, next) => {
     }
 
     const course = courseQuery.rows[0];
-    const targetPrice = req.body.amount && Number(req.body.amount) > 0 ? Number(req.body.amount) : Number(course.price);
+
+    // SECURITY ENFORCEMENT: Never trust client-submitted amount from browser DevTools!
+    // The price is strictly retrieved from the Database record.
+    const dbPrice = Number(course.price);
+    if (!dbPrice || dbPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course price configured in database",
+      });
+    }
+
+    const targetPrice = dbPrice;
     const amountInPaise = Math.round(targetPrice * 100);
 
     // If guest user provided studentDetails, find or create account
@@ -291,8 +302,8 @@ const verifyPayment = async (req, res, next) => {
       studentRecordId = newStudent.rows[0].id;
     }
 
-    // 4. Update order status and attach student_id & user_id
-    const finalAmount = amount && Number(amount) > 0 ? Number(amount) : (course.price || 0);
+    // 4. Update order status and attach student_id & user_id (Enforce database price)
+    const finalAmount = Number(course.price) || 0;
     await client.query(
       `INSERT INTO orders (user_id, student_id, course_id, razorpay_order_id, amount, currency, status)
        VALUES ($1, $2, $3, $4, $5, 'INR', 'paid')

@@ -86,6 +86,29 @@ const Checkout = () => {
     }
   }, [course]);
 
+  // Live Database Price Verification: Guarantees authentic price from DB & prevents DevTools tampering
+  useEffect(() => {
+    if (course?.id) {
+      api
+        .get(`/api/courses/${course.id}`)
+        .then((res) => {
+          if (res.data?.course) {
+            const dbCourse = res.data.course;
+            setCourse((prev) => ({
+              ...prev,
+              title: dbCourse.title || prev.title,
+              price: Number(dbCourse.price) || prev.price,
+              originalPrice: Number(dbCourse.original_price) || prev.originalPrice,
+              duration: dbCourse.duration || prev.duration,
+              totalLectures: dbCourse.total_lectures,
+              sections: dbCourse.sections,
+            }));
+          }
+        })
+        .catch((err) => console.warn("Live DB course verification notice:", err.message));
+    }
+  }, [course?.id]);
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
