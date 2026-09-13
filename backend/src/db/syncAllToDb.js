@@ -168,6 +168,15 @@ async function syncDatabase(providedPool = null) {
     if (Array.isArray(store.users) && store.users.length > 0) {
       console.log(`👤 Syncing ${store.users.length} Users...`);
       for (const u of store.users) {
+        let role = (u.role || "student").toLowerCase().trim();
+        let phone = u.phone || null;
+        if (!["admin", "teacher", "student"].includes(role)) {
+          if (role.startsWith("+") || /^\d+$/.test(role)) {
+            if (!phone) phone = role;
+          }
+          role = "student";
+        }
+
         const query = `
           INSERT INTO users (id, name, full_name, email, password, role, phone, specialization, status, avatar, created_at)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -188,8 +197,8 @@ async function syncDatabase(providedPool = null) {
           u.full_name || u.name || "User",
           u.email,
           u.password,
-          u.role || "student",
-          u.phone || null,
+          role,
+          phone,
           u.specialization || null,
           u.status || "Active",
           u.avatar || null,
@@ -487,6 +496,11 @@ async function syncDatabase(providedPool = null) {
         const actualCourseId = courseIdMap.get(o.course_id) || o.course_id;
         if (!actualUserId || !actualCourseId) continue;
 
+        let orderStatus = (o.status || "created").toLowerCase().trim();
+        if (!["created", "paid", "failed"].includes(orderStatus)) {
+          orderStatus = "created";
+        }
+
         await client.query(
           `INSERT INTO orders (id, user_id, student_id, course_id, razorpay_order_id, amount, currency, status, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -499,7 +513,7 @@ async function syncDatabase(providedPool = null) {
             o.razorpay_order_id || `order_mock_${o.id}`,
             o.amount || 0,
             o.currency || "INR",
-            o.status || "created",
+            orderStatus,
             o.created_at || new Date(),
           ]
         );
