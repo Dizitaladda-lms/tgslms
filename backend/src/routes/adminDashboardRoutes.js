@@ -11,7 +11,7 @@ router.use(checkRole("admin"));
 router.get("/dashboard", async (req, res, next) => {
   try {
     const studentsResult = await pool.query(
-      "SELECT COUNT(*) FROM users WHERE role = 'student'"
+      "SELECT COUNT(*) FROM students"
     );
 
     const teachersResult = await pool.query(
@@ -20,6 +20,14 @@ router.get("/dashboard", async (req, res, next) => {
 
     const coursesResult = await pool.query(
       "SELECT COUNT(*) FROM courses"
+    );
+
+    const lecturesResult = await pool.query(
+      "SELECT COUNT(*) FROM lectures"
+    );
+
+    const sectionsResult = await pool.query(
+      "SELECT COUNT(*) FROM sections"
     );
 
     const revenueResult = await pool.query(
@@ -48,10 +56,12 @@ router.get("/dashboard", async (req, res, next) => {
         totalStudents: Number(studentsResult.rows[0]?.count || 0),
         totalTeachers: Number(teachersResult.rows[0]?.count || 0),
         totalCourses: Number(coursesResult.rows[0]?.count || 0),
+        totalLectures: Number(lecturesResult.rows[0]?.count || 0),
+        totalSections: Number(sectionsResult.rows[0]?.count || 0),
         revenue: Number(revenueResult.rows[0]?.revenue || 0),
       },
-      recentStudents: recentStudents.rows,
-      recentPayments: recentPayments.rows,
+      recentStudents: recentStudents.rows || [],
+      recentPayments: recentPayments.rows || [],
     });
   } catch (error) {
     next(error);

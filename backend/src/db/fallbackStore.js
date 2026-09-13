@@ -1435,6 +1435,8 @@ class FallbackStore {
   }
 ],
       assignment_submissions: [],
+      payments: [],
+      activities: [],
     };
     this.loadFromDisk();
   }
@@ -1452,6 +1454,7 @@ class FallbackStore {
         }
         if (parsed.students) this.data.students = parsed.students;
         if (parsed.orders) this.data.orders = parsed.orders;
+        if (parsed.payments) this.data.payments = parsed.payments;
         if (parsed.enrollments) this.data.enrollments = parsed.enrollments;
         if (parsed.sections) this.data.sections = parsed.sections;
         if (parsed.lectures) this.data.lectures = parsed.lectures;
@@ -1461,6 +1464,7 @@ class FallbackStore {
         if (parsed.quiz_attempts) this.data.quiz_attempts = parsed.quiz_attempts;
         if (parsed.assignments) this.data.assignments = parsed.assignments;
         if (parsed.assignment_submissions) this.data.assignment_submissions = parsed.assignment_submissions;
+        if (parsed.activities) this.data.activities = parsed.activities;
       }
     } catch (e) {
       console.warn("FallbackStore: Could not load disk cache, starting with default seed data.");
@@ -1486,6 +1490,59 @@ class FallbackStore {
     // 1. Transactions
     if (upperQ === "BEGIN" || upperQ === "COMMIT" || upperQ === "ROLLBACK") {
       return { rows: [], rowCount: 0 };
+    }
+
+    // 1b. Aggregate queries (COUNT, SUM)
+    if (upperQ.includes("SELECT COUNT(*)")) {
+      if (upperQ.includes("FROM COURSES")) {
+        return { rows: [{ count: this.data.courses?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM STUDENTS")) {
+        return { rows: [{ count: this.data.students?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM LECTURES")) {
+        return { rows: [{ count: this.data.lectures?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM SECTIONS")) {
+        return { rows: [{ count: this.data.sections?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM USERS")) {
+        let list = this.data.users || [];
+        if (upperQ.includes("ROLE = 'STUDENT'") || (params && params.includes("student"))) {
+          list = list.filter((u) => u.role === "student");
+        } else if (upperQ.includes("ROLE = 'TEACHER'") || (params && params.includes("teacher"))) {
+          list = list.filter((u) => u.role === "teacher");
+        } else if (upperQ.includes("ROLE = 'ADMIN'") || (params && params.includes("admin"))) {
+          list = list.filter((u) => u.role === "admin");
+        }
+        return { rows: [{ count: list.length }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM ORDERS")) {
+        return { rows: [{ count: this.data.orders?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM PAYMENTS")) {
+        return { rows: [{ count: this.data.payments?.length || 0 }], rowCount: 1 };
+      }
+      return { rows: [{ count: 0 }], rowCount: 1 };
+    }
+
+    if (upperQ.includes("SUM(AMOUNT)") || upperQ.includes("REVENUE")) {
+      const payments = this.data.payments || [];
+      const orders = this.data.orders || [];
+      let total = 0;
+      payments.forEach((p) => {
+        if (!p.status || p.status.toLowerCase() === "success" || p.status.toLowerCase() === "completed") {
+          total += Number(p.amount) || 0;
+        }
+      });
+      if (total === 0) {
+        orders.forEach((o) => {
+          if (o.status === "paid" || o.status === "success") {
+            total += Number(o.amount) || 0;
+          }
+        });
+      }
+      return { rows: [{ revenue: total }], rowCount: 1 };
     }
 
     // 2a. ENROLLED COURSES FOR LOGGED-IN USER (myCourses)
@@ -1859,10 +1916,6 @@ class FallbackStore {
       return { rows: payment ? [payment] : [], rowCount: payment ? 1 : 0 };
     }
 
-    if (upperQ.includes("FROM PAYMENTS")) {
-      if (!this.data.payments) this.data.payments = [];
-      return { rows: this.data.payments, rowCount: this.data.payments.length };
-    }
 
     // 5c. ACTIVITIES QUERIES
     if (upperQ.includes("INSERT INTO ACTIVITIES")) {
@@ -2197,6 +2250,97 @@ class FallbackStore {
         } else if (upperQ.includes("STUDENT_ID")) {
           list = list.filter(s => Number(s.student_id) === idVal);
         }
+      }
+      return { rows: list, rowCount: list.length };
+    }
+
+    // ----------------------------------------------------
+    // ANALYTICS & AGGREGATE DASHBOARD QUERIES
+    // ----------------------------------------------------
+    if (upperQ.includes("SELECT COUNT(*)")) {
+      if (upperQ.includes("FROM COURSES")) {
+        return { rows: [{ count: this.data.courses?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM STUDENTS")) {
+        return { rows: [{ count: this.data.students?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM LECTURES")) {
+        return { rows: [{ count: this.data.lectures?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM SECTIONS")) {
+        return { rows: [{ count: this.data.sections?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM USERS")) {
+        let list = this.data.users || [];
+        if (upperQ.includes("ROLE = 'STUDENT'") || (params && params.includes("student"))) {
+          list = list.filter(u => u.role === "student");
+        } else if (upperQ.includes("ROLE = 'TEACHER'") || (params && params.includes("teacher"))) {
+          list = list.filter(u => u.role === "teacher");
+        } else if (upperQ.includes("ROLE = 'ADMIN'") || (params && params.includes("admin"))) {
+          list = list.filter(u => u.role === "admin");
+        }
+        return { rows: [{ count: list.length }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM ORDERS")) {
+        return { rows: [{ count: this.data.orders?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM PAYMENTS")) {
+        return { rows: [{ count: this.data.payments?.length || 0 }], rowCount: 1 };
+      }
+      return { rows: [{ count: 0 }], rowCount: 1 };
+    }
+
+    if (upperQ.includes("SUM(AMOUNT)") || upperQ.includes("REVENUE")) {
+      const payments = this.data.payments || [];
+      const orders = this.data.orders || [];
+      let total = 0;
+      payments.forEach(p => {
+        if (!p.status || p.status.toLowerCase() === "success" || p.status.toLowerCase() === "completed") {
+          total += Number(p.amount) || 0;
+        }
+      });
+      if (total === 0) {
+        orders.forEach(o => {
+          if (o.status === "paid" || o.status === "Success") {
+            total += Number(o.amount) || 0;
+          }
+        });
+      }
+      return { rows: [{ revenue: total }], rowCount: 1 };
+    }
+
+    if (upperQ.includes("FROM STUDENTS")) {
+      let list = [...(this.data.students || [])].reverse().map(st => {
+        const u = (this.data.users || []).find(user => user.id === st.user_id) || {};
+        return {
+          ...st,
+          avatar: u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(st.name || "Student")}&background=0B1220&color=06b6d4&bold=true`
+        };
+      });
+      if (upperQ.includes("LIMIT 6") || upperQ.includes("LIMIT 5")) {
+        list = list.slice(0, 6);
+      }
+      return { rows: list, rowCount: list.length };
+    }
+
+    if (upperQ.includes("FROM PAYMENTS")) {
+      let list = (this.data.payments || []).map(p => {
+        const user = (this.data.users || []).find(u => u.id === p.user_id) || {};
+        const course = (this.data.courses || []).find(c => c.id === p.course_id) || {};
+        return {
+          id: p.id,
+          amount: p.amount,
+          status: p.status || "Success",
+          created_at: p.created_at,
+          razorpay_payment_id: p.razorpay_payment_id || `pay_${p.id}`,
+          razorpay_order_id: p.razorpay_order_id || `order_${p.id}`,
+          student_name: user.name || "Student",
+          student_email: user.email || "",
+          course_title: course.title || "Course Enrollment",
+        };
+      }).reverse();
+      if (upperQ.includes("LIMIT 6") || upperQ.includes("LIMIT 5")) {
+        list = list.slice(0, 6);
       }
       return { rows: list, rowCount: list.length };
     }
