@@ -5547,6 +5547,26 @@
       "max_marks": 100,
       "resource_url": "https://dizitaladda.com/resources/email-whatsapp-sop.pdf",
       "created_at": "2026-09-12T11:17:31.532Z"
+    },
+    {
+      "id": 26,
+      "course_id": 6,
+      "title": "Capstone 5: Network Security Architecture Design & Hardening",
+      "description": "Design and implement defense-in-depth security architecture for an enterprise network. Configure pfSense firewalls, establish Zero-Trust VLAN segmentations, tune Snort IDS/IPS detection rules, and perform deep packet inspection using Wireshark.",
+      "due_date": "2026-12-25",
+      "max_marks": 100,
+      "resource_url": "https://dizitaladda.com/curriculum/network-defense-lab.pdf",
+      "created_at": "2026-09-13T06:00:56.391Z"
+    },
+    {
+      "id": 27,
+      "course_id": 6,
+      "title": "Capstone 6: Multi-Cloud Security Assessment & Automated Compliance",
+      "description": "Deploy and audit multi-cloud infrastructure across AWS and Azure. Implement CIS benchmark controls, configure AWS Security Hub & GuardDuty automated alerts, enforce least privilege IAM policies, and scan Terraform IaC templates for misconfigurations.",
+      "due_date": "2027-01-10",
+      "max_marks": 100,
+      "resource_url": "https://dizitaladda.com/curriculum/cloud-security-spec.pdf",
+      "created_at": "2026-09-13T06:00:56.393Z"
     }
   ],
   "assignment_submissions": [

@@ -32,6 +32,7 @@ import {
   FaLayerGroup,
   FaUserTie,
   FaBookOpen,
+  FaQuestionCircle,
 } from "react-icons/fa";
 import { EXPERT_DIGITAL_MARKETING_DETAILS } from "../data/expertDigitalMarketingData.js";
 import { ADVANCED_DIGITAL_MARKETING_DETAILS } from "../data/advancedDigitalMarketingData.js";
@@ -50,6 +51,8 @@ import {
   FOUNDATION_CYBER_SECURITY_DETAILS,
   ADVANCED_CYBER_SECURITY_DETAILS,
   EXPERT_CYBER_SECURITY_DETAILS,
+  DIGITAL_FORENSICS_DETAILS,
+  BUG_BOUNTY_DETAILS,
 } from "../data/cyberSecurityData.js";
 import {
   FOUNDATION_AI_PROMPT_DETAILS,
@@ -862,7 +865,7 @@ const DOMAINS = [
       "Defend digital infrastructure against modern threats, detect cyber attacks in real time, identify system vulnerabilities, and master ethical hacking techniques.",
     availableDurationIds: ["4-months", "6-months", "12-months"],
     coursesByDuration: {
-      "3-months": [
+      "4-months": [
         {
           id: "cs-4m-found",
           backendCourseId: "cyber-advanced",
@@ -914,57 +917,106 @@ const DOMAINS = [
             "Month 4: Ethical Hacking Fundamentals, Footprinting & Password Attacks",
           ],
         },
-      ],
-      "4-months": [
         {
-          id: "cs-4m-found",
+          id: "cs-4m-forensics",
           backendCourseId: "cyber-advanced",
           courseId: 6,
-          title: "Foundation in Cyber Security and Ethical Hacking",
-          subtitle: "4 Months Foundation • Python, Networking, Linux & Ethical Hacking Basics",
+          title: "Certification in Digital Forensic and Cyber Investigation",
+          subtitle: "4 Months Specialization • Disk Imaging, Memory Forensics & Cybercrime Investigation",
           duration: "4 Months",
           durationId: "4-months",
-          level: "BEGINNER LEVEL",
-          levelColor: "border-amber-400 text-amber-700 bg-amber-50",
-          checkColor: "text-amber-500",
+          level: "INTERMEDIATE LEVEL",
+          levelColor: "border-teal-400 text-teal-700 bg-teal-50",
+          checkColor: "text-teal-500",
           modulesCount: "12",
-          modulesType: "Core Security Modules",
+          modulesType: "DFIR Forensic Modules",
           aiToolsCount: "25+",
-          aiToolsType: "Security & Recon Tools",
+          aiToolsType: "Forensic Investigation Tools",
           hoursPerWeek: "8 - 10 Hours / Week",
-          modulesPill: "12 Core Modules • 25+ Security Tools",
+          modulesPill: "12 DFIR Modules • 25+ Forensic Tools",
           shortDesc:
-            "Master cybersecurity fundamentals, Python automation, networking, and ethical hacking basics in isolated labs.",
-          projectsHighlight: "4 Virtual Lab Projects",
-          certHighlight: "Dizital Adda Certificate + Security+ Prep",
-          price: 30000,
-          originalPrice: 40000,
-          onlinePrice: 30000,
-          offlinePrice: 40000,
-          emi: "₹3,499/mo",
-          projects: "4 Hands-on Virtual Lab Projects",
-          mentorship: "Weekly Mentorship with Dr. Gulshan Kumar & Ethical Hackers",
-          certification: "Dizital Adda Official Certification + Security+ Prep",
-          perfectFor: "Students, IT Freshers & System Admins",
-          perfectForBg: "bg-amber-50/80 border-amber-200 text-amber-900",
-          details: FOUNDATION_CYBER_SECURITY_DETAILS,
-          enrollUrl: "https://dizitaladda.com/courses/foundation-in-cyber-security-and-ethical-hacking",
-          whatsappUrl: "https://wa.me/918810606010?text=Hi%2C+I+want+to+enquire+about+the+Foundation+in+Cyber+Security+and+Ethical+Hacking+Course",
+            "Learn digital crime scene investigation, bit-stream disk imaging, memory forensics with Volatility, and court evidence dossiers.",
+          projectsHighlight: "4 Forensic Case Study Projects",
+          certHighlight: "Dizital Adda Certificate + GCFA / EnCE Prep",
+          price: 35000,
+          originalPrice: 50000,
+          onlinePrice: 35000,
+          offlinePrice: 50000,
+          emi: "₹3,999/mo",
+          projects: "4 Forensic Case Study Projects",
+          mentorship: "Weekly Mentorship with Forensic Cyber Investigators & Dr. Gulshan Kumar",
+          certification: "Dizital Adda DFIR Specialist Certificate + GCFA Prep",
+          perfectFor: "Forensic Aspirants, Legal Professionals, Police Trainees & SOC Analysts",
+          perfectForBg: "bg-teal-50/80 border-teal-200 text-teal-900",
+          details: DIGITAL_FORENSICS_DETAILS,
+          enrollUrl: "https://dizitaladda.com/courses/certification-in-digital-forensic-and-cyber-investigation",
+          whatsappUrl: "https://wa.me/918810606010?text=Hi%2C+I+want+to+enquire+about+the+Certification+in+Digital+Forensic+and+Cyber+Investigation+Course",
           featureList: [
-            "12 Core Security Modules",
-            "25+ Industry Security Tools",
-            "Python Security Scripting & Automation",
-            "TCP/IP & Packet Analysis with Wireshark",
-            "Linux System Hardening & Bash",
-            "Ethical Hacking & Vulnerability Scanning",
-            "Weekly Live Doubt Clearing",
-            "Official Certificate of Completion",
+            "12 DFIR Forensic Modules",
+            "25+ Industry Forensic Tools",
+            "Bit-Stream Disk Imaging (FTK Imager)",
+            "NTFS File Carving & Slack Space in Autopsy",
+            "Live RAM Memory Forensics with Volatility 3",
+            "Mobile Forensics (Android / iOS SQLite)",
+            "Court-Admissible 65B Evidence Dossier",
+            "100% Placement Support in Corporate Forensics",
           ],
           modules: [
-            "Month 1: Foundation of Cyber Security & Python Automation",
-            "Month 2: Enterprise Networking & Packet Sniffing with Wireshark",
-            "Month 3: Linux for Cybersecurity & System Hardening",
-            "Month 4: Ethical Hacking Fundamentals, Footprinting & Password Attacks",
+            "Month 1: Fundamentals of Digital Forensics & Evidence Seizure",
+            "Month 2: File System Analysis & Deleted Artifact Carving",
+            "Month 3: Memory Forensics (Volatility) & Network Triage",
+            "Month 4: Mobile Forensics, Cloud Artifacts & Expert Witness Reporting",
+          ],
+        },
+        {
+          id: "cs-4m-bugbounty",
+          backendCourseId: "cyber-advanced",
+          courseId: 6,
+          title: "Expert Training in Bug Bounty",
+          subtitle: "4 Months Intensive • Web App Hacking, API Security, OWASP Top 10 & Bug Hunting",
+          duration: "4 Months",
+          durationId: "4-months",
+          level: "ADVANCED LEVEL",
+          levelColor: "border-purple-400 text-purple-700 bg-purple-50",
+          checkColor: "text-purple-500",
+          modulesCount: "12",
+          modulesType: "Bug Hunting & Pentest Modules",
+          aiToolsCount: "30+",
+          aiToolsType: "Exploitation & Recon Stack",
+          hoursPerWeek: "8 - 10 Hours / Week",
+          modulesPill: "12 Modules • 30+ Exploitation Tools • Live Bounties",
+          shortDesc:
+            "Master advanced recon, OWASP Top 10 exploits (IDOR, SSRF, SQLi), REST/GraphQL API testing, and HackerOne report writing.",
+          projectsHighlight: "4 Live Bug Bounty Targets",
+          certHighlight: "Bug Bounty Specialist + HackerOne Prep",
+          price: 35000,
+          originalPrice: 50000,
+          onlinePrice: 35000,
+          offlinePrice: 50000,
+          emi: "₹3,999/mo",
+          projects: "4 Live Bug Bounty Targets",
+          mentorship: "Weekly Mentorship with Hall of Fame Bug Hunters & Dr. Gulshan Kumar",
+          certification: "Dizital Adda Bug Bounty Hunter Certificate + HackerOne Readiness",
+          perfectFor: "Web Developers, Ethical Hackers, Pentesters & Security Researchers",
+          perfectForBg: "bg-purple-50/80 border-purple-200 text-purple-900",
+          details: BUG_BOUNTY_DETAILS,
+          enrollUrl: "https://dizitaladda.com/courses/expert-traning-in-bug-bounty",
+          whatsappUrl: "https://wa.me/918810606010?text=Hi%2C+I+want+to+enquire+about+the+Expert+Traning+in+Bug+Bounty+Course",
+          featureList: [
+            "12 Specialized Bug Hunting Modules",
+            "30+ Modern Offensive & Recon Tools",
+            "Burp Suite Pro Interception & Macros",
+            "OWASP Top 10 Exploitation (IDOR, SSRF, SQLi)",
+            "REST & GraphQL API Security Audit",
+            "Android APK Reverse Engineering & SSL Bypass",
+            "HackerOne & Bugcrowd Report Writing",
+            "100% Placement Assistance in Product Security",
+          ],
+          modules: [
+            "Month 1: Advanced Reconnaissance & Target Surface Mapping",
+            "Month 2: Mastering OWASP Top 10 Exploitation",
+            "Month 3: API Security Testing & Authentication Flaws",
+            "Month 4: Mobile Pentesting, Automation & Responsible Disclosure",
           ],
         },
       ],
@@ -1479,6 +1531,7 @@ function Skilling() {
   const [activeDetailTab, setActiveDetailTab] = useState("curriculum"); // curriculum | projects | aiTools | journey | whoCanJoin | fees
   const [expandedCurriculumIdx, setExpandedCurriculumIdx] = useState(0);
   const [curriculumSearch, setCurriculumSearch] = useState("");
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   // Counselor Modal State
   const [showCounselorModal, setShowCounselorModal] = useState(false);
@@ -1547,11 +1600,11 @@ function Skilling() {
   // Collect all duration course cards for the selected domain or active track
   const domainCourses = activeSpecialization
     ? (activeSpecialization.availableDurationIds || [])
-        .map((durId) => activeSpecialization.coursesByDuration?.[durId]?.[0])
+        .flatMap((durId) => activeSpecialization.coursesByDuration?.[durId] || [])
         .filter(Boolean)
     : selectedDomain
     ? (selectedDomain.availableDurationIds || [])
-        .map((durId) => selectedDomain.coursesByDuration?.[durId]?.[0])
+        .flatMap((durId) => selectedDomain.coursesByDuration?.[durId] || [])
         .filter(Boolean)
     : [];
 
@@ -2247,6 +2300,40 @@ function Skilling() {
                         <FaAward />
                         <span>Fees & Certifications</span>
                       </button>
+
+                      {selectedCourse.details?.reviews?.length > 0 && (
+                        <button
+                          onClick={() => setActiveDetailTab("reviews")}
+                          className={`px-5 py-3 rounded-2xl transition whitespace-nowrap flex items-center gap-2 ${
+                            activeDetailTab === "reviews"
+                              ? "bg-[#7C2D12] text-white shadow-md"
+                              : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                          }`}
+                        >
+                          <FaStar className="text-amber-400" />
+                          <span>Student Reviews</span>
+                          <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">
+                            {selectedCourse.details.reviews.length} Verified
+                          </span>
+                        </button>
+                      )}
+
+                      {selectedCourse.details?.faqs?.length > 0 && (
+                        <button
+                          onClick={() => setActiveDetailTab("faqs")}
+                          className={`px-5 py-3 rounded-2xl transition whitespace-nowrap flex items-center gap-2 ${
+                            activeDetailTab === "faqs"
+                              ? "bg-[#7C2D12] text-white shadow-md"
+                              : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                          }`}
+                        >
+                          <FaQuestionCircle />
+                          <span>FAQs</span>
+                          <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">
+                            {selectedCourse.details.faqs.length} Q&As
+                          </span>
+                        </button>
+                      )}
                     </div>
 
                     {/* TAB 1: 70 MODULES ROADMAP ACCORDION */}
@@ -2761,6 +2848,113 @@ function Skilling() {
                               </button>
                             </div>
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 7: REVIEWS */}
+                    {activeDetailTab === "reviews" && (
+                      <div className="mt-8 space-y-8 animate-fadeIn">
+                        <div className="text-center max-w-2xl mx-auto">
+                          <span className="text-xs font-black uppercase tracking-widest text-[#7C2D12]">
+                            Alumni Success & Placements
+                          </span>
+                          <h5 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+                            Verified Alumni Reviews
+                          </h5>
+                          <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                            Direct feedback from graduates working at top global cybersecurity organizations.
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {(selectedCourse.details?.reviews || []).map((rev, rIdx) => (
+                            <div
+                              key={rIdx}
+                              className="bg-white p-6 rounded-3xl border-2 border-slate-200 hover:border-[#D4A017] shadow-sm flex flex-col justify-between transition-all"
+                            >
+                              <div>
+                                <div className="flex items-center gap-3 mb-4">
+                                  <div className="w-12 h-12 rounded-full bg-[#7C2D12] text-[#D4A017] flex items-center justify-center font-black text-lg shadow-sm">
+                                    {rev.author.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <h6 className="font-black text-base text-slate-900">
+                                      {rev.author}
+                                    </h6>
+                                    <p className="text-xs font-bold text-[#7C2D12]">
+                                      {rev.role}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex text-amber-400 text-sm mb-3">
+                                  {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                                    <FaStar key={i} />
+                                  ))}
+                                </div>
+                                <blockquote className="text-xs sm:text-sm text-slate-600 leading-relaxed italic">
+                                  "{rev.text}"
+                                </blockquote>
+                              </div>
+                              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-semibold">
+                                <span>Verified Alumni</span>
+                                <span className="text-emerald-600 flex items-center gap-1 font-bold">
+                                  <FaCheckCircle className="text-xs" /> Placed Graduate
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 8: FAQS */}
+                    {activeDetailTab === "faqs" && (
+                      <div className="mt-8 space-y-6 animate-fadeIn">
+                        <div className="text-center max-w-2xl mx-auto">
+                          <span className="text-xs font-black uppercase tracking-widest text-[#7C2D12]">
+                            Got Questions? We Have Answers
+                          </span>
+                          <h5 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+                            Frequently Asked Questions
+                          </h5>
+                          <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                            Everything you need to know about prerequisites, labs, certifications, and placement support.
+                          </p>
+                        </div>
+
+                        <div className="max-w-4xl mx-auto space-y-3">
+                          {(selectedCourse.details?.faqs || []).map((faq, fIdx) => {
+                            const isOpen = openFaqIndex === fIdx;
+                            return (
+                              <div
+                                key={fIdx}
+                                className="bg-white rounded-2xl border-2 border-slate-200 overflow-hidden transition-all shadow-xs"
+                              >
+                                <button
+                                  onClick={() => setOpenFaqIndex(isOpen ? null : fIdx)}
+                                  className="w-full text-left p-5 flex items-center justify-between gap-4 font-bold text-slate-900 hover:text-[#7C2D12] transition cursor-pointer"
+                                >
+                                  <span className="text-sm sm:text-base flex items-center gap-3">
+                                    <span className="w-7 h-7 rounded-full bg-orange-100 text-[#7C2D12] text-xs font-black flex items-center justify-center flex-shrink-0">
+                                      {fIdx + 1}
+                                    </span>
+                                    <span>{faq.q}</span>
+                                  </span>
+                                  {isOpen ? (
+                                    <FaChevronUp className="text-[#7C2D12] flex-shrink-0 text-sm" />
+                                  ) : (
+                                    <FaChevronDown className="text-slate-400 flex-shrink-0 text-sm" />
+                                  )}
+                                </button>
+                                {isOpen && (
+                                  <div className="px-6 pb-6 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-slate-50/60">
+                                    <p>{faq.a}</p>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}

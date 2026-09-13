@@ -1,7 +1,11 @@
 import axios from "axios";
 
-// Normalize baseURL from env or fallback
-const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// Normalize baseURL from env or fallback to Render in production
+const rawUrl =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+    ? "https://tsg-qlb1.onrender.com"
+    : "http://localhost:5000");
 const baseURL = rawUrl.trim().replace(/\/+$/, "");
 
 const api = axios.create({

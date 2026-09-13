@@ -477,6 +477,12 @@ export const FOUNDATION_CYBER_SECURITY_DETAILS = {
   ],
   reviews: [
   {
+    "author": "Saloni Bisht",
+    "role": "Cybersecurity Analyst @ Google",
+    "rating": 5,
+    "text": "The hands-on labs and real-world scenarios prepared me perfectly for my role at Google. The instructors are industry experts who genuinely care about our success."
+  },
+  {
     "author": "Milan Singh",
     "role": "Senior Penetration Tester @ Microsoft",
     "rating": 5,
@@ -495,19 +501,48 @@ export const FOUNDATION_CYBER_SECURITY_DETAILS = {
     "text": "The cloud security course was exactly what I needed to transition into cybersecurity. The practical labs and mentorship made all the difference."
   },
   {
+    "author": "Lalit Kumar",
+    "role": "SOC Analyst @ CrowdStrike",
+    "rating": 5,
+    "text": "The incident response training was phenomenal. I went from IT support to a SOC analyst at CrowdStrike. The course content is always up-to-date!"
+  },
+  {
     "author": "Jiya Mehta",
     "role": "Security Consultant @ Deloitte",
     "rating": 5,
     "text": "The comprehensive curriculum and networking opportunities helped me become a security consultant. The career support team is outstanding!"
-  },
-  {
-    "author": "Rahul Verma",
-    "role": "SOC Analyst @ Wipro",
-    "rating": 5,
-    "text": "The virtual labs and SIEM incident response simulations prepared me for real security operations center shifts. Highly recommended training!"
   }
 ],
   faqs: [
+    {
+    "q": "What prerequisites do I need to start the cybersecurity courses?",
+    "a": "Our courses are designed for various skill levels. For beginners, basic computer literacy and familiarity with operating systems is sufficient. For advanced courses, we recommend a basic understanding of networking concepts, familiarity with command line interfaces, and basic programming knowledge (helpful but not required)."
+  },
+  {
+    "q": "How long does it take to complete a cybersecurity course?",
+    "a": "Course duration varies depending on the program and your learning pace: Beginner courses take 3-4 Months (6-7 hours/week), Advanced courses take 6-7 Months (6-8 hours/week), and the Complete Master Program takes 12 months (6-8 hours/week) with dedicated live virtual labs and paid internship letter."
+  },
+  {
+    "q": "Do you provide job placement assistance after course completion?",
+    "a": "Yes! We provide comprehensive career support including resume and LinkedIn profile optimization, interview preparation and mock technical interviews with senior cybersecurity leads, direct connections with 30+ hiring partners, industry networking events, and lifetime access to our alumni network."
+  },
+  {
+    "q": "What certifications can I earn through your programs?",
+    "a": "Our courses prepare you for industry-leading certifications: CompTIA Security+ (Foundation certification), CEH (Certified Ethical Hacker - Penetration testing), CISSP (Advanced security professional), and GCIH/GCFA (Incident response and digital forensics)."
+  },
+  {
+    "q": "Can I take these courses while working full-time?",
+    "a": "Yes! We offer flexible learning schedules including evening and weekend batches, 24/7 access to our cloud virtual labs, and high-definition session recordings available on the Dizital Adda LMS within 24 hours."
+  },
+  {
+    "q": "What kind of hands-on experience will I get?",
+    "a": "Over 80% of our training is practical hands-on. You will work in isolated virtual labs, executing real-world penetration testing, network sniffing with Wireshark, exploitation with Metasploit, digital forensic investigations with Autopsy, and incident response triage with Splunk SIEM."
+  },
+  {
+    "q": "Do you offer free demo classes?",
+    "a": "Yes! We offer free trial sessions so you can experience our interactive teaching methodology, interact directly with Dr. Gulshan Kumar and senior mentors, and tour our virtual cyber lab before enrolling. Call +91-8810606010 to reserve your free demo."
+  },
+
   {
     "q": "What is Ethical Hacking and Cyber Security?",
     "a": "Ethical hacking is the authorised practice of testing computer systems, networks, and applications for security vulnerabilities — using the same tools and techniques as malicious hackers, but with explicit permission and the goal of fixing weaknesses before criminals can exploit them. Cyber security is the broader discipline of protecting digital assets, data, networks, and infrastructure from unauthorised access, attacks, and damage. Ethical hacking is one specialised practice within the much larger field of cyber security, which also includes network defence, security operations (SOC), digital forensics, governance and compliance, and incident response. DizitalAdda Foundation in Cyber Security and Ethical Hacking introduces both the defensive side (networking, Linux hardening, firewalls) and the offensive side (vulnerability scanning, password attacks, reporting) so beginners understand the full picture before specialising further. Call +91-8810606010."
@@ -1270,6 +1305,12 @@ export const ADVANCED_CYBER_SECURITY_DETAILS = {
   ],
   reviews: [
   {
+    "author": "Saloni Bisht",
+    "role": "Cybersecurity Analyst @ Google",
+    "rating": 5,
+    "text": "The hands-on labs and real-world scenarios prepared me perfectly for my role at Google. The instructors are industry experts who genuinely care about our success."
+  },
+  {
     "author": "Milan Singh",
     "role": "Senior Penetration Tester @ Microsoft",
     "rating": 5,
@@ -1288,19 +1329,48 @@ export const ADVANCED_CYBER_SECURITY_DETAILS = {
     "text": "The cloud security course was exactly what I needed to transition into cybersecurity. The practical labs and mentorship made all the difference."
   },
   {
+    "author": "Lalit Kumar",
+    "role": "SOC Analyst @ CrowdStrike",
+    "rating": 5,
+    "text": "The incident response training was phenomenal. I went from IT support to a SOC analyst at CrowdStrike. The course content is always up-to-date!"
+  },
+  {
     "author": "Jiya Mehta",
     "role": "Security Consultant @ Deloitte",
     "rating": 5,
     "text": "The comprehensive curriculum and networking opportunities helped me become a security consultant. The career support team is outstanding!"
-  },
-  {
-    "author": "Rahul Verma",
-    "role": "SOC Analyst @ Wipro",
-    "rating": 5,
-    "text": "The virtual labs and SIEM incident response simulations prepared me for real security operations center shifts. Highly recommended training!"
   }
 ],
   faqs: [
+    {
+    "q": "What prerequisites do I need to start the cybersecurity courses?",
+    "a": "Our courses are designed for various skill levels. For beginners, basic computer literacy and familiarity with operating systems is sufficient. For advanced courses, we recommend a basic understanding of networking concepts, familiarity with command line interfaces, and basic programming knowledge (helpful but not required)."
+  },
+  {
+    "q": "How long does it take to complete a cybersecurity course?",
+    "a": "Course duration varies depending on the program and your learning pace: Beginner courses take 3-4 Months (6-7 hours/week), Advanced courses take 6-7 Months (6-8 hours/week), and the Complete Master Program takes 12 months (6-8 hours/week) with dedicated live virtual labs and paid internship letter."
+  },
+  {
+    "q": "Do you provide job placement assistance after course completion?",
+    "a": "Yes! We provide comprehensive career support including resume and LinkedIn profile optimization, interview preparation and mock technical interviews with senior cybersecurity leads, direct connections with 30+ hiring partners, industry networking events, and lifetime access to our alumni network."
+  },
+  {
+    "q": "What certifications can I earn through your programs?",
+    "a": "Our courses prepare you for industry-leading certifications: CompTIA Security+ (Foundation certification), CEH (Certified Ethical Hacker - Penetration testing), CISSP (Advanced security professional), and GCIH/GCFA (Incident response and digital forensics)."
+  },
+  {
+    "q": "Can I take these courses while working full-time?",
+    "a": "Yes! We offer flexible learning schedules including evening and weekend batches, 24/7 access to our cloud virtual labs, and high-definition session recordings available on the Dizital Adda LMS within 24 hours."
+  },
+  {
+    "q": "What kind of hands-on experience will I get?",
+    "a": "Over 80% of our training is practical hands-on. You will work in isolated virtual labs, executing real-world penetration testing, network sniffing with Wireshark, exploitation with Metasploit, digital forensic investigations with Autopsy, and incident response triage with Splunk SIEM."
+  },
+  {
+    "q": "Do you offer free demo classes?",
+    "a": "Yes! We offer free trial sessions so you can experience our interactive teaching methodology, interact directly with Dr. Gulshan Kumar and senior mentors, and tour our virtual cyber lab before enrolling. Call +91-8810606010 to reserve your free demo."
+  },
+
   {
     "q": "What is VAPT (Vulnerability Assessment and Penetration Testing)?",
     "a": "VAPT is a combined security testing process: Vulnerability Assessment identifies and catalogues known weaknesses in systems, networks, and applications using automated scanning tools, while Penetration Testing goes a step further by actively attempting to exploit those weaknesses to determine real-world impact and confirm whether they are genuinely exploitable. Together, VAPT gives organisations both a comprehensive list of vulnerabilities and a realistic assessment of which ones pose actual risk. DizitalAdda Advanced Certification dedicates a full module to VAPT, teaching vulnerability scanning with Nessus and OpenVAS, manual and automated penetration testing methodology, exploitation using Metasploit, web application testing against the OWASP Top 10, and professional report writing and remediation recommendations — the exact workflow used by VAPT consultants in industry. Call +91-8810606010."
@@ -2352,6 +2422,12 @@ export const EXPERT_CYBER_SECURITY_DETAILS = {
   ],
   reviews: [
   {
+    "author": "Saloni Bisht",
+    "role": "Cybersecurity Analyst @ Google",
+    "rating": 5,
+    "text": "The hands-on labs and real-world scenarios prepared me perfectly for my role at Google. The instructors are industry experts who genuinely care about our success."
+  },
+  {
     "author": "Milan Singh",
     "role": "Senior Penetration Tester @ Microsoft",
     "rating": 5,
@@ -2370,19 +2446,48 @@ export const EXPERT_CYBER_SECURITY_DETAILS = {
     "text": "The cloud security course was exactly what I needed to transition into cybersecurity. The practical labs and mentorship made all the difference."
   },
   {
+    "author": "Lalit Kumar",
+    "role": "SOC Analyst @ CrowdStrike",
+    "rating": 5,
+    "text": "The incident response training was phenomenal. I went from IT support to a SOC analyst at CrowdStrike. The course content is always up-to-date!"
+  },
+  {
     "author": "Jiya Mehta",
     "role": "Security Consultant @ Deloitte",
     "rating": 5,
     "text": "The comprehensive curriculum and networking opportunities helped me become a security consultant. The career support team is outstanding!"
-  },
-  {
-    "author": "Rahul Verma",
-    "role": "SOC Analyst @ Wipro",
-    "rating": 5,
-    "text": "The virtual labs and SIEM incident response simulations prepared me for real security operations center shifts. Highly recommended training!"
   }
 ],
   faqs: [
+    {
+    "q": "What prerequisites do I need to start the cybersecurity courses?",
+    "a": "Our courses are designed for various skill levels. For beginners, basic computer literacy and familiarity with operating systems is sufficient. For advanced courses, we recommend a basic understanding of networking concepts, familiarity with command line interfaces, and basic programming knowledge (helpful but not required)."
+  },
+  {
+    "q": "How long does it take to complete a cybersecurity course?",
+    "a": "Course duration varies depending on the program and your learning pace: Beginner courses take 3-4 Months (6-7 hours/week), Advanced courses take 6-7 Months (6-8 hours/week), and the Complete Master Program takes 12 months (6-8 hours/week) with dedicated live virtual labs and paid internship letter."
+  },
+  {
+    "q": "Do you provide job placement assistance after course completion?",
+    "a": "Yes! We provide comprehensive career support including resume and LinkedIn profile optimization, interview preparation and mock technical interviews with senior cybersecurity leads, direct connections with 30+ hiring partners, industry networking events, and lifetime access to our alumni network."
+  },
+  {
+    "q": "What certifications can I earn through your programs?",
+    "a": "Our courses prepare you for industry-leading certifications: CompTIA Security+ (Foundation certification), CEH (Certified Ethical Hacker - Penetration testing), CISSP (Advanced security professional), and GCIH/GCFA (Incident response and digital forensics)."
+  },
+  {
+    "q": "Can I take these courses while working full-time?",
+    "a": "Yes! We offer flexible learning schedules including evening and weekend batches, 24/7 access to our cloud virtual labs, and high-definition session recordings available on the Dizital Adda LMS within 24 hours."
+  },
+  {
+    "q": "What kind of hands-on experience will I get?",
+    "a": "Over 80% of our training is practical hands-on. You will work in isolated virtual labs, executing real-world penetration testing, network sniffing with Wireshark, exploitation with Metasploit, digital forensic investigations with Autopsy, and incident response triage with Splunk SIEM."
+  },
+  {
+    "q": "Do you offer free demo classes?",
+    "a": "Yes! We offer free trial sessions so you can experience our interactive teaching methodology, interact directly with Dr. Gulshan Kumar and senior mentors, and tour our virtual cyber lab before enrolling. Call +91-8810606010 to reserve your free demo."
+  },
+
   {
     "q": "What is Ethical Hacking and Cyber Security, and how does the expert programme cover it?",
     "a": "Ethical hacking is the authorised practice of testing systems and networks for vulnerabilities before malicious hackers can exploit them, while cyber security is the broader field protecting digital assets, data, and infrastructure from cyber threats. DizitalAdda Expert Training in Cyber Security and Ethical Hacking covers both disciplines across the widest range of domains of any DizitalAdda programme — fundamentals, networking, and Linux, through ethical hacking and VAPT, into specialist areas including web and mobile application security, cloud security, IoT security, malware analysis, and endpoint defence — giving graduates the complete skill stack used by senior security professionals across offensive, defensive, and investigative roles. Call +91-8810606010."
@@ -2456,4 +2561,728 @@ export const EXPERT_CYBER_SECURITY_DETAILS = {
     "a": "DizitalAdda Expert Training in Cyber Security and Ethical Hacking is 12 months / 288 contact hours across 11 modules: Introduction to Cyber Security and Python; Networking; Linux for Cyber Security; Ethical Hacking; VAPT; Digital and Cyber Forensic Investigation; Web Application Penetration Testing; Mobile Application Penetration Testing; AWS Cloud Security; IoT Security; Malware Analysis; and Endpoint Security &amp; Hardening. Batch options include Weekday Evening and Weekend batches, fully available live online. New batches start every 2–3 weeks, and all sessions are recorded to the LMS within 24 hours. Call +91-8810606010 for the next batch date."
   }
 ],
+};
+
+// -------------------------------------------------------------------------
+// 4. CERTIFICATION IN DIGITAL FORENSIC AND CYBER INVESTIGATION (4 MONTHS)
+// Sourced from https://dizitaladda.com/courses/certification-in-digital-forensic-and-cyber-investigation
+// -------------------------------------------------------------------------
+export const DIGITAL_FORENSICS_DETAILS = {
+  id: "cs-4m-forensics",
+  backendCourseId: "cyber-advanced",
+  courseId: 6,
+  title: "Certification in Digital Forensic and Cyber Investigation",
+  subtitle: "4 Months Specialization • Disk Imaging, Memory Forensics & Cybercrime Investigation",
+  duration: "4 Months",
+  durationId: "4-months",
+  level: "INTERMEDIATE LEVEL",
+  levelColor: "border-teal-400 text-teal-700 bg-teal-50",
+  checkColor: "text-teal-500",
+  badge: "Law Enforcement & Corporate DFIR Track",
+  rating: 4.9,
+  ratingsCount: "820+ students (154 reviews)",
+  price: 35000,
+  originalPrice: 50000,
+  onlinePrice: 35000,
+  offlinePrice: 50000,
+  emi: "₹3,999/mo",
+  enrollUrl: "https://dizitaladda.com/courses/certification-in-digital-forensic-and-cyber-investigation",
+  whatsappUrl: "https://wa.me/918810606010?text=Hi%2C+I+want+to+enquire+about+the+Certification+in+Digital+Forensic+and+Cyber+Investigation+Course",
+  phone: "+91 88106 06010",
+  liveTrainingHours: "96+ Hours Contact Labs",
+  modulesCount: "12",
+  modulesType: "DFIR Forensic Modules",
+  aiToolsCount: "25+",
+  aiToolsType: "Forensic Investigation Tools",
+  projects: "4 Forensic Case Study Projects",
+  mentorship: "Weekly Mentorship with Forensic Cyber Investigators & Dr. Gulshan Kumar",
+  certification: "Dizital Adda DFIR Specialist Certificate + GCFA / EnCE Prep",
+  placementGuarantee: "100% Placement Assistance (Corporate Fraud, Banks & Law Enforcement)",
+  perfectFor: "Forensic Aspirants, Legal Professionals, Police Trainees & SOC Analysts",
+  perfectForBg: "bg-teal-50/80 border-teal-200 text-teal-900",
+
+  keyMetrics: [
+    { label: "Course Duration", value: "4 Months", subtext: "96+ Live Contact Hours" },
+    { label: "Core Modules", value: "12 Modules", subtext: "Imaging, Volatile RAM, Mobile & Case File" },
+    { label: "Forensics Stack", value: "25+ Forensic Tools", subtext: "Autopsy, Volatility, FTK Imager, EnCase" },
+    { label: "Hands-on Labs", value: "4 Deep Case Studies", subtext: "Real Drive Dumps & Evidence Bags" },
+    { label: "Placement Support", value: "100% Assistance", subtext: "Law Firms, Banks & MSSP Corporate Units" },
+    { label: "Certifications", value: "DFIR Credential", subtext: "Dizital Adda + GCFA Readiness" },
+  ],
+
+  overviewDescription:
+    "Master the art of cybercrime investigation and forensic discovery at DizitalAdda. This 4-month specialized program trains you to collect digital evidence, preserve bit-stream disk images without tampering, reconstruct volatile memory artifacts using Volatility, investigate mobile device extractions, and produce court-admissible forensic dossiers under the guidance of Dr. Gulshan Kumar and certified DFIR practitioners.",
+
+  highlights: [
+    "Comprehensive evidence acquisition: Bit-stream disk imaging and cryptographic hashing (MD5, SHA256)",
+    "Deep memory forensics on live and dead volatile RAM dumps using Volatility Framework",
+    "File system analysis: NTFS MFT records, FAT, EXT4, deleted file carving and slack space recovery",
+    "Mobile forensics for Android & iOS: SQLite database extraction, chat triage, and location history",
+    "Preparation of court-admissible forensic reports complying with Indian IT Act (Section 65B) and international forensic standards",
+    "Direct hands-on practice with Autopsy, FTK Imager, Volatility, EnCase, Sleuth Kit, and Wireshark",
+  ],
+
+  curriculumCategories: [
+    {
+      id: "df-cat-1",
+      categoryTitle: "Month 1: Fundamentals of Digital Forensics & Evidence Seizure",
+      categoryDesc: "Cybercrime scene triage, chain of custody, hardware write blockers, and live disk imaging.",
+      modules: [
+        {
+          num: 1,
+          title: "Introduction to Cyber Forensics & Legal Frameworks",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Locard's Exchange Principle in cyberspace", "Digital Evidence handling SOPs", "Indian IT Act Section 65B compliance", "Hardware & software write-blocking"],
+          skills: ["DigitalForensics", "ChainOfCustody", "CyberLaw"]
+        },
+        {
+          num: 2,
+          title: "Forensic Imaging & Verification (FTK Imager & dd)",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Bit-stream disk imaging formats (E01, RAW/DD)", "Cryptographic hash verification (MD5/SHA256)", "Physical vs logical imaging", "Evidence preservation standards"],
+          skills: ["FTKImager", "DiskImaging", "EvidenceIntegrity"]
+        },
+        {
+          num: 3,
+          title: "Hands-on Lab: Preserving Compromised Endpoint Disk Image",
+          duration: "1 Week",
+          type: "project",
+          topics: ["Setting up write-blockers", "Acquiring forensic disk image of simulated victim PC", "Generating forensic hashes", "Authoring evidence custody form"],
+          skills: ["EvidenceCustody", "ImagingLab", "DFIR"]
+        }
+      ]
+    },
+    {
+      id: "df-cat-2",
+      categoryTitle: "Month 2: File System Analysis & Deleted Artifact Carving",
+      categoryDesc: "Investigating NTFS, FAT32, EXT4 systems, Master File Table (MFT), and unallocated space recovery.",
+      modules: [
+        {
+          num: 4,
+          title: "File Systems Deep Dive & Metadata Recovery",
+          duration: "1 Week",
+          type: "video",
+          topics: ["NTFS $MFT, $LogFile, and $UsnJrnl analysis", "FAT32 file allocation tables", "EXT4 superblock & inodes", "Timestamp forensics ($STANDARD_INFORMATION vs $FILE_NAME)"],
+          skills: ["FileSystems", "NTFSForensics", "Timestomping"]
+        },
+        {
+          num: 5,
+          title: "Autopsy & Sleuth Kit Artifact Extraction",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Automating triage in Autopsy", "File signature headers & data carving", "Recovering unallocated clusters", "Keyword searches & hash set filtering"],
+          skills: ["Autopsy", "TheSleuthKit", "DataCarving"]
+        },
+        {
+          num: 6,
+          title: "Hands-on Lab: Recovering Deleted Intellectual Property Dossier",
+          duration: "1 Week",
+          type: "project",
+          topics: ["Analyzing disk image of insider threat suspect", "Carving deleted PDF/Office files", "Reconstructing timeline of deletion", "Compiling forensic findings"],
+          skills: ["InsiderThreat", "FileRecovery", "AutopsyLab"]
+        }
+      ]
+    },
+    {
+      id: "df-cat-3",
+      categoryTitle: "Month 3: Memory Forensics (Volatility) & Network Triage",
+      categoryDesc: "Extracting volatile RAM artifacts, uncovering injected processes, and analyzing network PCAPs.",
+      modules: [
+        {
+          num: 7,
+          title: "Live RAM Acquisition & Volatility Framework",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Memory dump capture with WinPmem & DumpIt", "Volatility 3 architecture & symbol tables", "pslist, pstree, and malfind plugin triage", "Detecting reflective DLL injection in memory"],
+          skills: ["VolatilityFramework", "MemoryForensics", "ProcessInjection"]
+        },
+        {
+          num: 8,
+          title: "Network Forensics & Exfiltration Analysis",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Wireshark PCAP triage for data exfiltration", "DNS tunneling detection", "Reconstructing HTTP/TLS sessions", "Correlating endpoint memory with network traces"],
+          skills: ["NetworkForensics", "Wireshark", "DNSTunneling"]
+        },
+        {
+          num: 9,
+          title: "Hands-on Lab: Volatile Memory Ransomware Infiltration Analysis",
+          duration: "1 Week",
+          type: "project",
+          topics: ["Loading RAM dump into Volatility 3", "Extracting process memory and C2 IP", "Carving encryption keys / injected payloads", "Writing memory triage report"],
+          skills: ["MemoryLab", "RansomwareTriage", "Volatility3"]
+        }
+      ]
+    },
+    {
+      id: "df-cat-4",
+      categoryTitle: "Month 4: Mobile Forensics, Cloud Artifacts & Expert Witness Reporting",
+      categoryDesc: "Android/iOS extraction, SQLite databases, cloud log analysis, and authoring courtroom evidence dossiers.",
+      modules: [
+        {
+          num: 10,
+          title: "Mobile Forensics (Android & iOS)",
+          duration: "1 Week",
+          type: "video",
+          topics: ["ADB physical/logical extraction", "iOS backup parsing", "SQLite database analysis for WhatsApp & Telegram", "Location geofence reconstruction"],
+          skills: ["MobileForensics", "SQLiteTriage", "ChatForensics"]
+        },
+        {
+          num: 11,
+          title: "Authoring Court-Admissible Forensic Reports",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Forensic dossier documentation structure", "Handling cross-examination as an expert witness", "Exhibits cataloging & hash certifications", "Mock court room scenario"],
+          skills: ["ExpertWitness", "ForensicReporting", "CourtroomTestimony"]
+        },
+        {
+          num: 12,
+          title: "Capstone Project: End-to-End Cyber Crime Corporate Investigation",
+          duration: "1 Week",
+          type: "project",
+          topics: ["Full investigation of corporate wire fraud breach", "Correlating disk, memory, mobile and network artifacts", "Authoring complete 65B compliant dossier", "Executive defense presentation"],
+          skills: ["CapstoneProject", "DFIRSpecialist", "ComprehensiveInvestigation"]
+        }
+      ]
+    }
+  ],
+
+  liveProjects: [
+    {
+      num: 1,
+      title: "Cyber Crime Investigation Case Study & Evidence Dossier",
+      duration: "3-4 Weeks",
+      badge: "DFIR Capstone",
+      description: "Conduct comprehensive forensic analysis on compromised enterprise systems. Preserve chain of custody, image drives with FTK Imager, extract volatile memory with Volatility, and prepare court-admissible evidence.",
+      deliverables: [
+        "Forensic Bit-Stream Image Acquisition & Hashing (MD5/SHA256)",
+        "Volatile Memory (RAM) Analysis with Volatility 3",
+        "Browser History, Registry & Event Log Reconstruction in Autopsy",
+        "Forensic Expert Witness Report with Chain of Custody"
+      ],
+      highlight: "Real-world data exfiltration crime investigation scenario"
+    },
+    {
+      num: 2,
+      title: "Corporate Insider Threat & IP Theft Investigation",
+      duration: "2-3 Weeks",
+      badge: "Insider Threat",
+      description: "Investigate an employee suspected of exfiltrating confidential intellectual property to personal cloud storage prior to resignation.",
+      deliverables: [
+        "USB Device Tracking via Windows Registry (USBSTOR)",
+        "LNK Files, Shellbags & Jump Lists Timeline Reconstruction",
+        "Deleted File Recovery & Slack Space Carving",
+        "Actionable HR & Legal Summary Document"
+      ],
+      highlight: "Hands-on analysis of authentic Windows endpoint forensic image"
+    },
+    {
+      num: 3,
+      title: "Volatile Memory Ransomware Infiltration & C2 Mapping",
+      duration: "2-3 Weeks",
+      badge: "Memory Triage",
+      description: "Analyze a memory capture taken during an active ransomware detonation to uncover the process injection and C2 infrastructure.",
+      deliverables: [
+        "Malicious Thread Detection with Volatility malfind",
+        "Network Socket Carving with netscan plugin",
+        "Extracting Injected DLLs and Command Strings",
+        "Threat Actor Infrastructure Attribution Dossier"
+      ],
+      highlight: "Direct triage on memory capture from infected production server"
+    },
+    {
+      num: 4,
+      title: "Mobile Chat & Location Forensic Extraction (Android/iOS)",
+      duration: "2 Weeks",
+      badge: "Mobile DFIR",
+      description: "Extract and reconstruct messaging histories, deleted media, and geotagged metadata from mobile device backups for fraud investigation.",
+      deliverables: [
+        "Encrypted SQLite DB Decryption and Querying",
+        "Timeline Synthesis of Cross-App Messaging",
+        "Location Coordinates Mapping onto Google Maps",
+        "Technical Evidentiary Report"
+      ],
+      highlight: "Authentic multi-platform mobile forensic examination"
+    }
+  ],
+
+  toolClusters: [
+    {
+      name: "Digital Forensics & Disk Acquisition",
+      badge: "Forensic Imaging",
+      tools: [
+        { name: "Autopsy", desc: "Digital Forensics Platform & Artifact Examiner", accent: "#ff6633" },
+        { name: "FTK Imager", desc: "Bit-Stream Forensic Imaging & Verification", accent: "#23527c" },
+        { name: "The Sleuth Kit", desc: "Command-line File System Investigation", accent: "#367bf0" },
+        { name: "EnCase Forensic", desc: "Enterprise Forensic Triage & Decryption", accent: "#005a9c" },
+        { name: "X-Ways Forensics", desc: "Fast Raw Disk Editor & Hex Carving", accent: "#e11d48" }
+      ]
+    },
+    {
+      name: "Memory Forensics & Network Triage",
+      badge: "Volatile Analysis",
+      tools: [
+        { name: "Volatility 3", desc: "Advanced Memory Forensics & Injection Analysis", accent: "#059669" },
+        { name: "Wireshark", desc: "Deep Packet Inspection & Network Forensics", accent: "#167ac6" },
+        { name: "WinPmem & DumpIt", desc: "Live Volatile RAM Acquisition Utilities", accent: "#7c3aed" },
+        { name: "NetworkMiner", desc: "Network Forensic Analysis Tool (NFAT)", accent: "#d97706" }
+      ]
+    }
+  ],
+
+  journeySteps: [
+    { step: "01", title: "Evidence Collection", desc: "Master chain of custody, write blockers, and bit-stream disk imaging." },
+    { step: "02", title: "File System Carving", desc: "Extract deleted files, parse NTFS $MFT, and reconstruct system timelines." },
+    { step: "03", title: "RAM & Network Triage", desc: "Analyze volatile memory with Volatility 3 and track exfiltration in Wireshark." },
+    { step: "04", title: "Mobile Device Forensics", desc: "Decode Android/iOS backups, SQLite databases, and location metadata." },
+    { step: "05", title: "Courtroom Dossier", desc: "Author Indian IT Act 65B compliant expert witness reports." },
+    { step: "06", title: "DFIR Placement", desc: "Interviews with top cyber crime units, banks, and corporate forensics teams." },
+  ],
+
+  whoShouldJoin: [
+    { role: "Aspiring Cyber Forensics Investigators", desc: "Individuals looking to build careers in digital forensics, cyber crime, and law enforcement." },
+    { role: "SOC & Incident Responders", desc: "Security analysts wanting to transition into deep forensic triage and evidence preservation." },
+    { role: "Law & Corporate Fraud Professionals", desc: "Attorneys, compliance officers, and internal auditors handling digital evidence." },
+    { role: "Police & Security Personnel", desc: "Enforcement officers wanting specialized digital evidence collection qualifications." }
+  ],
+
+  certificationsList: [
+    { name: "Dizital Adda Certification in Digital Forensics & Cyber Investigation", issuer: "Dizital Adda Official", badge: "Core" },
+    { name: "GIAC Certified Forensic Analyst (GCFA) Readiness Credential", issuer: "SANS/GIAC Aligned", badge: "Global" },
+    { name: "Digital Evidence Handling & Section 65B Compliance Certificate", issuer: "Cyber Law & Forensics Board", badge: "Legal" }
+  ],
+
+  reviews: [
+    {
+      author: "Saloni Bisht",
+      role: "Cybersecurity Analyst @ Google",
+      rating: 5,
+      text: "The hands-on labs and real-world scenarios prepared me perfectly for my role at Google. The instructors are industry experts who genuinely care about our success."
+    },
+    {
+      author: "Milan Singh",
+      role: "Senior Penetration Tester @ Microsoft",
+      rating: 5,
+      text: "From zero to hero in 6 months! The curriculum is cutting-edge and the practical approach helped me land my dream job at Microsoft. Best investment ever!"
+    },
+    {
+      author: "Abhishek Shukla",
+      role: "Security Engineer @ Amazon",
+      rating: 5,
+      text: "The malware analysis course opened doors I never knew existed. Now I am protecting millions of users at Amazon. The community support is incredible!"
+    },
+    {
+      author: "Farhaan Malik",
+      role: "Cloud Security Architect @ IBM",
+      rating: 5,
+      text: "The cloud security course was exactly what I needed to transition into cybersecurity. The practical labs and mentorship made all the difference."
+    },
+    {
+      author: "Lalit Kumar",
+      role: "SOC Analyst @ CrowdStrike",
+      rating: 5,
+      text: "The incident response training was phenomenal. I went from IT support to a SOC analyst at CrowdStrike. The course content is always up-to-date!"
+    },
+    {
+      author: "Jiya Mehta",
+      role: "Security Consultant @ Deloitte",
+      rating: 5,
+      text: "The comprehensive curriculum and networking opportunities helped me become a security consultant. The career support team is outstanding!"
+    }
+  ],
+
+  faqs: [
+    {
+      q: "What prerequisites do I need to start the cybersecurity courses?",
+      a: "Our courses are designed for various skill levels. For beginners, basic computer literacy and familiarity with operating systems is sufficient. For advanced courses, we recommend a basic understanding of networking concepts, familiarity with command line interfaces, and basic programming knowledge (helpful but not required)."
+    },
+    {
+      q: "How long does it take to complete a cybersecurity course?",
+      a: "Course duration varies depending on the program and your learning pace: Beginner courses take 3-4 Months (6-7 hours/week), Advanced courses take 6-7 Months (6-8 hours/week), and the Complete Master Program takes 12 months (6-8 hours/week) with dedicated live virtual labs and paid internship letter."
+    },
+    {
+      q: "Do you provide job placement assistance after course completion?",
+      a: "Yes! We provide comprehensive career support including resume and LinkedIn profile optimization, interview preparation and mock technical interviews with senior cybersecurity leads, direct connections with 30+ hiring partners, industry networking events, and lifetime access to our alumni network."
+    },
+    {
+      q: "What certifications can I earn through your programs?",
+      a: "Our courses prepare you for industry-leading certifications: CompTIA Security+ (Foundation certification), CEH (Certified Ethical Hacker - Penetration testing), CISSP (Advanced security professional), and GCIH/GCFA (Incident response and digital forensics)."
+    },
+    {
+      q: "Can I take these courses while working full-time?",
+      a: "Yes! We offer flexible learning schedules including evening and weekend batches, 24/7 access to our cloud virtual labs, and high-definition session recordings available on the Dizital Adda LMS within 24 hours."
+    },
+    {
+      q: "What kind of hands-on experience will I get?",
+      a: "Over 80% of our training is practical hands-on. You will work in isolated virtual labs, executing real-world penetration testing, network sniffing with Wireshark, exploitation with Metasploit, digital forensic investigations with Autopsy, and incident response triage with Splunk SIEM."
+    },
+    {
+      q: "Do you offer free demo classes?",
+      a: "Yes! We offer free trial sessions so you can experience our interactive teaching methodology, interact directly with Dr. Gulshan Kumar and senior mentors, and tour our virtual cyber lab before enrolling. Call +91-8810606010 to reserve your free demo."
+    }
+  ]
+};
+
+// -------------------------------------------------------------------------
+// 5. EXPERT TRAINING IN BUG BOUNTY (4 MONTHS)
+// Sourced from https://dizitaladda.com/courses/expert-traning-in-bug-bounty
+// -------------------------------------------------------------------------
+export const BUG_BOUNTY_DETAILS = {
+  id: "cs-4m-bugbounty",
+  backendCourseId: "cyber-advanced",
+  courseId: 6,
+  title: "Expert Training in Bug Bounty",
+  subtitle: "4 Months Intensive • Web App Hacking, API Security, OWASP Top 10 & Bug Hunting",
+  duration: "4 Months",
+  durationId: "4-months",
+  level: "ADVANCED LEVEL",
+  levelColor: "border-purple-400 text-purple-700 bg-purple-50",
+  checkColor: "text-purple-500",
+  badge: "High-Bounty Offensive Security Track",
+  rating: 4.9,
+  ratingsCount: "910+ students (178 reviews)",
+  price: 35000,
+  originalPrice: 50000,
+  onlinePrice: 35000,
+  offlinePrice: 50000,
+  emi: "₹3,999/mo",
+  enrollUrl: "https://dizitaladda.com/courses/expert-traning-in-bug-bounty",
+  whatsappUrl: "https://wa.me/918810606010?text=Hi%2C+I+want+to+enquire+about+the+Expert+Traning+in+Bug+Bounty+Course",
+  phone: "+91 88106 06010",
+  liveTrainingHours: "96+ Hours Contact Labs",
+  modulesCount: "12",
+  modulesType: "Bug Hunting & Pentest Modules",
+  aiToolsCount: "30+",
+  aiToolsType: "Exploitation & Recon Stack",
+  projects: "4 Live Bug Bounty Targets",
+  mentorship: "Weekly Mentorship with Hall of Fame Bug Hunters & Dr. Gulshan Kumar",
+  certification: "Dizital Adda Bug Bounty Hunter Certificate + HackerOne / Bugcrowd Readiness",
+  placementGuarantee: "100% Placement Assistance (Vulnerability Management & Red Teams)",
+  perfectFor: "Web Developers, Ethical Hackers, Pentesters & Security Researchers",
+  perfectForBg: "bg-purple-50/80 border-purple-200 text-purple-900",
+
+  keyMetrics: [
+    { label: "Course Duration", value: "4 Months", subtext: "96+ Live Contact Hours" },
+    { label: "Core Modules", value: "12 Modules", subtext: "Recon, OWASP Top 10, APIs & Disclosure" },
+    { label: "Tools Stack", value: "30+ Exploitation Tools", subtext: "Burp Pro, OWASP ZAP, Nuclei, SQLmap" },
+    { label: "Live Programs", value: "4 Bug Bounty Targets", subtext: "HackerOne & Bugcrowd Scenarios" },
+    { label: "Placement Support", value: "100% Assistance", subtext: "Corporate VAPT & Product Security" },
+    { label: "Bounty Ready", value: "Hall of Fame Focus", subtext: "Live Vulnerability Disclosure Submissions" },
+  ],
+
+  overviewDescription:
+    "Turn vulnerability research into rewarding bounties and top security careers with DizitalAdda's 4-month Expert Training in Bug Bounty. Master reconnaissance automation, modern OWASP Top 10 vulnerabilities (SQLi, XSS, SSRF, IDOR, Broken Object Level Auth), REST & GraphQL API security testing, mobile app exploitation, and responsible disclosure report authoring under the mentorship of Dr. Gulshan Kumar and active Hall of Fame researchers.",
+
+  highlights: [
+    "Master advanced automated and manual reconnaissance: Subdomain enumeration, JS file analysis, and hidden endpoint discovery",
+    "Deep exploitation of OWASP Top 10: IDOR, SSRF, Blind SQL Injection, Cross-Site Scripting, and CORS misconfigurations",
+    "Modern API security testing covering RESTful endpoints, GraphQL introspection, and JWT token manipulation",
+    "Mobile application pentesting: Android APK decompilation, Frida hooking, and SSL pinning bypass",
+    "Authoring high-impact bug bounty reports with clear reproduction steps for HackerOne, Bugcrowd, and Intigriti",
+    "100% hands-on training with Burp Suite Pro, OWASP ZAP, Nuclei, Amass, SQLmap, and customized Python automation scripts",
+  ],
+
+  curriculumCategories: [
+    {
+      id: "bb-cat-1",
+      categoryTitle: "Month 1: Advanced Reconnaissance & Target Surface Mapping",
+      categoryDesc: "Passive and active recon, subdomain takeover, content discovery, and OSINT automation.",
+      modules: [
+        {
+          num: 1,
+          title: "Bug Bounty Fundamentals & Scope Definition",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Bug bounty platforms (HackerOne, Bugcrowd, Intigriti)", "Understanding rules of engagement & scopes", "Legal protections & Safe Harbor policies", "Setting up an offensive cloud VPS"],
+          skills: ["BugBountyBasics", "ScopeMapping", "OffSecVPS"]
+        },
+        {
+          num: 2,
+          title: "Subdomain Enumeration & Asset Discovery",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Passive recon with Amass, Sublist3r & Certificate Transparency logs", "Active DNS brute forcing with massdns", "Subdomain takeover identification", "Visual recon with Aquatone"],
+          skills: ["SubdomainEnum", "SubdomainTakeover", "Amass"]
+        },
+        {
+          num: 3,
+          title: "Hands-on Lab: Mapping the Attack Surface of a Fortune 500 Scope",
+          duration: "1 Week",
+          type: "project",
+          topics: ["Automating recon pipelines with bash & python", "Filtering live hosts with httpx", "Port scanning with naabu", "Generating consolidated attack matrix"],
+          skills: ["ReconAutomation", "Httpx", "Naabu"]
+        }
+      ]
+    },
+    {
+      id: "bb-cat-2",
+      categoryTitle: "Month 2: Mastering OWASP Top 10 Exploitation",
+      categoryDesc: "IDOR, SSRF, SQL Injection, XSS, CSRF, and logic flaws with Burp Suite Pro.",
+      modules: [
+        {
+          num: 4,
+          title: "Broken Access Control & IDOR Vulnerabilities",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Insecure Direct Object References (IDOR)", "Privilege escalation (Horizontal vs Vertical)", "Mass assignment & parameter tampering", "Bypassing multi-tenant authorization barriers"],
+          skills: ["IDOR", "AccessControl", "BurpSuitePro"]
+        },
+        {
+          num: 5,
+          title: "Server-Side Request Forgery (SSRF) & Injection Flaws",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Blind & out-of-band SSRF attacks", "Stealing cloud instance metadata (AWS 169.254.169.254)", "SQL injection (Union, Error, Blind & Time-based)", "Automated SQL exploitation with SQLmap"],
+          skills: ["SSRF", "CloudMetadata", "SQLInjection"]
+        },
+        {
+          num: 6,
+          title: "Hands-on Lab: Bypassing Filters to Extract Cloud Credentials",
+          duration: "1 Week",
+          type: "project",
+          topics: ["Finding hidden SSRF endpoint in image fetcher", "Bypassing IP whitelists and DNS rebinding", "Extracting simulated AWS temporary security tokens", "Documenting proof of concept"],
+          skills: ["SSRFPoC", "AWSMetadata", "BugReporting"]
+        }
+      ]
+    },
+    {
+      id: "bb-cat-3",
+      categoryTitle: "Month 3: API Security Testing & Authentication Flaws",
+      categoryDesc: "RESTful, GraphQL, JWT vulnerabilities, OAuth 2.0 flows, and rate limit bypasses.",
+      modules: [
+        {
+          num: 7,
+          title: "REST & GraphQL API Pentesting",
+          duration: "1 Week",
+          type: "video",
+          topics: ["API documentation discovery (Swagger / OpenAPI)", "GraphQL introspection query exploitation", "Broken Object Level Authorization (BOLA)", "Excessive data exposure"],
+          skills: ["APISecurity", "GraphQLHacking", "BOLA"]
+        },
+        {
+          num: 8,
+          title: "JWT & OAuth 2.0 Exploitation",
+          duration: "1 Week",
+          type: "video",
+          topics: ["JWT signature bypass (none algorithm, weak secrets)", "OAuth 2.0 redirect URI manipulation", "CSRF in OAuth state flows", "Account takeover vulnerabilities"],
+          skills: ["JWTHacking", "OAuthFlaws", "AccountTakeover"]
+        },
+        {
+          num: 9,
+          title: "Hands-on Lab: Exploiting BOLA & Account Takeover in a Fintech API",
+          duration: "1 Week",
+          type: "project",
+          topics: ["Intercepting REST API calls in Postman & Burp", "Testing authorization tokens across account boundaries", "Modifying transactions of other users", "Writing severity-ranked report"],
+          skills: ["FintechAPILab", "BOLAPoC", "PostmanBurp"]
+        }
+      ]
+    },
+    {
+      id: "bb-cat-4",
+      categoryTitle: "Month 4: Mobile Pentesting, Automation & Responsible Disclosure",
+      categoryDesc: "Android APK hacking, Nuclei template authoring, and writing $1,000+ bounty reports.",
+      modules: [
+        {
+          num: 10,
+          title: "Mobile App Bug Bounty (Android APKs)",
+          duration: "1 Week",
+          type: "video",
+          topics: ["Decompiling APKs with Jadx-GUI", "Hardcoded API keys & secrets extraction", "Bypassing SSL Pinning with Frida scripts", "Exported activities & deep link exploitation"],
+          skills: ["AndroidHacking", "FridaHooking", "SSLPinning"]
+        },
+        {
+          num: 11,
+          title: "Authoring High-Paying Vulnerability Reports",
+          duration: "1 Week",
+          type: "video",
+          topics: ["How triage teams evaluate submissions", "Writing clear reproduction steps and business impact", "CVSS 3.1 severity calculation", "Interacting professionally with program managers"],
+          skills: ["VulnerabilityReporting", "CVSS3", "HackerOneTriage"]
+        },
+        {
+          num: 12,
+          title: "Capstone Project: Live Target Hunting & Report Submission",
+          duration: "1 Week",
+          type: "project",
+          topics: ["Selecting live public program on HackerOne / Bugcrowd", "Full recon, vulnerability discovery and PoC generation", "Submitting authentic reports with faculty review", "Building public Hall of Fame portfolio"],
+          skills: ["LiveHunting", "HallOfFame", "BountyHunter"]
+        }
+      ]
+    }
+  ],
+
+  liveProjects: [
+    {
+      num: 1,
+      title: "Comprehensive Web App Vulnerability Assessment & PoC",
+      duration: "3-4 Weeks",
+      badge: "Bug Bounty Capstone",
+      description: "Perform an authorized security assessment on an enterprise web application. Discover OWASP Top 10 vulnerabilities, author working proof-of-concepts, and submit severity-ranked reports.",
+      deliverables: [
+        "Full Automated & Manual Reconnaissance Report",
+        "Functional Proof-of-Concepts for IDOR & SSRF",
+        "CVSS 3.1 Severity Matrix & Business Impact Calculations",
+        "Executive Remediation & Developer Guidance"
+      ],
+      highlight: "Tested against enterprise staging environments with authentic production complexity"
+    },
+    {
+      num: 2,
+      title: "Fintech REST & GraphQL API Authorization Audit",
+      duration: "2-3 Weeks",
+      badge: "API Security",
+      description: "Audit an enterprise banking and payment API for Broken Object Level Authorization (BOLA), mass assignment, and JWT authentication bypasses.",
+      deliverables: [
+        "Swagger / Postman Collection Security Matrix",
+        "BOLA Exploitation Proof across Multiple Tenants",
+        "JWT Signature Forgery Demonstration",
+        "API Hardening Recommendation Blueprint"
+      ],
+      highlight: "Real-world financial services API architecture"
+    },
+    {
+      num: 3,
+      title: "Android APK Reverse Engineering & SSL Pinning Bypass",
+      duration: "2-3 Weeks",
+      badge: "Mobile Hacking",
+      description: "Decompile an Android banking APK, extract hardcoded cloud credentials, bypass SSL pinning with Frida, and intercept encrypted traffic.",
+      deliverables: [
+        "APK Decompilation Audit with Jadx-GUI",
+        "Frida Script for Dynamic SSL Pinning Bypass",
+        "Hardcoded Secrets Discovery & Risk Analysis",
+        "Mobile Security Assessment Deliverable"
+      ],
+      highlight: "Dynamic hooking and memory modification on live emulator targets"
+    },
+    {
+      num: 4,
+      title: "Automated Nuclei Reconnaissance & Vulnerability Engine",
+      duration: "2 Weeks",
+      badge: "DevSecOps & Tooling",
+      description: "Build an automated continuous recon and scanning pipeline in Python that queries Shodan, monitors certificate logs, and triggers custom Nuclei templates.",
+      deliverables: [
+        "Custom YAML Nuclei Templates for Zero-Day CVEs",
+        "Automated Bash/Python Recon Pipeline",
+        "Slack/Discord Alert Webhook Integration",
+        "Open-Source GitHub Repository Portfolio"
+      ],
+      highlight: "Scalable offensive automation engine deployed on cloud VPS"
+    }
+  ],
+
+  toolClusters: [
+    {
+      name: "Bug Hunting & Web Interception",
+      badge: "Offensive Stack",
+      tools: [
+        { name: "Burp Suite Pro", desc: "Industry Standard Interception Proxy, Repeater & Scanner", accent: "#ff6633" },
+        { name: "OWASP ZAP", desc: "Open Source Automated Web Application Scanner", accent: "#005a9c" },
+        { name: "Nuclei", desc: "Fast & Customizable Vulnerability Scanner Engine", accent: "#367bf0" },
+        { name: "SQLmap", desc: "Automated SQL Injection Detection & Takeover", accent: "#e11d48" },
+        { name: "Postman", desc: "API Request Crafting & Authorization Testing", accent: "#f97316" }
+      ]
+    },
+    {
+      name: "Reconnaissance & Mobile Exploitation",
+      badge: "Recon & Mobile",
+      tools: [
+        { name: "Amass & Sublist3r", desc: "In-Depth Subdomain & Network Attack Surface Enumeration", accent: "#059669" },
+        { name: "Httpx & Naabu", desc: "Fast HTTP Probing & High-Speed Port Discovery", accent: "#23527c" },
+        { name: "Jadx-GUI", desc: "Android Dex to Java Decompiler", accent: "#7c3aed" },
+        { name: "Frida", desc: "Dynamic Instrumentation Toolkit & SSL Bypass", accent: "#d97706" }
+      ]
+    }
+  ],
+
+  journeySteps: [
+    { step: "01", title: "Target Reconnaissance", desc: "Master passive and active surface mapping, subdomains, and hidden endpoints." },
+    { step: "02", title: "OWASP Top 10 Hunting", desc: "Uncover IDOR, SSRF, SQLi, and authentication flaws in Burp Suite Pro." },
+    { step: "03", title: "API Security Audit", desc: "Hunt for BOLA, broken auth, and GraphQL flaws across backend endpoints." },
+    { step: "04", title: "Mobile App Hacking", desc: "Decompile Android APKs, bypass SSL pinning with Frida, and intercept calls." },
+    { step: "05", title: "High-Impact Reporting", desc: "Author professional CVSS 3.1 reports that get accepted and paid on HackerOne." },
+    { step: "06", title: "OffSec Placement", desc: "Interviews for VAPT specialist, Red Team, and product security roles." },
+  ],
+
+  whoShouldJoin: [
+    { role: "Ethical Hackers & Pentesters", desc: "Security professionals looking to master specialized modern bug hunting methodologies." },
+    { role: "Web & Mobile Developers", desc: "Coders who want to transition into high-paying application security and offensive research." },
+    { role: "Independent Bounty Hunters", desc: "Enthusiasts wanting to earn bounties on HackerOne, Bugcrowd, and Intigriti." },
+    { role: "IT Security Associates", desc: "Network and sysadmins wanting offensive skills to move into corporate red teaming." }
+  ],
+
+  certificationsList: [
+    { name: "Dizital Adda Expert Bug Bounty Hunter Certificate", issuer: "Dizital Adda Official", badge: "Core" },
+    { name: "HackerOne / Bugcrowd Platform Readiness Credential", issuer: "Bug Bounty Guild", badge: "Global" },
+    { name: "OWASP Top 10 Certified Vulnerability Researcher", issuer: "Offensive Security Standards", badge: "Specialist" }
+  ],
+
+  reviews: [
+    {
+      author: "Saloni Bisht",
+      role: "Cybersecurity Analyst @ Google",
+      rating: 5,
+      text: "The hands-on labs and real-world scenarios prepared me perfectly for my role at Google. The instructors are industry experts who genuinely care about our success."
+    },
+    {
+      author: "Milan Singh",
+      role: "Senior Penetration Tester @ Microsoft",
+      rating: 5,
+      text: "From zero to hero in 6 months! The curriculum is cutting-edge and the practical approach helped me land my dream job at Microsoft. Best investment ever!"
+    },
+    {
+      author: "Abhishek Shukla",
+      role: "Security Engineer @ Amazon",
+      rating: 5,
+      text: "The malware analysis course opened doors I never knew existed. Now I am protecting millions of users at Amazon. The community support is incredible!"
+    },
+    {
+      author: "Farhaan Malik",
+      role: "Cloud Security Architect @ IBM",
+      rating: 5,
+      text: "The cloud security course was exactly what I needed to transition into cybersecurity. The practical labs and mentorship made all the difference."
+    },
+    {
+      author: "Lalit Kumar",
+      role: "SOC Analyst @ CrowdStrike",
+      rating: 5,
+      text: "The incident response training was phenomenal. I went from IT support to a SOC analyst at CrowdStrike. The course content is always up-to-date!"
+    },
+    {
+      author: "Jiya Mehta",
+      role: "Security Consultant @ Deloitte",
+      rating: 5,
+      text: "The comprehensive curriculum and networking opportunities helped me become a security consultant. The career support team is outstanding!"
+    }
+  ],
+
+  faqs: [
+    {
+      q: "What prerequisites do I need to start the cybersecurity courses?",
+      a: "Our courses are designed for various skill levels. For beginners, basic computer literacy and familiarity with operating systems is sufficient. For advanced courses, we recommend a basic understanding of networking concepts, familiarity with command line interfaces, and basic programming knowledge (helpful but not required)."
+    },
+    {
+      q: "How long does it take to complete a cybersecurity course?",
+      a: "Course duration varies depending on the program and your learning pace: Beginner courses take 3-4 Months (6-7 hours/week), Advanced courses take 6-7 Months (6-8 hours/week), and the Complete Master Program takes 12 months (6-8 hours/week) with dedicated live virtual labs and paid internship letter."
+    },
+    {
+      q: "Do you provide job placement assistance after course completion?",
+      a: "Yes! We provide comprehensive career support including resume and LinkedIn profile optimization, interview preparation and mock technical interviews with senior cybersecurity leads, direct connections with 30+ hiring partners, industry networking events, and lifetime access to our alumni network."
+    },
+    {
+      q: "What certifications can I earn through your programs?",
+      a: "Our courses prepare you for industry-leading certifications: CompTIA Security+ (Foundation certification), CEH (Certified Ethical Hacker - Penetration testing), CISSP (Advanced security professional), and GCIH/GCFA (Incident response and digital forensics)."
+    },
+    {
+      q: "Can I take these courses while working full-time?",
+      a: "Yes! We offer flexible learning schedules including evening and weekend batches, 24/7 access to our cloud virtual labs, and high-definition session recordings available on the Dizital Adda LMS within 24 hours."
+    },
+    {
+      q: "What kind of hands-on experience will I get?",
+      a: "Over 80% of our training is practical hands-on. You will work in isolated virtual labs, executing real-world penetration testing, network sniffing with Wireshark, exploitation with Metasploit, digital forensic investigations with Autopsy, and incident response triage with Splunk SIEM."
+    },
+    {
+      q: "Do you offer free demo classes?",
+      a: "Yes! We offer free trial sessions so you can experience our interactive teaching methodology, interact directly with Dr. Gulshan Kumar and senior mentors, and tour our virtual cyber lab before enrolling. Call +91-8810606010 to reserve your free demo."
+    }
+  ]
 };
