@@ -5,16 +5,16 @@ import {
   FaBookOpen,
   FaUserGraduate,
   FaMoneyBillWave,
-  FaVideo,
+  FaCog,
   FaSyncAlt,
   FaExternalLinkAlt,
   FaSignOutAlt,
   FaBars,
   FaTimes,
-  FaDatabase,
   FaShieldAlt,
-  FaChalkboardTeacher,
+  FaDatabase,
 } from "react-icons/fa";
+import logo from "../../assets/logo.png";
 import api from "../../lib/api";
 
 export default function AdminLayout({ children, title, subtitle, onSyncComplete }) {
@@ -22,7 +22,7 @@ export default function AdminLayout({ children, title, subtitle, onSyncComplete 
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncStatus, setSyncStatus] = useState(null);
+  const [syncNotice, setSyncNotice] = useState(null);
 
   const admin = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -34,254 +34,251 @@ export default function AdminLayout({ children, title, subtitle, onSyncComplete 
   const handleSyncDatabase = async () => {
     try {
       setIsSyncing(true);
-      setSyncStatus("Syncing...");
+      setSyncNotice("Syncing...");
       const response = await api.post("/api/admin/sync-database");
       const message =
         response.data?.message ||
-        "All LMS courses, modules and lectures synced to Database successfully! 🚀";
+        "All LMS courses, modules, lectures & students synced to PostgreSQL successfully! 🚀";
       alert(message);
-      setSyncStatus("Synced ✅");
+      setSyncNotice("Database Synced ✅");
       if (onSyncComplete) onSyncComplete();
     } catch (error) {
       console.error("Sync error:", error);
       alert("Database sync notice: " + (error.response?.data?.message || error.message));
-      setSyncStatus("Error ⚠️");
+      setSyncNotice("Sync Notice ⚠️");
     } finally {
       setIsSyncing(false);
-      setTimeout(() => setSyncStatus(null), 4000);
+      setTimeout(() => setSyncNotice(null), 4000);
     }
   };
 
-  const navItems = [
+  // Exactly the 5 requested core sections
+  const navTabs = [
     {
       name: "Dashboard",
       path: "/admin",
-      icon: <FaChartLine className="text-xl" />,
+      icon: <FaChartLine className="inline mr-2" />,
     },
     {
-      name: "Courses & Curriculum",
-      path: "/admin/courses",
-      icon: <FaBookOpen className="text-xl" />,
-    },
-    {
-      name: "Content Manager",
-      path: "/admin/content-manager",
-      icon: <FaVideo className="text-xl" />,
-    },
-    {
-      name: "Students Directory",
+      name: "Students",
       path: "/admin/students",
-      icon: <FaUserGraduate className="text-xl" />,
+      icon: <FaUserGraduate className="inline mr-2" />,
     },
     {
-      name: "Payments & Revenue",
+      name: "Courses & Video Studio",
+      path: "/admin/courses",
+      icon: <FaBookOpen className="inline mr-2" />,
+    },
+    {
+      name: "Payments",
       path: "/admin/payments",
-      icon: <FaMoneyBillWave className="text-xl" />,
+      icon: <FaMoneyBillWave className="inline mr-2" />,
     },
     {
-      name: "Faculty & Mentors",
-      path: "/admin/teachers",
-      icon: <FaChalkboardTeacher className="text-xl" />,
+      name: "Settings",
+      path: "/admin/settings",
+      icon: <FaCog className="inline mr-2" />,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-white flex flex-col lg:flex-row font-sans selection:bg-cyan-500 selection:text-black">
+    <div className="bg-[#f8fafc] min-h-screen text-slate-800 flex flex-col font-sans">
       {/* ============================================================ */}
-      {/* SIDEBAR (DESKTOP) */}
+      {/* VIKSHIT BHARAT / DIZITAL ADDA TOP BRAND HEADER (Exact Landing Style) */}
       {/* ============================================================ */}
-      <aside className="hidden lg:flex w-72 bg-gradient-to-b from-[#0b1220] via-[#0d1627] to-[#070b14] border-r border-white/10 flex-col shrink-0 sticky top-0 h-screen z-30">
-        {/* BRAND HEADER */}
-        <div className="p-6 border-b border-white/10">
-          <Link to="/admin" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-600 to-indigo-600 flex items-center justify-center font-black text-xl shadow-lg shadow-cyan-500/30">
-              DA
+      <header className="bg-[#0B1220] text-white border-b-4 border-[#D4A017] shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* LOGO & BRAND TITLE */}
+          <div className="flex items-center gap-4 text-center md:text-left">
+            <div className="w-[72px] h-[72px] rounded-full border-2 border-[#D4A017] overflow-hidden bg-black shrink-0 shadow-lg">
+              <img src={logo} alt="Dizital Adda" className="w-full h-full object-cover" />
             </div>
             <div>
-              <div className="font-black text-lg tracking-wider text-white">
-                DIZITAL ADDA
-              </div>
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#D4A017] flex items-center gap-1">
-                <FaShieldAlt className="text-[10px]" /> LMS Admin Console
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wide">
+                DIZITAL ADDA LMS
+              </h1>
+              <p className="text-xs sm:text-sm font-bold text-[#D4A017] tracking-wider uppercase mt-0.5">
+                A Mission for Vikshit Bharat 2047 • Admin Console
+              </p>
             </div>
-          </Link>
-        </div>
-
-        {/* NAVIGATION LINKS */}
-        <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
-          <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Core Modules
-          </div>
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${
-                  isActive
-                    ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shadow-lg shadow-cyan-500/10 font-bold"
-                    : "text-slate-300 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <span className={isActive ? "text-cyan-400" : "text-slate-400"}>
-                  {item.icon}
-                </span>
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* SYSTEM STATUS & LOGOUT */}
-        <div className="p-4 border-t border-white/10 space-y-3 bg-[#070b14]/60">
-          {/* DB STATUS PILL */}
-          <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-emerald-300 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <FaDatabase className="text-emerald-400" />
-              <span>DB Connected</span>
-            </div>
-            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">
-              PostgreSQL
-            </span>
           </div>
 
-          {/* VIEW SITE */}
-          <a
-            href="/"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition"
-          >
-            <span className="flex items-center gap-2">
-              <FaExternalLinkAlt className="text-slate-400" />
-              View Public Website
-            </span>
-            <span className="text-[10px] text-slate-500">Live ↗</span>
-          </a>
-
-          {/* LOGOUT */}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition"
-          >
-            <FaSignOutAlt />
-            Log Out
-          </button>
-        </div>
-      </aside>
-
-      {/* ============================================================ */}
-      {/* MOBILE NAV DRAWER */}
-      {/* ============================================================ */}
-      <div className="lg:hidden bg-[#0b1220] border-b border-white/10 p-4 flex items-center justify-between sticky top-0 z-40">
-        <Link to="/admin" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-black text-sm">
-            DA
-          </div>
-          <span className="font-bold text-sm tracking-wide">
-            DIZITAL ADDA <span className="text-[#D4A017] text-[10px]">ADMIN</span>
-          </span>
-        </Link>
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-lg bg-white/10 text-white"
-        >
-          {mobileOpen ? <FaTimes /> : <FaBars />}
-        </button>
-      </div>
-
-      {mobileOpen && (
-        <div className="lg:hidden bg-[#0b1220] border-b border-white/10 p-4 space-y-2 z-40">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium ${
-                location.pathname === item.path
-                  ? "bg-cyan-500/20 text-cyan-400 font-bold"
-                  : "text-slate-300 hover:bg-white/5"
-              }`}
-            >
-              {item.icon}
-              <span>{item.name}</span>
-            </Link>
-          ))}
-          <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+          {/* ACTION BUTTONS & ADMIN PROFILE */}
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5">
+            {/* 1-Click Database Sync */}
             <button
               onClick={handleSyncDatabase}
               disabled={isSyncing}
-              className="text-xs bg-emerald-600 px-3 py-2 rounded-lg font-bold flex items-center gap-2"
+              className={
+                "bg-[#1E293B] border border-[#D4A017] py-2 px-3.5 rounded-lg text-xs font-bold text-white hover:bg-[#7C2D12] hover:border-amber-400 transition shadow-sm flex items-center gap-2 cursor-pointer " +
+                (isSyncing ? "opacity-75 cursor-not-allowed animate-pulse" : "")
+              }
             >
               <FaSyncAlt className={isSyncing ? "animate-spin" : ""} />
-              {isSyncing ? "Syncing..." : "Sync DB"}
+              <span>{isSyncing ? "Syncing..." : syncNotice || "Sync Live DB 🔄"}</span>
             </button>
+
+            {/* Visit Public Site */}
+            <Link
+              to="/"
+              target="_blank"
+              className="bg-[#1E293B] border border-[#D4A017] py-2 px-3.5 rounded-lg text-xs font-bold text-orange-200 hover:bg-[#7C2D12] hover:text-white transition shadow-sm flex items-center gap-1.5"
+            >
+              <span>Visit Public Site</span>
+              <FaExternalLinkAlt className="text-[10px]" />
+            </Link>
+
+            {/* Admin User Badge */}
+            <div className="bg-[#1E293B] border border-slate-700 py-1.5 px-3 rounded-lg flex items-center gap-2 text-xs">
+              <div className="w-6 h-6 rounded-full bg-[#D4A017] text-[#0B1220] flex items-center justify-center font-bold text-xs">
+                A
+              </div>
+              <div className="hidden sm:block text-left">
+                <div className="font-bold text-white text-[11px] leading-tight">
+                  {admin.name || "Administrator"}
+                </div>
+                <div className="text-[10px] text-[#D4A017] uppercase tracking-wider font-semibold">
+                  Super Admin
+                </div>
+              </div>
+            </div>
+
+            {/* Direct Logout */}
             <button
               onClick={handleLogout}
-              className="text-xs text-red-400 hover:text-red-300 font-bold flex items-center gap-2"
+              className="bg-red-950/60 border border-red-500/50 hover:bg-red-700 text-red-100 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-sm"
+              title="Logout from Admin"
             >
-              <FaSignOutAlt /> Log Out
+              <FaSignOutAlt />
+              <span className="hidden sm:inline">Logout</span>
             </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ============================================================ */}
+      {/* 5-TAB STICKY NAVIGATION BAR (Exact Landing Page Grid Styling) */}
+      {/* ============================================================ */}
+      <nav className="bg-[#0B1220] sticky top-0 z-40 border-b border-orange-400/20 shadow-md">
+        <div className="max-w-7xl mx-auto">
+          {/* DESKTOP 5-COLUMN GRID */}
+          <div className="hidden md:grid grid-cols-5 text-center">
+            {navTabs.map((tab) => {
+              const isActive =
+                tab.path === "/admin"
+                  ? location.pathname === "/admin"
+                  : location.pathname.startsWith(tab.path);
+
+              return (
+                <Link
+                  key={tab.path}
+                  to={tab.path}
+                  className={
+                    "py-3.5 border-r border-orange-400/20 text-sm sm:text-base font-bold transition block " +
+                    (isActive
+                      ? "bg-[#7C2D12] text-white border-b-4 border-[#D4A017] shadow-inner"
+                      : "text-orange-200 hover:bg-[#7C2D12]/70 hover:text-white")
+                  }
+                >
+                  {tab.icon}
+                  <span>{tab.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* MOBILE NAVBAR TOGGLE */}
+          <div className="md:hidden flex items-center justify-between px-4 py-3">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017]">
+              Admin Menu ({navTabs.find((t) => (t.path === "/admin" ? location.pathname === "/admin" : location.pathname.startsWith(t.path)))?.name || "Portal"})
+            </span>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="text-white p-2 border border-slate-700 rounded-lg"
+            >
+              {mobileOpen ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
+
+          {/* MOBILE DROPDOWN */}
+          {mobileOpen && (
+            <div className="md:hidden bg-[#0B1220] border-t border-orange-400/20 flex flex-col">
+              {navTabs.map((tab) => {
+                const isActive =
+                  tab.path === "/admin"
+                    ? location.pathname === "/admin"
+                    : location.pathname.startsWith(tab.path);
+
+                return (
+                  <Link
+                    key={tab.path}
+                    to={tab.path}
+                    onClick={() => setMobileOpen(false)}
+                    className={
+                      "py-3 px-6 text-sm font-bold border-b border-white/5 transition flex items-center gap-2 " +
+                      (isActive
+                        ? "bg-[#7C2D12] text-white border-l-4 border-[#D4A017]"
+                        : "text-orange-200 hover:bg-[#7C2D12]/60 hover:text-white")
+                    }
+                  >
+                    {tab.icon}
+                    <span>{tab.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* ============================================================ */}
+      {/* PAGE HEADER STRIP (Like Landing Page Section Headers) */}
+      {/* ============================================================ */}
+      {(title || subtitle) && (
+        <div className="bg-white border-b border-slate-200 py-6 px-4 sm:px-6 shadow-xs">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2">
+            <div>
+              {title && (
+                <h2 className="text-2xl sm:text-3xl font-black text-[#0B1220] tracking-tight">
+                  {title}
+                </h2>
+              )}
+              {subtitle && (
+                <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Live DB Connected
+              </span>
+            </div>
           </div>
         </div>
       )}
 
       {/* ============================================================ */}
-      {/* MAIN VIEWPORT */}
+      {/* MAIN BODY CONTENT */}
       {/* ============================================================ */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* TOP HEADER */}
-        <header className="bg-[#0b1220]/70 backdrop-blur-xl border-b border-white/10 px-6 lg:px-10 py-5 sticky top-0 z-20 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full">
+        {children}
+      </main>
+
+      {/* ============================================================ */}
+      {/* CLASSICAL FOOTER (Exact Landing Page Style) */}
+      {/* ============================================================ */}
+      <footer className="bg-[#0B1220] text-white border-t-4 border-[#D4A017] py-6 px-4 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 text-center sm:text-left">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
-              {title || "Admin Console"}
-            </h1>
-            <p className="text-slate-400 text-xs lg:text-sm mt-1">
-              {subtitle || "Authoritative LMS management and real-time database supervision."}
-            </p>
+            <span className="font-bold text-white">DIZITAL ADDA LMS PORTAL</span> • Authoritative Database Superadmin System
           </div>
-
-          <div className="flex items-center gap-3 self-start md:self-auto">
-            {/* 1-CLICK DB SYNC BUTTON */}
-            <button
-              onClick={handleSyncDatabase}
-              disabled={isSyncing}
-              title="Sync authoritative courses, modules and lectures from local store directly into PostgreSQL"
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg ${
-                isSyncing
-                  ? "bg-amber-600/80 cursor-not-allowed text-white animate-pulse"
-                  : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30 active:scale-95"
-              }`}
-            >
-              <FaSyncAlt className={isSyncing ? "animate-spin" : ""} />
-              <span>{isSyncing ? "Syncing to DB..." : syncStatus || "Sync Live DB 🔄"}</span>
-            </button>
-
-            {/* ADMIN BADGE */}
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-black text-white shadow">
-                {admin?.name ? admin.name[0].toUpperCase() : "A"}
-              </div>
-              <div className="text-left hidden sm:block">
-                <div className="text-xs font-bold text-white truncate max-w-[120px]">
-                  {admin?.name || "System Admin"}
-                </div>
-                <div className="text-[10px] text-cyan-400 uppercase font-mono">
-                  {admin?.role || "Admin"}
-                </div>
-              </div>
-            </div>
+          <div className="text-[#D4A017] font-semibold">
+            Associated by Timeless Foundation • Vikshit Bharat 2047
           </div>
-        </header>
-
-        {/* CONTENT BODY */}
-        <main className="flex-1 p-6 lg:p-10 max-w-7xl w-full mx-auto">
-          {children}
-        </main>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }

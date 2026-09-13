@@ -337,6 +337,36 @@ router.put("/update-password", async (req, res, next) => {
 });
 
 // ==========================
+// 8.1 UPDATE PROFILE (ADMIN SELF)
+// ==========================
+router.put("/update-profile", async (req, res, next) => {
+  try {
+    const adminUserId = req.user.id;
+    const { name, phone } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
+
+    const updateRes = await pool.query(
+      "UPDATE users SET name = $1, full_name = $1, phone = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, name, email, role, phone, avatar",
+      [name.trim(), phone ? phone.trim() : null, adminUserId]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully 🚀",
+      user: updateRes.rows[0],
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==========================
 // 9. GET ALL USERS (ADMIN)
 // ==========================
 router.get("/users", async (req, res, next) => {

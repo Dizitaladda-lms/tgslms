@@ -1,459 +1,355 @@
 import { useState, useEffect } from "react";
-import api from "../../lib/api";
-
+import { useNavigate } from "react-router-dom";
 import {
   FaUserCog,
   FaLock,
-  FaBell,
-  FaPalette,
-  FaCreditCard,
-  FaShieldAlt,
+  FaSignOutAlt,
   FaSave,
+  FaCheckCircle,
+  FaShieldAlt,
+  FaEnvelope,
+  FaPhone,
+  FaKey,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
+import AdminLayout from "../../components/admin/AdminLayout";
+import api from "../../lib/api";
 
-function Settings() {
+export default function Settings() {
+  const navigate = useNavigate();
 
-  // add state
-  const [passwordData, setPasswordData] = useState({
+  // Notification state
+  const [notification, setNotification] = useState(null);
+  const showNotification = (type, msg) => {
+    setNotification({ type, msg });
+    setTimeout(() => setNotification(null), 4500);
+  };
 
-  currentPassword: "",
-
-  newPassword: "",
-
-});
-
-// update pasword fuction
-const updatePassword = async () => {
-
-  try {
-
-    await api.put(
-      "/api/admin/update-password",
-      {
-        email: adminData.email,
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-      }
-    );
-
-    alert("Password Updated Successfully 🚀");
-
-  }
-
-  catch (error) {
-
-    console.log(error);
-
-    alert(
-
-      error.response?.data?.message ||
-
-      "Error updating password"
-
-    );
-
-  }
-
-};
-  // ADMIN DATA
-  const [adminData, setAdminData] = useState({
-
-    name: "",
-
-    email: "",
-
+  // Profile State
+  const [profile, setProfile] = useState({
+    name: "System Admin",
+    email: "admin@dizitaladda.com",
+    phone: "+919876543210",
+    role: "admin",
   });
+  const [savingProfile, setSavingProfile] = useState(false);
 
-  // LOAD SAVED SETTINGS
+  // Password State
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  // Load User Data from localStorage or API
   useEffect(() => {
-
-    const savedAdmin = JSON.parse(
-
-      localStorage.getItem("adminSettings")
-
-    );
-
-    if (savedAdmin) {
-
-      setAdminData(savedAdmin);
-
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser.email) {
+      setProfile({
+        name: storedUser.name || "System Admin",
+        email: storedUser.email || "admin@dizitaladda.com",
+        phone: storedUser.phone || "+919876543210",
+        role: storedUser.role || "admin",
+      });
     }
-
   }, []);
 
-  // SAVE SETTINGS
-  const saveProfile = () => {
+  // Handle Profile Update
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    if (!profile.name.trim()) {
+      alert("Name cannot be empty.");
+      return;
+    }
+    try {
+      setSavingProfile(true);
+      const res = await api.put("/api/admin/update-profile", {
+        name: profile.name.trim(),
+        phone: profile.phone?.trim() || null,
+      });
 
-    localStorage.setItem(
+      // Update localStorage
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const updatedUser = { ...storedUser, name: profile.name.trim(), phone: profile.phone?.trim() };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      "adminSettings",
+      showNotification("success", res.data?.message || "Admin profile updated successfully! 🚀");
+    } catch (error) {
+      console.error("Profile update error:", error);
+      showNotification("error", error.response?.data?.message || "Failed to update profile.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
-      JSON.stringify(adminData)
+  // Handle Password Update
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!passwords.currentPassword || !passwords.newPassword) {
+      alert("Please enter both current and new password.");
+      return;
+    }
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      alert("New password and confirm password do not match.");
+      return;
+    }
+    if (passwords.newPassword.length < 6) {
+      alert("New password must be at least 6 characters long.");
+      return;
+    }
 
-    );
+    try {
+      setUpdatingPassword(true);
+      const res = await api.put("/api/admin/update-password", {
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+      });
 
-    alert("Settings Saved Successfully 🚀");
+      showNotification("success", res.data?.message || "Password updated successfully! 🔐");
+      setPasswords({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error("Password update error:", error);
+      showNotification("error", error.response?.data?.message || "Failed to update password.");
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
 
+  // Handle Logout
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out from the Admin Console?")) {
+      localStorage.clear();
+      navigate("/login");
+    }
   };
 
   return (
-
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-black text-white p-10 relative overflow-hidden">
-
-      {/* GLOW */}
-      <div className="absolute top-[-150px] left-[-150px] w-[400px] h-[400px] bg-cyan-500/20 rounded-full blur-3xl"></div>
-
-      <div className="absolute bottom-[-150px] right-[-150px] w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-3xl"></div>
-
-      {/* HEADER */}
-      <div className="relative z-10">
-
-        <h1 className="text-7xl font-black">
-
-          Admin Settings ⚙️
-
-        </h1>
-
-        <p className="text-slate-400 text-xl mt-5 max-w-4xl leading-9">
-
-          Configure LMS platform settings, security,
-          branding, notifications and payment systems.
-
-        </p>
-
-      </div>
-
-      {/* SETTINGS GRID */}
-      <div className="grid grid-cols-2 gap-10 mt-14 relative z-10">
-
-        {/* PROFILE SETTINGS */}
-        <div className="bg-white/10 border border-white/10 backdrop-blur-2xl rounded-[40px] p-8 shadow-2xl">
-
-          <div className="flex items-center gap-5">
-
-            <FaUserCog className="text-5xl text-cyan-400" />
-
-            <div>
-
-              <h1 className="text-4xl font-black">
-
-                Profile Settings
-
-              </h1>
-
-              <p className="text-slate-400 mt-2">
-
-                Manage admin profile information.
-
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="space-y-6 mt-10">
-
-            {/* ADMIN NAME */}
-            <input
-              type="text"
-              placeholder="Admin Name"
-              value={adminData.name}
-              onChange={(e) =>
-                setAdminData({
-                  ...adminData,
-                  name: e.target.value,
-                })
-              }
-              className="w-full bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            {/* ADMIN EMAIL */}
-            <input
-              type="email"
-              placeholder="Admin Email"
-              value={adminData.email}
-              onChange={(e) =>
-                setAdminData({
-                  ...adminData,
-                  email: e.target.value,
-                })
-              }
-              className="w-full bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            {/* SAVE BUTTON */}
-            <button
-              onClick={saveProfile}
-              className="bg-cyan-500 hover:bg-cyan-400 transition px-8 py-4 rounded-2xl font-bold flex items-center gap-3"
-            >
-
-              <FaSave />
-
-              Save Changes
-
-            </button>
-
-          </div>
-
+    <AdminLayout
+      title="Admin Account & Security Settings ⚙️"
+      subtitle="Manage your administrative credentials, update personal contact profile, change passwords, and terminate active sessions."
+    >
+      {/* NOTIFICATION */}
+      {notification && (
+        <div
+          className={
+            "mb-6 p-4 rounded-xl flex items-center gap-3 border shadow-xs transition-all " +
+            (notification.type === "success"
+              ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+              : "bg-red-50 border-red-300 text-red-800")
+          }
+        >
+          <FaCheckCircle className="text-lg shrink-0" />
+          <span className="font-semibold text-sm">{notification.msg}</span>
         </div>
-
-        {/* SECURITY */}
-        <div className="bg-white/10 border border-white/10 backdrop-blur-2xl rounded-[40px] p-8 shadow-2xl">
-
-          <div className="flex items-center gap-5">
-
-            <FaLock className="text-5xl text-red-400" />
-
-            <div>
-
-              <h1 className="text-4xl font-black">
-
-                Security Settings
-
-              </h1>
-
-              <p className="text-slate-400 mt-2">
-
-                Change password and security preferences.
-
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="space-y-6 mt-10">
-
-            <input
-              type="password"
-              placeholder="Current Password"
-              className="w-full bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-<input
-  type="password"
-  placeholder="New Password"
-  value={passwordData.newPassword}
-  onChange={(e) =>
-    setPasswordData({
-      ...passwordData,
-      newPassword: e.target.value,
-    })
-  }
-  className="w-full bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-/>
-
-<button
-  onClick={updatePassword}
-  className="bg-red-500 hover:bg-red-400 transition px-8 py-4 rounded-2xl font-bold flex items-center gap-3"
->
-
-  <FaShieldAlt />
-
-  Update Password
-
-</button>
-
-          </div>
-
-        </div>
-
-        {/* NOTIFICATIONS */}
-        <div className="bg-white/10 border border-white/10 backdrop-blur-2xl rounded-[40px] p-8 shadow-2xl">
-
-          <div className="flex items-center gap-5">
-
-            <FaBell className="text-5xl text-yellow-400" />
-
-            <div>
-
-              <h1 className="text-4xl font-black">
-
-                Notification Settings
-
-              </h1>
-
-              <p className="text-slate-400 mt-2">
-
-                Configure LMS alerts and reminders.
-
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="space-y-5 mt-10 text-lg">
-
-            <label className="flex items-center justify-between bg-black/20 p-5 rounded-2xl">
-
-              Email Notifications
-
-              <input type="checkbox" defaultChecked />
-
-            </label>
-
-            <label className="flex items-center justify-between bg-black/20 p-5 rounded-2xl">
-
-              Payment Alerts
-
-              <input type="checkbox" defaultChecked />
-
-            </label>
-
-            <label className="flex items-center justify-between bg-black/20 p-5 rounded-2xl">
-
-              Student Activity Alerts
-
-              <input type="checkbox" defaultChecked />
-
-            </label>
-
-          </div>
-
-        </div>
-
-        {/* PAYMENT SETTINGS */}
-        <div className="bg-white/10 border border-white/10 backdrop-blur-2xl rounded-[40px] p-8 shadow-2xl">
-
-          <div className="flex items-center gap-5">
-
-            <FaCreditCard className="text-5xl text-emerald-400" />
-
-            <div>
-
-              <h1 className="text-4xl font-black">
-
-                API & Payment Keys
-
-              </h1>
-
-              <p className="text-slate-400 mt-2">
-
-                Configure LMS integrations and payment gateways.
-
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="grid grid-cols-2 gap-6 mt-10">
-
-            <input
-              type="text"
-              placeholder="Razorpay Key ID"
-              className="bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            <input
-              type="text"
-              placeholder="Razorpay Secret"
-              className="bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            <input
-              type="text"
-              placeholder="Stripe Publishable Key"
-              className="bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            <input
-              type="text"
-              placeholder="Stripe Secret Key"
-              className="bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            <input
-              type="text"
-              placeholder="Cloudinary API Key"
-              className="bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            <input
-              type="text"
-              placeholder="Cloudinary Secret"
-              className="bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            <input
-              type="text"
-              placeholder="SMTP Email"
-              className="bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-            <input
-              type="password"
-              placeholder="SMTP Password"
-              className="bg-black/20 border border-white/10 rounded-2xl p-5 outline-none"
-            />
-
-          </div>
-
-          <button className="mt-8 bg-emerald-500 hover:bg-emerald-400 transition px-8 py-4 rounded-2xl font-bold flex items-center gap-3">
-
-            <FaSave />
-
-            Save All Keys
-
-          </button>
-
-        </div>
-
-      </div>
-
-      {/* THEME */}
-      <div className="bg-white/10 border border-white/10 backdrop-blur-2xl rounded-[40px] p-8 shadow-2xl mt-10 relative z-10">
-
-        <div className="flex items-center gap-5">
-
-          <FaPalette className="text-5xl text-pink-400" />
-
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* ============================================================ */}
+        {/* CARD 1: PROFILE INFORMATION */}
+        {/* ============================================================ */}
+        <div className="bg-white border border-slate-300 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between">
           <div>
+            <div className="bg-[#0B1220] text-white py-3.5 px-6 border-b-4 border-[#D4A017] flex items-center justify-between">
+              <h3 className="font-bold text-base tracking-wide flex items-center gap-2">
+                <FaUserCog className="text-[#D4A017]" />
+                <span>Admin Profile Information</span>
+              </h3>
+              <span className="text-[11px] font-bold text-orange-300 uppercase tracking-widest bg-white/10 px-2 py-0.5 rounded">
+                Super Admin
+              </span>
+            </div>
 
-            <h1 className="text-4xl font-black">
+            <form onSubmit={handleProfileSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={profile.name}
+                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm text-slate-800 focus:bg-white focus:border-[#D4A017] focus:outline-none transition"
+                />
+              </div>
 
-              Appearance & Branding
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Email Address (Primary Login ID)
+                </label>
+                <input
+                  type="email"
+                  disabled
+                  value={profile.email}
+                  className="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-500 cursor-not-allowed"
+                />
+                <span className="text-[11px] text-slate-400 mt-1 block">
+                  Authoritative email linked to superadmin privileges.
+                </span>
+              </div>
 
-            </h1>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Contact Phone Number
+                </label>
+                <div className="relative">
+                  <FaPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={profile.phone || ""}
+                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 p-2.5 text-sm text-slate-800 focus:bg-white focus:border-[#D4A017] focus:outline-none transition"
+                  />
+                </div>
+              </div>
 
-            <p className="text-slate-400 mt-2">
-
-              Customize LMS branding and platform appearance.
-
-            </p>
-
+              <div className="pt-3">
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="w-full bg-[#0B1220] hover:bg-[#7C2D12] text-white border border-[#D4A017] font-bold text-xs py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                >
+                  <FaSave className="text-[#D4A017]" />
+                  <span>{savingProfile ? "Saving Profile..." : "Save Profile Changes 💾"}</span>
+                </button>
+              </div>
+            </form>
           </div>
-
         </div>
 
-        <div className="grid grid-cols-3 gap-6 mt-10">
+        {/* ============================================================ */}
+        {/* CARD 2: PASSWORD UPDATE */}
+        {/* ============================================================ */}
+        <div className="bg-white border border-slate-300 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="bg-[#0B1220] text-white py-3.5 px-6 border-b-4 border-[#D4A017] flex items-center justify-between">
+              <h3 className="font-bold text-base tracking-wide flex items-center gap-2">
+                <FaLock className="text-[#D4A017]" />
+                <span>Security & Password Update</span>
+              </h3>
+              <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-widest bg-white/10 px-2 py-0.5 rounded">
+                Bcrypt 256-Bit
+              </span>
+            </div>
 
-          <button className="bg-cyan-500 hover:bg-cyan-400 transition py-5 rounded-2xl font-bold">
+            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Current Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPass ? "text" : "password"}
+                    required
+                    placeholder="Enter current password"
+                    value={passwords.currentPassword}
+                    onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg pr-10 p-2.5 text-sm text-slate-800 focus:bg-white focus:border-[#D4A017] focus:outline-none transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPass(!showCurrentPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+                  >
+                    {showCurrentPass ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
 
-            Dark Theme
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  New Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPass ? "text" : "password"}
+                    required
+                    placeholder="Enter new password (min 6 characters)"
+                    value={passwords.newPassword}
+                    onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg pr-10 p-2.5 text-sm text-slate-800 focus:bg-white focus:border-[#D4A017] focus:outline-none transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+                  >
+                    {showNewPass ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
 
-          </button>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Confirm New Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Re-enter new password"
+                  value={passwords.confirmPassword}
+                  onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm text-slate-800 focus:bg-white focus:border-[#D4A017] focus:outline-none transition"
+                />
+              </div>
 
-          <button className="bg-purple-500 hover:bg-purple-400 transition py-5 rounded-2xl font-bold">
-
-            Purple Theme
-
-          </button>
-
-          <button className="bg-emerald-500 hover:bg-emerald-400 transition py-5 rounded-2xl font-bold">
-
-            Green Theme
-
-          </button>
-
+              <div className="pt-3">
+                <button
+                  type="submit"
+                  disabled={updatingPassword}
+                  className="w-full bg-[#0B1220] hover:bg-[#7C2D12] text-white border border-[#D4A017] font-bold text-xs py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                >
+                  <FaKey className="text-[#D4A017]" />
+                  <span>{updatingPassword ? "Updating Password..." : "Update Password 🔐"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-
       </div>
 
-    </div>
+      {/* ============================================================ */}
+      {/* CARD 3: SESSION LOGOUT & SECURITY ACTIONS */}
+      {/* ============================================================ */}
+      <div className="mt-8 bg-white border border-slate-300 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-[#0B1220] text-white py-3.5 px-6 border-b-4 border-[#D4A017] flex items-center justify-between">
+          <h3 className="font-bold text-base tracking-wide flex items-center gap-2">
+            <FaShieldAlt className="text-[#D4A017]" />
+            <span>Active Session & Portal Termination</span>
+          </h3>
+          <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+            Active Session
+          </span>
+        </div>
 
+        <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div>
+            <h4 className="font-bold text-[#0B1220] text-sm">
+              Logged in as: {profile.email}
+            </h4>
+            <p className="text-xs text-slate-500 mt-1 max-w-xl leading-relaxed">
+              Terminating your administrative session will revoke authentication tokens from this browser and require password verification upon re-entry.
+            </p>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-3 px-6 rounded-lg transition flex items-center gap-2 shadow-sm shrink-0 cursor-pointer"
+          >
+            <FaSignOutAlt />
+            <span>Log Out of Admin Console 🚪</span>
+          </button>
+        </div>
+      </div>
+    </AdminLayout>
   );
-
 }
-
-export default Settings;

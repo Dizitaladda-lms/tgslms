@@ -1752,6 +1752,11 @@ class FallbackStore {
         if (upperQ.includes("PASSWORD = $1")) {
           user.password = params[0];
         }
+        if (upperQ.includes("NAME = $1")) {
+          user.name = params[0];
+          user.full_name = params[0];
+          if (params[1] !== undefined) user.phone = params[1];
+        }
         user.updated_at = new Date().toISOString();
         this.saveToDisk();
       }
