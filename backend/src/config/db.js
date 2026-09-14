@@ -52,8 +52,17 @@ if (connectionString) {
           try {
             const check = await realPool.query("SELECT COUNT(*) FROM courses");
             const count = parseInt(check.rows[0].count, 10);
-            if (count < 12) {
-              console.log(`📦 Database has ${count} courses (< 12). Auto-synchronizing full LMS database...`);
+            let targetCount = 17;
+            try {
+              const storePath = path.join(__dirname, "..", "..", "data", "lms_store.json");
+              if (fs.existsSync(storePath)) {
+                const s = JSON.parse(fs.readFileSync(storePath, "utf8"));
+                if (Array.isArray(s.courses)) targetCount = s.courses.length;
+              }
+            } catch (e) {}
+
+            if (count < targetCount) {
+              console.log(`📦 Database has ${count} courses (< ${targetCount}). Auto-synchronizing full LMS database...`);
               const { syncDatabase } = require("../db/syncAllToDb");
               await syncDatabase(realPool);
             }
@@ -86,33 +95,32 @@ if (connectionString) {
   );
 }
 
-// Unified Resilient Pool Interface
+// Unified Direct & Resilient Pool Interface
 const pool = {
   isPostgres: () => isPostgresAvailable,
   getRealPool: () => (isPostgresAvailable ? realPool : null),
 
   async query(text, params = []) {
-    if (isPostgresAvailable && realPool) {
-      try {
-        return await realPool.query(text, params);
-      } catch (err) {
-        console.warn("⚠️ PostgreSQL query error, executing fallback:", err.message);
-        return await fallbackStore.handleQuery(text, params);
+    if (connectionString) {
+      // Direct PostgreSQL Mode: Strict execution directly against DB
+      if (!realPool || !isPostgresAvailable) {
+        throw new Error("PostgreSQL database is connecting or unavailable. Direct DB save failed.");
       }
+      return await realPool.query(text, params);
     }
+    // Only if DATABASE_URL is completely unset in dev, fallback to local store
     return await fallbackStore.handleQuery(text, params);
   },
 
   async connect() {
-    if (isPostgresAvailable && realPool) {
-      try {
-        return await realPool.connect();
-      } catch (err) {
-        console.warn("⚠️ PostgreSQL connect error, falling back to mock client:", err.message);
+    if (connectionString) {
+      if (!realPool || !isPostgresAvailable) {
+        throw new Error("PostgreSQL database is connecting or unavailable. Direct DB connection failed.");
       }
+      return await realPool.connect();
     }
 
-    // Mock client for transactions (BEGIN, COMMIT, ROLLBACK) and queries
+    // Mock client for transactions (BEGIN, COMMIT, ROLLBACK) and queries when no DB is configured
     return {
       query: async (text, params = []) => {
         return await fallbackStore.handleQuery(text, params);

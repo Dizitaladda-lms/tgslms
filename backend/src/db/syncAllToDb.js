@@ -21,14 +21,15 @@ for (const p of envPaths) {
  * synchronizes into PostgreSQL, creating all tables, indexes, records, and sequences.
  */
 async function syncDatabase(providedPool = null) {
-  const connectionString = (process.env.DATABASE_URL || "").trim();
+  const cliArgUrl = process.argv[2] && (process.argv[2].startsWith("postgres://") || process.argv[2].startsWith("postgresql://")) ? process.argv[2] : null;
+  const connectionString = (cliArgUrl || process.env.DATABASE_URL || "").trim();
   let pool = providedPool;
   let shouldClosePool = false;
 
   if (!pool) {
     if (!connectionString) {
       throw new Error(
-        "DATABASE_URL is not set. Please provide a valid PostgreSQL connection string in .env"
+        "DATABASE_URL is not set. Please provide a valid PostgreSQL connection string in .env or as an argument (e.g. node src/db/syncAllToDb.js \"postgresql://user:pass@host:5432/db\")"
       );
     }
 

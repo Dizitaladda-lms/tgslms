@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Features from "../../components/landing/Features";
@@ -7,6 +7,9 @@ import logo from "../../assets/logo.png";
 import {
   FaClock,
   FaSignal,
+  FaChevronLeft,
+  FaChevronRight,
+  FaArrowRight,
 } from "react-icons/fa";
 
 function LandingPage() {
@@ -17,8 +20,104 @@ function LandingPage() {
   // ==========================
 
   const DEFAULT_LANDING_COURSES = [
+    // Artificial Intelligence (2 Courses)
+    {
+      id: 7,
+      course_id: "ai-expert",
+      title: "Diploma in Generative AI & Prompt Engineering",
+      description: "12-Month / 288-hour comprehensive diploma program covering AI Foundations, Python, ML, NLP, Transformers, LLMs, LangChain, Vector DBs, RAG, and AI Agents.",
+      duration: "12 Months",
+      level: "Expert",
+      category: "Artificial Intelligence",
+      price: 48000,
+      original_price: 135000,
+      total_lectures: 60,
+      total_students: 780,
+    },
+    {
+      id: 13,
+      course_id: "ai-6m-agents",
+      title: "Advanced Certification in Gen AI & Prompt Engineering",
+      description: "6-Month intensive advanced certification covering Large Language Models (LLMs), Prompt Engineering frameworks (CoT, ReAct), LangChain, and Multi-Agent systems.",
+      duration: "6 Months",
+      level: "Advanced",
+      category: "Artificial Intelligence",
+      price: 34999,
+      original_price: 60000,
+      total_lectures: 48,
+      total_students: 650,
+    },
+    // Cyber Security (2 Courses)
+    {
+      id: 6,
+      course_id: "cyber-advanced",
+      title: "Expert Training in Cyber Security & Ethical Hacking | DizitalAdda",
+      description: "Master 12-month Cyber Security & Ethical Hacking: Python automation, networking, VAPT, forensics, reverse engineering, and Splunk SOC operations.",
+      duration: "12 Months",
+      level: "Expert",
+      category: "Cyber Security",
+      price: 95000,
+      original_price: 135000,
+      total_lectures: 48,
+      total_students: 480,
+    },
+    {
+      id: 10,
+      course_id: "cyber-intermediate",
+      title: "Advanced Certification in Cyber Security and Ethical Hacking",
+      description: "6-month intensive training in enterprise VAPT, web application pentesting, OWASP Top 10, digital forensics, and CEH certification prep.",
+      duration: "6 Months",
+      level: "Advanced",
+      category: "Cyber Security",
+      price: 45000,
+      original_price: 60000,
+      total_lectures: 24,
+      total_students: 310,
+    },
+    // Data Science & Analytics (2 Courses)
+    {
+      id: 8,
+      course_id: "data-science",
+      title: "Diploma in Data Science & AI | Master Track (NIDADS Flagship)",
+      description: "Flagship 12-month National Diploma from NIDADS & Dizital Adda. Master Python, Mathematical Statistics, Scikit-Learn ML, PyTorch Deep Learning, LLMOps, and MLOps.",
+      duration: "12 Months",
+      level: "Master Track",
+      category: "Data Science",
+      price: 39999,
+      original_price: 79999,
+      total_lectures: 43,
+      total_students: 460,
+    },
+    {
+      id: 5,
+      course_id: "data-analytics",
+      title: "Diploma in Data Analytics & AI | Job-Ready Program (NIDADS)",
+      description: "Complete 12-month National Diploma from NIDADS & Dizital Adda. Master Advanced Excel, SQL, Power BI, Tableau, Python EDA, and real portfolio capstones.",
+      duration: "12 Months",
+      level: "Job-Ready",
+      category: "Data Analytics",
+      price: 34999,
+      original_price: 69999,
+      total_lectures: 87,
+      total_students: 520,
+    },
+    // Digital Marketing (2 Courses)
+    {
+      id: 2,
+      course_id: "dm-expert",
+      title: "Expert in Digital Marketing",
+      description: "12-month master program with 70 comprehensive modules, 60+ AI tools, 10 live brand projects, paid agency internship, and 100% placement guarantee.",
+      duration: "12 Months",
+      level: "Expert",
+      category: "Digital Marketing",
+      price: 34999,
+      original_price: 69999,
+      total_lectures: 70,
+      total_students: 890,
+    },
     {
       id: 1,
+      course_id: "dm-advanced",
       title: "Advanced Digital Marketing Course",
       description: "6-month Advanced Digital Marketing Course — 10 live brand campaigns, 54+ AI tools, Google & Meta certifications, and agency internship.",
       duration: "6 Months",
@@ -28,30 +127,6 @@ function LandingPage() {
       original_price: 35999,
       total_lectures: 60,
       total_students: 1420,
-    },
-    {
-      id: 5,
-      title: "Diploma in Data Analytics & AI | Job-Ready Program (NIDADS)",
-      description: "Complete 12-month National Diploma from NIDADS & Dizital Adda. Master Advanced Excel, SQL, Power BI, Tableau, Python EDA, and real portfolio capstones.",
-      duration: "12 Months",
-      level: "Job-Ready Diploma",
-      category: "Data Analytics",
-      price: 34999,
-      original_price: 69999,
-      total_lectures: 87,
-      total_students: 520,
-    },
-    {
-      id: 6,
-      title: "Expert Training in Cyber Security & Ethical Hacking | DizitalAdda",
-      description: "Master 12-month Expert Cyber Security & Ethical Hacking with Dizital Adda. From Python automation, networking, and VAPT to digital forensics and SOC operations.",
-      duration: "12 Months",
-      level: "Expert",
-      category: "Cyber Security",
-      price: 95000,
-      original_price: 135000,
-      total_lectures: 48,
-      total_students: 480,
     },
   ];
 
@@ -252,6 +327,103 @@ const prevSlide = () => {
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  // ==========================
+  // POPULAR COURSES SLIDER (2 COURSES PER DOMAIN)
+  // ==========================
+  const sliderRef = useRef(null);
+  const [isSliderPaused, setIsSliderPaused] = useState(false);
+
+  const scrollSlider = (direction = "next") => {
+    if (!sliderRef.current) return;
+    const container = sliderRef.current;
+    const scrollAmount = 390; // card width + gap
+    if (direction === "next") {
+      if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 30) {
+        container.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        container.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      }
+    } else {
+      if (container.scrollLeft <= 30) {
+        container.scrollTo({ left: container.scrollWidth, behavior: "smooth" });
+      } else {
+        container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isSliderPaused) return;
+    const interval = setInterval(() => {
+      scrollSlider("next");
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isSliderPaused]);
+
+  // Strictly select 2 flagship courses per domain
+  const popularCourses = (() => {
+    if (!courses || courses.length === 0) return DEFAULT_LANDING_COURSES;
+
+    // 1. Artificial Intelligence (2 courses)
+    const aiCourses = courses.filter((c) =>
+      c.category === "Artificial Intelligence" ||
+      c.title?.toLowerCase().includes("generative ai") ||
+      c.course_id?.startsWith("ai-")
+    ).slice(0, 2);
+
+    // 2. Cyber Security (2 courses)
+    const cyberCourses = courses.filter((c) =>
+      c.category === "Cyber Security" ||
+      c.title?.toLowerCase().includes("cyber")
+    ).slice(0, 2);
+
+    // 3. Data Science & Analytics (2 courses)
+    const dataCourses = courses.filter((c) =>
+      c.category === "Data Science" ||
+      c.category === "Data Analytics" ||
+      c.title?.toLowerCase().includes("data")
+    ).slice(0, 2);
+
+    // 4. Digital Marketing (2 courses)
+    const dmCourses = courses.filter((c) =>
+      c.category === "Digital Marketing" ||
+      c.title?.toLowerCase().includes("marketing")
+    ).slice(0, 2);
+
+    const combined = [...aiCourses, ...cyberCourses, ...dataCourses, ...dmCourses];
+    return combined.length >= 4 ? combined : DEFAULT_LANDING_COURSES;
+  })();
+
+  const getDomainBadge = (category, title) => {
+    const text = `${category || ""} ${title || ""}`.toLowerCase();
+    if (text.includes("ai") || text.includes("generative")) {
+      return {
+        name: "Artificial Intelligence",
+        bg: "bg-purple-100 text-purple-900 border-purple-300",
+        border: "border-purple-500",
+      };
+    }
+    if (text.includes("cyber") || text.includes("ethical")) {
+      return {
+        name: "Cyber Security",
+        bg: "bg-rose-100 text-rose-900 border-rose-300",
+        border: "border-rose-500",
+      };
+    }
+    if (text.includes("data")) {
+      return {
+        name: "Data Science & Analytics",
+        bg: "bg-blue-100 text-blue-900 border-blue-300",
+        border: "border-blue-500",
+      };
+    }
+    return {
+      name: "Digital Marketing",
+      bg: "bg-amber-100 text-amber-900 border-amber-300",
+      border: "border-amber-500",
+    };
+  };
 
   return (
 
@@ -1085,191 +1257,220 @@ px-4
 
 </section>
 {/* ==========================
-    POPULAR COURSES
+    POPULAR COURSES (MOVING SINGLE ROW - 2 COURSES PER DOMAIN)
 ========================== */}
 
 <section className="max-w-[1800px] mx-auto px-6 py-12">
 
-  <div className="text-center mb-12">
+  <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+    <div>
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0B1220] text-[#D4A017] text-xs font-semibold uppercase tracking-wider mb-2 border border-[#D4A017]/30">
+        <span className="w-2 h-2 rounded-full bg-[#D4A017] animate-ping"></span>
+        Top 8 Flagships • 2 Courses Per Domain
+      </div>
+      <h1 className="text-3xl md:text-5xl font-bold text-[#0B1220]">
+        Popular Courses
+      </h1>
+      <div className="w-28 h-1 bg-[#D4A017] mt-3"></div>
+      <p className="text-gray-600 mt-3 text-base md:text-lg">
+        Explore premier career programs across AI, Cyber Security, Data Science & Digital Marketing.
+      </p>
+    </div>
 
-    <h1 className="text-4xl md:text-5xl font-bold text-[#0B1220]">
-
-      Popular Courses
-
-    </h1>
-
-    <div className="w-32 h-1 bg-[#D4A017] mx-auto mt-4"></div>
-
-    <p className="text-gray-600 mt-5 text-lg">
-
-      Explore high quality programs designed for India's future leaders.
-
-    </p>
-
+    {/* Moving Controls & Pause Status */}
+    <div className="flex items-center gap-3 self-end md:self-auto">
+      <span className="text-xs text-slate-500 font-medium hidden sm:inline-block px-2.5 py-1 rounded bg-slate-100 border border-slate-200">
+        {isSliderPaused ? "⏸ Paused (Hovered)" : "▶ Moving"}
+      </span>
+      <button
+        onClick={() => scrollSlider("prev")}
+        className="w-11 h-11 rounded-lg bg-white border border-slate-300 text-[#0B1220] hover:bg-[#0B1220] hover:text-[#D4A017] hover:border-[#0B1220] shadow-sm flex items-center justify-center transition duration-200 cursor-pointer"
+        aria-label="Previous Course"
+        title="Previous Course"
+      >
+        <FaChevronLeft className="text-base" />
+      </button>
+      <button
+        onClick={() => scrollSlider("next")}
+        className="w-11 h-11 rounded-lg bg-[#0B1220] text-[#D4A017] hover:bg-[#7C2D12] hover:text-white shadow-sm flex items-center justify-center transition duration-200 cursor-pointer"
+        aria-label="Next Course"
+        title="Next Course"
+      >
+        <FaChevronRight className="text-base" />
+      </button>
+    </div>
   </div>
 
-  {/* COURSES GRID */}
-
-  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-    {
-      courses?.length > 0 ? (
-
-        courses.map((course) => (
-
-          <div
-            key={course.id}
-            className="
-            bg-white
-            border
-            border-slate-300
-            rounded-md
-            overflow-hidden
-            shadow-sm
-            hover:border-[#7C2D12]
-            transition
-            "
-          >
-
-            {/* COURSE HEADER */}
-
+  {/* SINGLE HORIZONTAL MOVING ROW */}
+  <div className="relative">
+    <div
+      ref={sliderRef}
+      onMouseEnter={() => setIsSliderPaused(true)}
+      onMouseLeave={() => setIsSliderPaused(false)}
+      onTouchStart={() => setIsSliderPaused(true)}
+      onTouchEnd={() => setIsSliderPaused(false)}
+      className="flex flex-nowrap gap-6 overflow-x-auto scroll-smooth py-3 px-1 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {popularCourses?.length > 0 ? (
+        popularCourses.map((course) => {
+          const badge = getDomainBadge(course.category, course.title);
+          return (
             <div
+              key={course.id}
               className="
-              bg-[#0B1220]
-              border-b-4
-              border-[#D4A017]
-              h-[140px]
-              flex
-              items-center
-              justify-center
-              px-6
-              text-center
+                w-[320px] sm:w-[360px] md:w-[390px]
+                shrink-0
+                snap-start
+                bg-white
+                border
+                border-slate-300
+                rounded-xl
+                overflow-hidden
+                shadow-sm
+                hover:shadow-xl
+                hover:border-[#D4A017]
+                transition-all
+                duration-300
+                flex
+                flex-col
+                justify-between
+                group
               "
             >
-
-              <h1 className="text-white text-2xl font-bold">
-
-                {course.title}
-
-              </h1>
-
-            </div>
-
-            {/* COURSE CONTENT */}
-
-            <div className="p-6">
-
-              <h2 className="text-2xl font-bold text-[#0B1220]">
-
-                {course.title}
-
-              </h2>
-
-              <p className="text-gray-600 mt-4 leading-7 min-h-[120px]">
-
-                {course.description}
-
-              </p>
-
-              {/* INFO */}
-
-              <div className="flex flex-wrap gap-3 mt-5">
-
-                <div
-                  className="
-                  border
-                  border-slate-300
-                  px-3
-                  py-2
-                  rounded-md
-                  bg-white
-                  text-sm
-                  flex
-                  items-center
-                  gap-2
-                  "
-                >
-
-                  <FaClock />
-
-                  {course.duration}
-
-                </div>
-
-                <div
-                  className="
-                  border
-                  border-slate-300
-                  px-3
-                  py-2
-                  rounded-md
-                  bg-white
-                  text-sm
-                  flex
-                  items-center
-                  gap-2
-                  "
-                >
-
-                  <FaSignal />
-
-                  {course.level}
-
-                </div>
-
-              </div>
-
-              {/* PRICE + BUTTON */}
-
-              <div className="mt-6 flex justify-between items-center">
-
-                <h3 className="text-2xl font-bold text-green-700">
-
-                  ₹{course.price}
-
-                </h3>
-
-                <Link
-                  to={`/course/${course.id}`}
-                  className="
+              {/* COURSE HEADER */}
+              <div
+                className="
                   bg-[#0B1220]
-                  text-white
-                  px-5
-                  py-2
-                  rounded-md
-                  font-semibold
-                  hover:bg-[#7C2D12]
-                  transition
-                  "
-                >
+                  border-b-4
+                  border-[#D4A017]
+                  p-5
+                  relative
+                  flex
+                  flex-col
+                  justify-between
+                  min-h-[140px]
+                "
+              >
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span
+                    className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${badge.bg}`}
+                  >
+                    {badge.name}
+                  </span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-white/10 text-amber-300 border border-white/20 shrink-0">
+                    {course.duration}
+                  </span>
+                </div>
 
-                  Explore
-
-                </Link>
-
+                <h2 className="text-white text-lg font-bold line-clamp-2 group-hover:text-amber-300 transition-colors">
+                  {course.title}
+                </h2>
               </div>
 
+              {/* COURSE CONTENT */}
+              <div className="p-6 flex flex-col flex-1 justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-[#0B1220] line-clamp-1">
+                    {course.title}
+                  </h3>
+
+                  <p className="text-gray-600 mt-3 text-sm leading-relaxed line-clamp-3 min-h-[60px]">
+                    {course.description}
+                  </p>
+
+                  {/* INFO TAGS */}
+                  <div className="flex flex-wrap gap-2.5 mt-5">
+                    <div
+                      className="
+                        border
+                        border-slate-200
+                        px-3
+                        py-1.5
+                        rounded-md
+                        bg-slate-50
+                        text-xs
+                        font-medium
+                        text-slate-700
+                        flex
+                        items-center
+                        gap-2
+                      "
+                    >
+                      <FaClock className="text-[#D4A017]" />
+                      <span>{course.duration}</span>
+                    </div>
+
+                    <div
+                      className="
+                        border
+                        border-slate-200
+                        px-3
+                        py-1.5
+                        rounded-md
+                        bg-slate-50
+                        text-xs
+                        font-medium
+                        text-slate-700
+                        flex
+                        items-center
+                        gap-2
+                      "
+                    >
+                      <FaSignal className="text-slate-500" />
+                      <span>{course.level || "Diploma / Certificate"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PRICE + BUTTON */}
+                <div className="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center">
+                  <div>
+                    <div className="text-2xl font-extrabold text-green-700">
+                      ₹{typeof course.price === "number" ? course.price.toLocaleString("en-IN") : course.price}
+                    </div>
+                    {course.original_price && (
+                      <div className="text-xs text-gray-400 line-through">
+                        ₹{typeof course.original_price === "number" ? course.original_price.toLocaleString("en-IN") : course.original_price}
+                      </div>
+                    )}
+                  </div>
+
+                  <Link
+                    to={`/course/${course.id}`}
+                    className="
+                      bg-[#0B1220]
+                      text-white
+                      px-5
+                      py-2.5
+                      rounded-lg
+                      font-semibold
+                      text-sm
+                      hover:bg-[#7C2D12]
+                      hover:text-amber-200
+                      transition-all
+                      duration-200
+                      flex
+                      items-center
+                      gap-2
+                      shadow-sm
+                    "
+                  >
+                    <span>Explore</span>
+                    <FaArrowRight className="text-xs group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                </div>
+              </div>
             </div>
-
-          </div>
-
-        ))
-
+          );
+        })
       ) : (
-
-        <div className="col-span-3 text-center py-16">
-
-          <h2 className="text-2xl font-semibold text-gray-400">
-
+        <div className="w-full text-center py-16 bg-white border border-slate-200 rounded-xl">
+          <h2 className="text-xl font-semibold text-gray-400">
             No Courses Found
-
           </h2>
-
         </div>
-
-      )
-    }
-
+      )}
+    </div>
   </div>
 
 </section>
