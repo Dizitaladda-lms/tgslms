@@ -33,7 +33,11 @@ api.interceptors.response.use(
         if (hadToken) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          window.location.href = "/login";
+          const msg =
+            error.response?.data?.message ||
+            "Your secure JWT session has expired. Please login again.";
+          sessionStorage.setItem("session_ended_notice", msg);
+          window.location.href = "/login?session=expired";
         }
       }
     }
