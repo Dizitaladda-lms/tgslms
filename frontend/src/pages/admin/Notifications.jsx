@@ -8,6 +8,7 @@ import {
   FaUserGraduate,
   FaCheckCircle,
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 function Notifications() {
 
@@ -323,11 +324,12 @@ function Notifications() {
 
                 </p>
 
-                <button className="mt-5 bg-cyan-500 hover:bg-cyan-400 transition px-6 py-3 rounded-2xl font-bold">
-
-                  View Details
-
-                </button>
+                <Link
+                  to={notification.type === "certificate" ? "/admin/certificates" : "/admin/students"}
+                  className="mt-5 inline-block bg-cyan-500 hover:bg-cyan-400 transition px-6 py-3 rounded-2xl font-bold text-white text-sm"
+                >
+                  {notification.type === "certificate" ? "Upload Certificate PDF →" : "View Details"}
+                </Link>
 
               </div>
 

@@ -20,12 +20,14 @@ import {
   FaTimes,
   FaStar,
   FaCalendarAlt,
+  FaFilePdf,
 } from "react-icons/fa";
 import api from "../../lib/api";
 
 function StudentDashboard() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
+  const [certificates, setCertificates] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,13 +62,18 @@ function StudentDashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const [coursesRes, profileRes] = await Promise.allSettled([
+        const [coursesRes, profileRes, certRes] = await Promise.allSettled([
           api.get("/api/enrollments/my-courses"),
           api.get("/api/students/me/profile"),
+          api.get("/api/certificates/my-certificates"),
         ]);
 
         if (isMounted && coursesRes.status === "fulfilled" && coursesRes.value.data?.courses) {
           setCourses(coursesRes.value.data.courses);
+        }
+
+        if (isMounted && certRes.status === "fulfilled" && certRes.value.data?.certificates) {
+          setCertificates(certRes.value.data.certificates);
         }
 
         if (isMounted && profileRes.status === "fulfilled") {
@@ -453,9 +460,109 @@ function StudentDashboard() {
         ========================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* =======================================================
-              LEFT COLUMN (2 COLS): ENROLLED COURSES & CURRICULUM
+              LEFT COLUMN (2 COLS): CERTIFICATES & ENROLLED COURSES
           ======================================================= */}
           <div className="lg:col-span-2 space-y-8">
+            {/* OFFICIAL VERIFIED CERTIFICATES SECTION */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[#0B1220] flex items-center gap-2">
+                    <FaAward className="text-[#D4A017]" />
+                    <span>Official Verified Certificates</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                    Recognized credentials issued upon course completion & mentor evaluation
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-[#7C2D12] bg-[#7C2D12]/10 px-3 py-1 rounded-full">
+                  {certificates.filter(c => (c.status || '').toLowerCase() === 'issued').length} Issued
+                </span>
+              </div>
+
+              {certificates.length === 0 ? (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center">
+                  <FaAward className="text-4xl text-slate-300 mx-auto mb-2" />
+                  <h4 className="font-bold text-[#0B1220] text-sm">No Certificates Issued Yet</h4>
+                  <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                    Complete 100% of any enrolled course syllabus. As soon as you finish, an automated request will be sent to the administration to review and upload your official PDF certificate.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {certificates.map((cert) => {
+                    const isIssued = (cert.status || '').toLowerCase() === 'issued';
+                    return (
+                      <div
+                        key={cert.id}
+                        className={`border rounded-2xl p-5 transition ${
+                          isIssued
+                            ? "bg-gradient-to-r from-amber-50/40 via-white to-white border-[#D4A017]/60 shadow-sm"
+                            : "bg-slate-50/70 border-slate-200"
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div className="flex items-start gap-4">
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${
+                              isIssued ? "bg-[#0B1220] text-[#D4A017] border border-[#D4A017]" : "bg-slate-200 text-slate-500"
+                            }`}>
+                              <FaAward />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                {isIssued ? (
+                                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                    <FaCheckCircle /> Verified Certificate
+                                  </span>
+                                ) : (
+                                  <span className="bg-amber-100 text-[#7C2D12] border border-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 animate-pulse">
+                                    <FaClock /> Course Complete • PDF Under Admin Issuance
+                                  </span>
+                                )}
+                                <span className="text-[11px] font-mono text-slate-500 font-semibold">
+                                  {cert.certificate_code}
+                                </span>
+                              </div>
+                              <h4 className="text-base sm:text-lg font-bold text-[#0B1220]">
+                                {cert.course_title || "Professional Certification Track"}
+                              </h4>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                Issued to <strong>{studentName}</strong> • {cert.grade || "Grade A+"} • {cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pending Review'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                            {isIssued && cert.pdf_url ? (
+                              <a
+                                href={cert.pdf_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                download={`Certificate_${cert.certificate_code}.pdf`}
+                                className="w-full sm:w-auto bg-[#0B1220] hover:bg-[#7C2D12] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer"
+                              >
+                                <FaFilePdf className="text-red-400" />
+                                <span>Download PDF</span>
+                              </a>
+                            ) : null}
+                            <Link
+                              to={`/verify-certificate/${cert.certificate_code}`}
+                              target="_blank"
+                              className="text-xs font-bold text-[#7C2D12] hover:text-[#0B1220] px-3 py-2 border border-slate-200 hover:border-[#7C2D12] rounded-xl transition flex items-center gap-1.5"
+                              title="Public Verification"
+                            >
+                              <span>Verify</span>
+                              <FaExternalLinkAlt className="text-[10px]" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             {/* ENROLLED COURSES SECTION */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
               <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">

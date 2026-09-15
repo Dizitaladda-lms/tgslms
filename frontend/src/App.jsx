@@ -39,6 +39,8 @@ import Placement from "./pages/Placement";
 import AddStudent from "./pages/admin/AddStudent";
 import CourseListing from "./pages/CourseListing";
 import Checkout from "./pages/Checkout";
+import AdminCertificates from "./pages/admin/AdminCertificates";
+import VerifyCertificate from "./pages/VerifyCertificate";
 
 function App() {
   return (
@@ -57,6 +59,8 @@ function App() {
       <Route path="/competition" element={<Competition />} />
       <Route path="/skilling" element={<Skilling />} />
       <Route path="/placement" element={<Placement />} />
+      <Route path="/verify-certificate" element={<VerifyCertificate />} />
+      <Route path="/verify-certificate/:code" element={<VerifyCertificate />} />
 
       {/* ================= STUDENT / ENROLLED ROUTES ================= */}
       <Route path="/checkout" element={<Checkout />} />
@@ -117,6 +121,14 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <CoursesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/certificates"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminCertificates />
           </ProtectedRoute>
         }
       />

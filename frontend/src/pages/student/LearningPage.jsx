@@ -18,9 +18,31 @@ import {
   FaCheck,
   FaTimes,
   FaPaperPlane,
+  FaLock,
+  FaUnlock,
 } from "react-icons/fa";
 import api from "../../lib/api";
 import SecureVideoPlayer from "../../components/SecureVideoPlayer";
+
+// Helper to compute sequential locking (Lesson N is locked until Lesson N-1 is completed)
+const computeSequentialLocks = (rawLectures, userRole) => {
+  if (userRole === "admin" || userRole === "teacher") {
+    return rawLectures.map((l) => ({ ...l, is_locked: false }));
+  }
+  let prevCompleted = true;
+  return rawLectures.map((l, idx) => {
+    const isCompleted = Boolean(l.is_completed);
+    const isLocked = idx === 0 ? false : !prevCompleted;
+    if (!isCompleted) {
+      prevCompleted = false;
+    }
+    return {
+      ...l,
+      is_completed: isCompleted,
+      is_locked: isLocked,
+    };
+  });
+};
 
 const LearningPage = () => {
   const navigate = useNavigate();
@@ -42,6 +64,7 @@ const LearningPage = () => {
   }, []);
 
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isPrivileged = storedUser?.role === "admin" || storedUser?.role === "teacher";
   const studentName = profile?.name || storedUser?.name || "Student";
   const studentEmail = profile?.email || storedUser?.email || "student@tsglms.com";
   const studentCode = profile?.student_id || profile?.course_code || `TSG-STU-${storedUser?.id || "001"}`;
@@ -53,6 +76,17 @@ const LearningPage = () => {
   const [selectedLecture, setSelectedLecture] = useState(null);
   const [marking, setMarking] = useState(false);
   const [activeTab, setActiveTab] = useState("overview"); // overview | notes | doubts
+
+  // Locked Modal & Celebration Banner States
+  const [lockAlertModal, setLockAlertModal] = useState({
+    isOpen: false,
+    targetLessonNumber: 1,
+    targetTitle: "",
+    prereqNumber: 1,
+    prereqTitle: "",
+    prereqLecture: null,
+  });
+  const [unlockBanner, setUnlockBanner] = useState(null);
 
   // Quiz Taking States
   const [activeQuiz, setActiveQuiz] = useState(null);
@@ -84,10 +118,20 @@ const LearningPage = () => {
       ]);
 
       if (lecRes.status === "fulfilled") {
-        const lectureData = lecRes.value.data?.lectures || lecRes.value.data || [];
-        setLectures(lectureData);
-        if (lectureData.length > 0) {
-          setSelectedLecture((prev) => prev || lectureData[0]);
+        const rawLectures = lecRes.value.data?.lectures || lecRes.value.data || [];
+        const enriched = computeSequentialLocks(rawLectures, storedUser?.role);
+        setLectures(enriched);
+
+        if (enriched.length > 0) {
+          setSelectedLecture((prev) => {
+            if (prev) {
+              const matched = enriched.find((l) => l.id === prev.id);
+              if (matched) return matched;
+            }
+            // Auto-resume: pick the first unlocked incomplete lecture, or fallback to first lecture
+            const firstUnlockedIncomplete = enriched.find((l) => !l.is_locked && !l.is_completed);
+            return firstUnlockedIncomplete || enriched[0];
+          });
         }
       }
 
@@ -105,7 +149,7 @@ const LearningPage = () => {
     } catch (error) {
       console.error("FETCH ERROR:", error);
     }
-  }, [courseId]);
+  }, [courseId, storedUser?.role]);
 
   useEffect(() => {
     fetchCourseData();
@@ -119,12 +163,100 @@ const LearningPage = () => {
         courseId,
         completed: true,
       });
+
+      // Update state locally with sequential lock recalculation immediately
+      let currIdx = -1;
+      let nextLecObj = null;
+
+      setLectures((prev) => {
+        currIdx = prev.findIndex((l) => l.id === lecId);
+        const updated = prev.map((l) => (l.id === lecId ? { ...l, is_completed: true } : l));
+        const recomputed = computeSequentialLocks(updated, storedUser?.role);
+        if (currIdx !== -1 && currIdx < recomputed.length - 1) {
+          nextLecObj = recomputed[currIdx + 1];
+        }
+        return recomputed;
+      });
+
+      setSelectedLecture((prev) =>
+        prev?.id === lecId ? { ...prev, is_completed: true, is_locked: false } : prev
+      );
+
+      if (currIdx !== -1 && currIdx < lectures.length - 1) {
+        const nextLec = lectures[currIdx + 1];
+        setUnlockBanner({
+          completedLessonNumber: currIdx + 1,
+          nextLessonNumber: currIdx + 2,
+          nextTitle: nextLec?.title || "Next Video",
+          nextLecture: { ...nextLec, is_locked: false },
+        });
+      }
+
       fetchCourseData();
     } catch (err) {
       console.error("Error marking lecture complete:", err);
     } finally {
       setMarking(false);
     }
+  };
+
+  const handleAutoComplete = async (lecId, watchedSec) => {
+    try {
+      await api.post("/api/progress/update", {
+        lectureId: lecId,
+        courseId: course?.id,
+        completed: true,
+        watchedSeconds: watchedSec,
+      });
+
+      let currIdx = -1;
+      setLectures((prev) => {
+        currIdx = prev.findIndex((l) => l.id === lecId);
+        const updated = prev.map((l) => (l.id === lecId ? { ...l, is_completed: true } : l));
+        return computeSequentialLocks(updated, storedUser?.role);
+      });
+
+      setSelectedLecture((prev) =>
+        prev?.id === lecId ? { ...prev, is_completed: true, is_locked: false } : prev
+      );
+
+      if (currIdx !== -1 && currIdx < lectures.length - 1) {
+        const nextLec = lectures[currIdx + 1];
+        setUnlockBanner({
+          completedLessonNumber: currIdx + 1,
+          nextLessonNumber: currIdx + 2,
+          nextTitle: nextLec?.title || "Next Video",
+          nextLecture: { ...nextLec, is_locked: false },
+        });
+      }
+
+      fetchCourseData();
+    } catch (err) {
+      console.error("Auto complete sync notice:", err);
+    }
+  };
+
+  const handleLectureClick = (lec, idx) => {
+    const isLocked = lec.is_locked && !isPrivileged;
+    if (isLocked) {
+      // Find the first uncompleted lecture before this one
+      const prereqIdx = lectures.slice(0, idx).findIndex((l) => !l.is_completed);
+      const prereqLecture = prereqIdx !== -1 ? lectures[prereqIdx] : lectures[idx - 1] || lectures[0];
+      const prereqNumber = (prereqIdx !== -1 ? prereqIdx : idx - 1) + 1;
+
+      setLockAlertModal({
+        isOpen: true,
+        targetLessonNumber: idx + 1,
+        targetTitle: lec.title,
+        prereqNumber,
+        prereqTitle: prereqLecture?.title || "Previous Lesson",
+        prereqLecture,
+      });
+      return;
+    }
+
+    setSelectedLecture(lec);
+    setUnlockBanner(null);
   };
 
   // -------------------------------------------------------------
@@ -207,6 +339,23 @@ const LearningPage = () => {
   const completedCount = lectures.filter((l) => l.is_completed).length;
   const progressPercent = lectures.length > 0 ? Math.round((completedCount / lectures.length) * 100) : 0;
 
+  // Selected lecture analysis for locking and prerequisite guidance
+  const selectedIdx = lectures.findIndex((l) => l.id === selectedLecture?.id);
+  const isSelectedLocked =
+    Boolean(selectedLecture?.is_locked) && !isPrivileged;
+  const prereqIdxForSelected =
+    selectedIdx > 0
+      ? lectures.slice(0, selectedIdx).findIndex((l) => !l.is_completed)
+      : -1;
+  const prereqLecForSelected =
+    prereqIdxForSelected !== -1
+      ? lectures[prereqIdxForSelected]
+      : selectedIdx > 0
+      ? lectures[selectedIdx - 1]
+      : null;
+  const nextLecture =
+    selectedIdx >= 0 && selectedIdx < lectures.length - 1 ? lectures[selectedIdx + 1] : null;
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans">
       {/* =========================================================
@@ -227,18 +376,23 @@ const LearningPage = () => {
               <h1 className="text-base font-bold text-white truncate max-w-md">
                 {course?.title || "TSG Classroom"}
               </h1>
-              <p className="text-[11px] text-[#D4A017] font-semibold">
-                Instructor: {course?.teacher || "Dr. Gulshan Kumar"}
+              <p className="text-[11px] text-[#D4A017] font-semibold flex items-center gap-2">
+                <span>Instructor: {course?.teacher || "Dr. Gulshan Kumar"}</span>
+                {isPrivileged && (
+                  <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] px-1.5 py-0.2 rounded font-black">
+                    Admin Preview Mode
+                  </span>
+                )}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-300">
-              <span>Lectures Progress: {progressPercent}%</span>
+              <span>Progress: {completedCount}/{lectures.length} ({progressPercent}%)</span>
               <div className="w-24 bg-slate-700 rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-[#D4A017] h-2 rounded-full"
+                  className="bg-[#D4A017] h-2 rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
                 ></div>
               </div>
@@ -307,52 +461,131 @@ const LearningPage = () => {
           <div className="flex-1 space-y-6">
             {selectedLecture ? (
               <div>
-                {/* SECURE VIDEO CONTAINER WITH ANTI-PIRACY, DRIVE STREAM & WATERMARK */}
-                <SecureVideoPlayer
-                  key={selectedLecture.id}
-                  videoUrl={selectedLecture.video_url}
-                  lectureTitle={selectedLecture.title}
-                  lectureId={selectedLecture.id}
-                  courseId={course?.id}
-                  durationMinutes={parseInt(selectedLecture.duration, 10) || 20}
-                  initialWatchedSeconds={selectedLecture.watched_seconds || 0}
-                  isCompleted={Boolean(selectedLecture.is_completed)}
-                  studentInfo={{
-                    name: studentName,
-                    email: studentEmail,
-                    studentId: studentCode,
-                  }}
-                  onProgressUpdate={async ({ lectureId, courseId, watchedSeconds, completed }) => {
-                    try {
-                      await api.post("/api/progress/update", {
-                        lectureId,
-                        courseId,
-                        watchedSeconds,
-                        completed,
-                      });
-                    } catch (err) {
-                      // ignore background sync notice
-                    }
-                  }}
-                  onAutoComplete={async (lecId, watchedSec) => {
-                    try {
-                      await api.post("/api/progress/update", {
-                        lectureId: lecId,
-                        courseId: course?.id,
-                        completed: true,
-                        watchedSeconds: watchedSec,
-                      });
-                      setLectures((prev) =>
-                        prev.map((l) => (l.id === lecId ? { ...l, is_completed: true } : l))
-                      );
-                      setSelectedLecture((prev) =>
-                        prev?.id === lecId ? { ...prev, is_completed: true } : prev
-                      );
-                    } catch (err) {
-                      console.error("Auto complete sync notice:", err);
-                    }
-                  }}
-                />
+                {/* UNLOCK CELEBRATION BANNER */}
+                {unlockBanner && (
+                  <div className="bg-gradient-to-r from-emerald-950 via-[#0B1220] to-[#0B1220] border-2 border-emerald-500 text-white p-4 rounded-2xl shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5 animate-fadeIn">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-xl text-emerald-300 shrink-0">
+                        <FaCheckCircle />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-emerald-300 flex items-center gap-2">
+                          <span>Lesson {unlockBanner.completedLessonNumber} Completed! 🎉</span>
+                          <span className="text-[10px] bg-emerald-700/80 px-2 py-0.5 rounded text-white font-black">
+                            +1 Lesson Unlocked
+                          </span>
+                        </h4>
+                        <p className="text-xs text-slate-200 mt-0.5">
+                          Shabaash! Agla video unlock ho gaya: <strong>Lesson {unlockBanner.nextLessonNumber} ({unlockBanner.nextTitle})</strong> 🔓
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                      {unlockBanner.nextLecture && (
+                        <button
+                          onClick={() => {
+                            setSelectedLecture(unlockBanner.nextLecture);
+                            setUnlockBanner(null);
+                          }}
+                          className="bg-[#D4A017] hover:bg-[#b58710] text-[#0B1220] font-black text-xs px-4 py-2 rounded-xl transition shadow flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FaPlayCircle />
+                          <span>Play Lesson {unlockBanner.nextLessonNumber} →</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setUnlockBanner(null)}
+                        className="text-slate-400 hover:text-white p-1.5 cursor-pointer"
+                        title="Dismiss"
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* SECURE VIDEO CONTAINER OR LOCKED STAGE */}
+                {isSelectedLocked ? (
+                  <div className="bg-[#0B1220] border-2 border-[#D4A017]/60 rounded-2xl p-8 sm:p-12 text-center text-white shadow-2xl relative overflow-hidden">
+                    <div className="absolute -top-20 -right-20 w-52 h-52 bg-[#D4A017]/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div className="absolute -bottom-20 -left-20 w-52 h-52 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div className="relative z-10 max-w-lg mx-auto">
+                      <div className="w-20 h-20 bg-[#D4A017]/20 border-2 border-[#D4A017] text-[#D4A017] rounded-3xl flex items-center justify-center text-4xl mx-auto mb-5 shadow-lg shadow-[#D4A017]/20 animate-pulse">
+                        <FaLock />
+                      </div>
+
+                      <span className="bg-[#D4A017]/20 text-[#D4A017] border border-[#D4A017]/40 text-[11px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
+                        Video Session Locked 🔒
+                      </span>
+
+                      <h2 className="text-2xl sm:text-3xl font-black text-white mt-3 mb-2">
+                        {selectedLecture.title}
+                      </h2>
+
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6">
+                        Yeh video abhi locked hai. TSG LMS standard curriculum policy ke anusar agla lecture dekhne ke liye pehle pichla lecture complete karna zaroori hai.
+                      </p>
+
+                      {prereqLecForSelected && (
+                        <div className="bg-[#1E293B] border border-slate-700 rounded-xl p-4 mb-6 text-left flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase text-[#D4A017] tracking-wider block">
+                              Prerequisite Lesson To Unlock:
+                            </span>
+                            <h4 className="text-xs sm:text-sm font-bold text-white truncate max-w-xs mt-0.5">
+                              Lesson {(prereqIdxForSelected !== -1 ? prereqIdxForSelected : selectedIdx - 1) + 1}: {prereqLecForSelected.title}
+                            </h4>
+                            <span className="text-[11px] text-slate-400">
+                              Duration: {prereqLecForSelected.duration || "25m"} • Need ≥80% watch time
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setSelectedLecture(prereqLecForSelected)}
+                            className="bg-[#D4A017] hover:bg-[#b58710] text-[#0B1220] font-black text-xs px-4 py-2.5 rounded-lg transition shrink-0 cursor-pointer shadow flex items-center gap-1.5"
+                          >
+                            <FaPlayCircle />
+                            <span>Watch Prerequisite Now →</span>
+                          </button>
+                        </div>
+                      )}
+
+                      <p className="text-[11px] text-slate-400">
+                        💡 Tip: Video ko 80% watch karne par ya 'Mark Complete' karne par agla video automatic unlock ho jayega.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <SecureVideoPlayer
+                    key={selectedLecture.id}
+                    videoUrl={selectedLecture.video_url}
+                    lectureTitle={selectedLecture.title}
+                    lectureId={selectedLecture.id}
+                    courseId={course?.id}
+                    durationMinutes={parseInt(selectedLecture.duration, 10) || 20}
+                    initialWatchedSeconds={selectedLecture.watched_seconds || 0}
+                    isCompleted={Boolean(selectedLecture.is_completed)}
+                    studentInfo={{
+                      name: studentName,
+                      email: studentEmail,
+                      studentId: studentCode,
+                    }}
+                    onProgressUpdate={async ({ lectureId, courseId, watchedSeconds, completed }) => {
+                      try {
+                        await api.post("/api/progress/update", {
+                          lectureId,
+                          courseId,
+                          watchedSeconds,
+                          completed,
+                        });
+                      } catch (err) {
+                        // ignore background sync notice
+                      }
+                    }}
+                    onAutoComplete={handleAutoComplete}
+                  />
+                )}
 
                 {/* LECTURE HEADER & ACTIONS */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mt-5">
@@ -387,16 +620,31 @@ const LearningPage = () => {
 
                       <button
                         onClick={() => handleMarkComplete(selectedLecture.id)}
-                        disabled={marking || selectedLecture.is_completed}
+                        disabled={marking || selectedLecture.is_completed || isSelectedLocked}
                         className={`text-xs sm:text-sm font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm ${
                           selectedLecture.is_completed
                             ? "bg-emerald-700 text-white cursor-default"
+                            : isSelectedLocked
+                            ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                             : "bg-[#0B1220] hover:bg-[#7C2D12] text-white cursor-pointer"
                         }`}
                       >
                         <FaCheckCircle />
                         <span>{selectedLecture.is_completed ? "Completed ✅" : marking ? "Saving..." : "Mark Complete"}</span>
                       </button>
+
+                      {selectedLecture.is_completed && nextLecture && (!nextLecture.is_locked || isPrivileged) && (
+                        <button
+                          onClick={() => {
+                            setSelectedLecture(nextLecture);
+                            setUnlockBanner(null);
+                          }}
+                          className="bg-[#D4A017] hover:bg-[#b58710] text-[#0B1220] text-xs sm:text-sm font-black px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow cursor-pointer"
+                        >
+                          <FaPlayCircle />
+                          <span>Next Lesson: Lesson {selectedIdx + 2} →</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -488,6 +736,27 @@ const LearningPage = () => {
 
           {/* RIGHT COLUMN: CURRICULUM PLAYLIST */}
           <div className="w-full lg:w-96 shrink-0">
+            {completedCount === lectures.length && lectures.length > 0 && (
+              <div className="bg-gradient-to-r from-[#0B1220] to-[#7C2D12] text-white border-2 border-[#D4A017] p-3.5 rounded-2xl shadow-md flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5">
+                  <FaAward className="text-[#D4A017] text-2xl shrink-0" />
+                  <div>
+                    <h4 className="font-bold text-xs text-amber-200">
+                      100% Course Completed! 🎉
+                    </h4>
+                    <p className="text-[10px] text-slate-200">
+                      Certificate request submitted to admin for PDF issuance.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/student"
+                  className="bg-[#D4A017] hover:bg-[#b58710] text-[#0B1220] font-black text-[10px] px-3 py-1.5 rounded-lg shrink-0 transition"
+                >
+                  Dashboard
+                </Link>
+              </div>
+            )}
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden sticky top-36">
               <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                 <div>
@@ -511,22 +780,34 @@ const LearningPage = () => {
                 ) : (
                   lectures.map((lec, idx) => {
                     const isSelected = selectedLecture?.id === lec.id;
+                    const isLocked = lec.is_locked && !isPrivileged;
+                    const isCompleted = lec.is_completed;
+                    const isCurrentActive = !isLocked && !isCompleted;
+
                     return (
                       <div
                         key={lec.id}
-                        onClick={() => setSelectedLecture(lec)}
-                        className={`p-3.5 cursor-pointer transition flex items-start gap-3 ${
-                          isSelected
-                            ? "bg-[#0B1220] text-white"
-                            : "hover:bg-slate-50 text-slate-700"
+                        onClick={() => handleLectureClick(lec, idx)}
+                        className={`p-3.5 transition flex items-start gap-3 relative ${
+                          isLocked
+                            ? "opacity-60 bg-slate-50/90 hover:bg-slate-100/90 cursor-not-allowed border-l-4 border-slate-300"
+                            : isSelected
+                            ? "bg-[#0B1220] text-white border-l-4 border-[#D4A017] shadow-sm"
+                            : isCompleted
+                            ? "hover:bg-emerald-50/50 text-slate-700 cursor-pointer border-l-4 border-emerald-500/60"
+                            : "hover:bg-slate-50 text-slate-700 cursor-pointer border-l-4 border-[#D4A017]/40"
                         }`}
                       >
                         <div className="mt-0.5 shrink-0">
-                          {lec.is_completed ? (
-                            <FaCheckCircle className="text-emerald-500 text-sm" />
+                          {isCompleted ? (
+                            <FaCheckCircle className="text-emerald-500 text-base" title="Completed" />
+                          ) : isLocked ? (
+                            <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px]" title="Locked: Complete previous lesson first">
+                              <FaLock />
+                            </div>
                           ) : (
                             <FaPlayCircle
-                              className={`text-sm ${isSelected ? "text-[#D4A017]" : "text-slate-400"}`}
+                              className={`text-base ${isSelected ? "text-[#D4A017]" : "text-amber-500"}`}
                             />
                           )}
                         </div>
@@ -535,10 +816,16 @@ const LearningPage = () => {
                           <div className="flex items-center justify-between gap-1">
                             <span
                               className={`text-[10px] font-bold uppercase tracking-wider ${
-                                isSelected ? "text-[#D4A017]" : "text-slate-400"
+                                isSelected
+                                  ? "text-[#D4A017]"
+                                  : isCompleted
+                                  ? "text-emerald-600 font-semibold"
+                                  : isLocked
+                                  ? "text-slate-400"
+                                  : "text-[#7C2D12] font-semibold"
                               }`}
                             >
-                              Lesson {idx + 1}
+                              Lesson {idx + 1} {isCompleted ? "• Completed ✅" : isLocked ? "• 🔒 Locked" : isCurrentActive ? "• Active" : ""}
                             </span>
                             <span
                               className={`text-[10px] font-medium ${
@@ -548,13 +835,24 @@ const LearningPage = () => {
                               {lec.duration || "25m"}
                             </span>
                           </div>
+
                           <h4
                             className={`text-xs sm:text-sm font-semibold truncate mt-0.5 ${
-                              isSelected ? "text-white" : "text-slate-800"
+                              isSelected
+                                ? "text-white"
+                                : isLocked
+                                ? "text-slate-500"
+                                : "text-slate-800"
                             }`}
                           >
                             {lec.title}
                           </h4>
+
+                          {isLocked && (
+                            <span className="inline-flex items-center gap-1 text-[9px] text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded font-semibold mt-1">
+                              <FaLock className="text-[8px]" /> Complete Lesson {idx} to unlock
+                            </span>
+                          )}
                         </div>
                       </div>
                     );
@@ -908,6 +1206,76 @@ const LearningPage = () => {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* =========================================================
+          LOCKED LESSON INTERACTIVE MODAL
+      ========================================================= */}
+      {lockAlertModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-[#0B1220] border-2 border-[#D4A017] rounded-2xl max-w-md w-full p-6 text-white shadow-2xl relative">
+            <button
+              onClick={() => setLockAlertModal({ ...lockAlertModal, isOpen: false })}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white text-base cursor-pointer p-1"
+            >
+              <FaTimes />
+            </button>
+
+            <div className="w-16 h-16 rounded-2xl bg-[#D4A017]/20 border-2 border-[#D4A017] text-[#D4A017] flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-[#D4A017]/20 animate-pulse">
+              <FaLock />
+            </div>
+
+            <div className="text-center">
+              <span className="text-[10px] font-black uppercase text-[#D4A017] bg-[#D4A017]/10 px-2.5 py-0.5 rounded-full border border-[#D4A017]/30">
+                Sequential Learning Enforced
+              </span>
+              <h3 className="text-xl font-black text-white mt-2 mb-1">
+                Lesson {lockAlertModal.targetLessonNumber} Is Locked 🔒
+              </h3>
+              <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed mb-5">
+                Aapko yeh video dekhne ke liye pehle pichla lesson poora karna hoga. Jab tak aap <strong>Lesson {lockAlertModal.prereqNumber}</strong> complete nahi karte, agla video locked rahega.
+              </p>
+            </div>
+
+            {lockAlertModal.prereqLecture && (
+              <div className="bg-[#1E293B] border border-slate-700 rounded-xl p-4 mb-5 text-left">
+                <span className="text-[10px] font-bold uppercase text-[#D4A017] tracking-wider block">
+                  Pehle Yeh Lesson Complete Karein:
+                </span>
+                <h4 className="text-xs sm:text-sm font-bold text-white truncate mt-1">
+                  Lesson {lockAlertModal.prereqNumber}: {lockAlertModal.prereqTitle}
+                </h4>
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-1">
+                  <FaClock className="text-slate-500 text-[10px]" />
+                  <span>Duration: {lockAlertModal.prereqLecture.duration || "25m"}</span>
+                  <span>•</span>
+                  <span className="text-emerald-400 font-semibold">≥80% watch time required</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              {lockAlertModal.prereqLecture && (
+                <button
+                  onClick={() => {
+                    setSelectedLecture(lockAlertModal.prereqLecture);
+                    setLockAlertModal({ ...lockAlertModal, isOpen: false });
+                  }}
+                  className="flex-1 bg-[#D4A017] hover:bg-[#b58710] text-[#0B1220] font-black text-xs py-3 rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <FaPlayCircle />
+                  <span>Watch Lesson {lockAlertModal.prereqNumber} Now →</span>
+                </button>
+              )}
+              <button
+                onClick={() => setLockAlertModal({ ...lockAlertModal, isOpen: false })}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold text-xs py-3 px-4 rounded-xl transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

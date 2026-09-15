@@ -1614,6 +1614,7 @@ class FallbackStore {
       payments: [],
       activities: [],
       video_progress: [],
+      certificates: [],
     };
     this.loadFromDisk();
   }
@@ -1643,6 +1644,26 @@ class FallbackStore {
         if (parsed.assignment_submissions) this.data.assignment_submissions = parsed.assignment_submissions;
         if (parsed.activities) this.data.activities = parsed.activities;
         if (parsed.video_progress) this.data.video_progress = parsed.video_progress;
+        if (parsed.certificates && parsed.certificates.length > 0) {
+          this.data.certificates = parsed.certificates;
+        } else {
+          this.data.certificates = [
+            {
+              id: 1,
+              student_id: 1,
+              user_id: 3,
+              course_id: 1,
+              certificate_code: "TSG-CERT-2026-10492",
+              pdf_url: null,
+              status: "Pending",
+              grade: "Grade A+",
+              issued_by: "Admin",
+              completion_percent: 100,
+              requested_at: new Date(Date.now() - 3600000).toISOString(),
+              issue_date: null,
+            },
+          ];
+        }
       }
     } catch (e) {
       console.warn("FallbackStore: Could not load disk cache, starting with default seed data.");
@@ -1762,13 +1783,19 @@ class FallbackStore {
 
         const lecCount = this.data.lectures.filter((l) => Number(l.course_id) === Number(c.id)).length;
         const totalLec = lecCount > 0 ? lecCount : (c.total_lectures || 36);
+        const userProgress = (this.data.video_progress || []).filter(
+          (vp) => Number(vp.user_id) === userId && (Number(vp.course_id) === Number(c.id) || !vp.course_id) && vp.completed === true
+        );
+        const completedCount = userProgress.length;
+        const progressPercent = totalLec > 0 ? Math.round((completedCount / totalLec) * 100) : 0;
 
         return {
           ...c,
           enrolled_at: eRec?.enrolled_at || sRec?.created_at || new Date().toISOString(),
           enrollment_status: eRec?.status || sRec?.status || "Active",
           total_lectures: totalLec,
-          completed_lectures: 0,
+          completed_lectures: completedCount,
+          progressPercent: progressPercent,
         };
       });
 
@@ -1827,13 +1854,20 @@ class FallbackStore {
       }
       const userId = params.length > 1 ? Number(params[1]) : 0;
       const progressList = this.data.video_progress || [];
-      const rows = filtered.map((l) => {
+      let prevCompleted = true;
+      const rows = filtered.map((l, idx) => {
         const vp = progressList.find(
           (p) => Number(p.lecture_id) === Number(l.id) && (userId === 0 || Number(p.user_id) === userId)
         );
+        const isCompleted = Boolean(vp?.completed);
+        const isLocked = idx === 0 ? false : !prevCompleted;
+        if (!isCompleted) {
+          prevCompleted = false;
+        }
         return {
           ...l,
-          is_completed: Boolean(vp?.completed),
+          is_completed: isCompleted,
+          is_locked: isLocked,
           watched_seconds: Number(vp?.watched_seconds) || 0,
         };
       });
@@ -2515,9 +2549,110 @@ class FallbackStore {
     }
 
     // ----------------------------------------------------
+    // CERTIFICATES MANAGEMENT (SELECT, INSERT, UPDATE)
+    // ----------------------------------------------------
+    if (upperQ.includes("INSERT INTO CERTIFICATES")) {
+      if (!this.data.certificates) this.data.certificates = [];
+      const newCert = {
+        id: this.data.certificates.length + 1,
+        student_id: params[0] ? Number(params[0]) : null,
+        user_id: params[1] ? Number(params[1]) : Number(params[0]),
+        course_id: Number(params[2]),
+        certificate_code: params[3] || `TSG-CERT-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`,
+        pdf_url: params[4] || null,
+        status: params[5] || "Pending",
+        grade: params[6] || "Grade A+",
+        issued_by: params[7] || "Admin",
+        completion_percent: params[8] ? Number(params[8]) : 100,
+        requested_at: new Date().toISOString(),
+        issue_date: params[5] === "Issued" ? new Date().toISOString() : null,
+      };
+      // Check if already exists for this user and course
+      const existingIdx = this.data.certificates.findIndex(
+        c => Number(c.user_id) === Number(newCert.user_id) && Number(c.course_id) === Number(newCert.course_id)
+      );
+      if (existingIdx !== -1) {
+        this.data.certificates[existingIdx] = {
+          ...this.data.certificates[existingIdx],
+          ...newCert,
+          id: this.data.certificates[existingIdx].id,
+        };
+        this.saveToDisk();
+        return { rows: [this.data.certificates[existingIdx]], rowCount: 1 };
+      }
+      this.data.certificates.push(newCert);
+      this.saveToDisk();
+      return { rows: [newCert], rowCount: 1 };
+    }
+
+    if (upperQ.includes("UPDATE CERTIFICATES")) {
+      if (!this.data.certificates) this.data.certificates = [];
+      let updatedCert = null;
+      // Usually updated by id or certificate_code
+      const targetIdOrCode = params[params.length - 1];
+      const cert = this.data.certificates.find(
+        c => String(c.id) === String(targetIdOrCode) || c.certificate_code === String(targetIdOrCode)
+      );
+      if (cert) {
+        if (upperQ.includes("PDF_URL = $1") || upperQ.includes("PDF_URL")) {
+          cert.pdf_url = params[0] || cert.pdf_url;
+          cert.status = "Issued";
+          if (params[1]) cert.grade = params[1];
+          cert.issue_date = new Date().toISOString();
+        }
+        cert.updated_at = new Date().toISOString();
+        updatedCert = cert;
+        this.saveToDisk();
+      }
+      return { rows: updatedCert ? [updatedCert] : [], rowCount: updatedCert ? 1 : 0 };
+    }
+
+    if (upperQ.includes("FROM CERTIFICATES") && !upperQ.includes("COUNT")) {
+      if (!this.data.certificates) this.data.certificates = [];
+      let list = [...this.data.certificates];
+
+      if (upperQ.includes("CERTIFICATE_CODE = $1")) {
+        const code = String(params[0]).trim();
+        list = list.filter(c => c.certificate_code.toLowerCase() === code.toLowerCase());
+      } else if (upperQ.includes("STATUS = 'PENDING'") || (params && params.includes("Pending"))) {
+        list = list.filter(c => (c.status || "Pending").toLowerCase() === "pending");
+      } else if (upperQ.includes("USER_ID = $1") || upperQ.includes("STUDENT_ID = $1")) {
+        const uId = Number(params[0]);
+        list = list.filter(c => Number(c.user_id) === uId || Number(c.student_id) === uId);
+      }
+
+      // Enrich with student and course metadata
+      const enriched = list.map(c => {
+        const user = (this.data.users || []).find(u => Number(u.id) === Number(c.user_id)) || {};
+        const student = (this.data.students || []).find(s => Number(s.user_id) === Number(c.user_id) || Number(s.id) === Number(c.student_id)) || {};
+        const course = (this.data.courses || []).find(co => Number(co.id) === Number(c.course_id)) || {};
+        return {
+          ...c,
+          student_name: student.name || user.name || "Student",
+          student_email: student.email || user.email || "",
+          student_phone: student.phone || user.phone || "",
+          student_code: student.student_id || student.course_code || `TSG-${c.user_id}`,
+          course_title: course.title || "Certification Track",
+          course_duration: course.duration || "4 Months",
+          course_category: course.category || "Technology",
+        };
+      });
+      return { rows: enriched, rowCount: enriched.length };
+    }
+
+    // ----------------------------------------------------
     // ANALYTICS & AGGREGATE DASHBOARD QUERIES
     // ----------------------------------------------------
     if (upperQ.includes("SELECT COUNT(*)")) {
+      if (upperQ.includes("FROM CERTIFICATES")) {
+        let list = this.data.certificates || [];
+        if (upperQ.includes("STATUS = 'PENDING'") || upperQ.includes("STATUS = $1")) {
+          list = list.filter(c => (c.status || "Pending").toLowerCase() === "pending");
+        } else if (upperQ.includes("STATUS = 'ISSUED'")) {
+          list = list.filter(c => (c.status || "").toLowerCase() === "issued");
+        }
+        return { rows: [{ count: list.length }], rowCount: 1 };
+      }
       if (upperQ.includes("FROM COURSES")) {
         return { rows: [{ count: this.data.courses?.length || 0 }], rowCount: 1 };
       }

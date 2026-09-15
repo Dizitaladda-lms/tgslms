@@ -13,6 +13,7 @@ import {
   FaTimes,
   FaShieldAlt,
   FaDatabase,
+  FaAward,
 } from "react-icons/fa";
 import logo from "../../assets/logo.png";
 import api from "../../lib/api";
@@ -38,21 +39,19 @@ export default function AdminLayout({ children, title, subtitle, onSyncComplete 
       const response = await api.post("/api/admin/sync-database");
       const message =
         response.data?.message ||
-        "All LMS courses, modules, lectures & students synced to PostgreSQL successfully! 🚀";
-      alert(message);
-      setSyncNotice("Database Synced ✅");
-      if (onSyncComplete) onSyncComplete();
-    } catch (error) {
-      console.error("Sync error:", error);
-      alert("Database sync notice: " + (error.response?.data?.message || error.message));
-      setSyncNotice("Sync Notice ⚠️");
+        `Database synchronized! Found ${response.data?.count || 17} courses.`;
+      setSyncNotice("Synced ✅");
+      if (onSyncComplete) onSyncComplete(response.data);
+    } catch (err) {
+      console.error("Admin sync error:", err);
+      setSyncNotice("Sync Failed ❌");
     } finally {
       setIsSyncing(false);
       setTimeout(() => setSyncNotice(null), 4000);
     }
   };
 
-  // Exactly the 5 requested core sections
+  // Core admin sections
   const navTabs = [
     {
       name: "Dashboard",
@@ -68,6 +67,11 @@ export default function AdminLayout({ children, title, subtitle, onSyncComplete 
       name: "Courses & Video Studio",
       path: "/admin/courses",
       icon: <FaBookOpen className="inline mr-2" />,
+    },
+    {
+      name: "Certificates",
+      path: "/admin/certificates",
+      icon: <FaAward className="inline mr-2" />,
     },
     {
       name: "Payments",
@@ -161,8 +165,8 @@ export default function AdminLayout({ children, title, subtitle, onSyncComplete 
       {/* ============================================================ */}
       <nav className="bg-[#0B1220] sticky top-0 z-40 border-b border-orange-400/20 shadow-md">
         <div className="max-w-7xl mx-auto">
-          {/* DESKTOP 5-COLUMN GRID */}
-          <div className="hidden md:grid grid-cols-5 text-center">
+          {/* DESKTOP 6-COLUMN GRID */}
+          <div className="hidden md:grid grid-cols-6 text-center">
             {navTabs.map((tab) => {
               const isActive =
                 tab.path === "/admin"

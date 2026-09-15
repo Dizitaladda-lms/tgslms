@@ -142,10 +142,36 @@ const getLectures = async (req, res, next) => {
 
     const result = await pool.query(query, params);
 
+    // Calculate sequential lock state for students
+    let rows = result.rows;
+    if (courseId) {
+      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
+        let prevCompleted = true;
+        rows = rows.map((lec, idx) => {
+          const isCompleted = Boolean(lec.is_completed);
+          const isLocked = idx === 0 ? false : !prevCompleted;
+          if (!isCompleted) {
+            prevCompleted = false;
+          }
+          return {
+            ...lec,
+            is_completed: isCompleted,
+            is_locked: isLocked,
+          };
+        });
+      } else {
+        rows = rows.map((lec) => ({
+          ...lec,
+          is_completed: Boolean(lec.is_completed),
+          is_locked: false,
+        }));
+      }
+    }
+
     res.status(200).json({
       success: true,
-      count: result.rows.length,
-      lectures: result.rows,
+      count: rows.length,
+      lectures: rows,
     });
   } catch (error) {
     next(error);

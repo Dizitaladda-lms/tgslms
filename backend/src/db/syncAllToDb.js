@@ -133,6 +133,14 @@ async function syncDatabase(providedPool = null) {
         "ALTER TABLE assignments ADD COLUMN IF NOT EXISTS resource_url TEXT;",
         "ALTER TABLE assignment_submissions ADD COLUMN IF NOT EXISTS notes TEXT;",
         "ALTER TABLE assignment_submissions ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Submitted';",
+        "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS user_id INTEGER;",
+        "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS pdf_url TEXT;",
+        "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending';",
+        "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS grade VARCHAR(50) DEFAULT 'Grade A+';",
+        "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS issued_by VARCHAR(100) DEFAULT 'Admin';",
+        "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS completion_percent INTEGER DEFAULT 100;",
+        "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS requested_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;",
+        "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS issue_date TIMESTAMP WITH TIME ZONE;",
       ];
       for (const sql of upgradeStatements) {
         try {

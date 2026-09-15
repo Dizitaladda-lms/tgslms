@@ -254,17 +254,25 @@ CREATE INDEX IF NOT EXISTS idx_quiz_attempts_student ON quiz_attempts(student_id
 -- 15. CERTIFICATES TABLE
 CREATE TABLE IF NOT EXISTS certificates (
     id SERIAL PRIMARY KEY,
-    student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
     certificate_code VARCHAR(100) UNIQUE NOT NULL,
-    issue_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(student_id, course_id)
+    pdf_url TEXT,
+    status VARCHAR(50) DEFAULT 'Pending',
+    grade VARCHAR(50) DEFAULT 'Grade A+',
+    issued_by VARCHAR(100) DEFAULT 'Admin',
+    completion_percent INTEGER DEFAULT 100,
+    requested_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    issue_date TIMESTAMP WITH TIME ZONE,
+    UNIQUE(user_id, course_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_certificates_code ON certificates(certificate_code);
 CREATE INDEX IF NOT EXISTS idx_certificates_student ON certificates(student_id);
+CREATE INDEX IF NOT EXISTS idx_certificates_user ON certificates(user_id);
 CREATE INDEX IF NOT EXISTS idx_certificates_course ON certificates(course_id);
+CREATE INDEX IF NOT EXISTS idx_certificates_status ON certificates(status);
 
 -- 16. ACTIVITIES TABLE
 CREATE TABLE IF NOT EXISTS activities (
