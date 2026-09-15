@@ -1,11 +1,9 @@
-import React, { useState } from "react";
-
+import React, { useState, useEffect } from "react";
 import api from "../../lib/api";
-
 import TeacherSidebar from "../../components/teacher/TeacherSidebar";
 
 const UploadLecture = () => {
-
+  const [courses, setCourses] = useState([]);
   const [lectureData, setLectureData] = useState({
     title: "",
     description: "",
@@ -16,6 +14,18 @@ const UploadLecture = () => {
   const [video, setVideo] = useState(null);
   const [pdf, setPdf] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    api.get("/api/courses")
+      .then((res) => {
+        const list = res.data?.courses || res.data || [];
+        setCourses(list);
+        if (list.length > 0 && !lectureData.course_id) {
+          setLectureData((prev) => ({ ...prev, course_id: String(list[0].id) }));
+        }
+      })
+      .catch((err) => console.warn("Failed to load courses:", err));
+  }, []);
 
   // INPUT CHANGE
   const handleChange = (e) => {
@@ -61,94 +71,55 @@ const UploadLecture = () => {
         formData.append("pdf", pdf);
       }
 
-      console.log(
-        "Sending Files To Backend..."
-      );
-
       // API CALL
-
       const response = await api.post(
-
-        `${import.meta.env.VITE_API_URL}/api/lectures/upload`,
-
+        "/api/lectures/upload",
         formData,
-
         {
           headers: {
-            "Content-Type":
-              "multipart/form-data",
+            "Content-Type": "multipart/form-data",
           },
         }
-
       );
 
-      console.log(response.data);
-
-      alert(
-        "Lecture Uploaded Successfully 🚀"
-      );
+      alert("Lecture Uploaded Successfully 🚀");
 
       // RESET FORM
-
       setLectureData({
         title: "",
         description: "",
-        course_id: "",
+        course_id: courses.length > 0 ? String(courses[0].id) : "",
         video_url: "",
       });
 
       setVideo(null);
-
       setPdf(null);
-
       setLoading(false);
-
     } catch (error) {
-
       console.log(error);
-
       alert(
         error.response?.data?.message ||
         "Upload Failed"
       );
-
       setLoading(false);
-
     }
-
   };
 
   return (
-
     <div className="flex bg-zinc-100 min-h-screen">
-
       <TeacherSidebar />
-
       <div className="flex-1 p-8">
-
         <div className="bg-white rounded-2xl shadow-md p-8 max-w-4xl mx-auto">
-
           <h1 className="text-4xl font-bold mb-8">
-
             Upload Lecture
-
           </h1>
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
-
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* TITLE */}
-
             <div>
-
               <label className="block mb-2 font-medium">
-
                 Lecture Title
-
               </label>
-
               <input
                 type="text"
                 name="title"
@@ -156,49 +127,54 @@ const UploadLecture = () => {
                 className="w-full border p-4 rounded-xl outline-none"
                 onChange={handleChange}
                 value={lectureData.title}
+                required
               />
-
             </div>
 
             {/* DESCRIPTION */}
-
             <div>
-
               <label className="block mb-2 font-medium">
-
                 Lecture Description
-
               </label>
-
               <textarea
                 name="description"
                 placeholder="Enter lecture description"
-                className="w-full border p-4 rounded-xl outline-none h-40"
+                className="w-full border p-4 rounded-xl outline-none h-32"
                 onChange={handleChange}
                 value={lectureData.description}
               />
-
             </div>
 
-            {/* COURSE ID */}
-
+            {/* COURSE SELECTOR */}
             <div>
-
               <label className="block mb-2 font-medium">
-
-                Course ID
-
+                Select Course
               </label>
-
-              <input
-                type="text"
-                name="course_id"
-                placeholder="Enter course ID"
-                className="w-full border p-4 rounded-xl outline-none"
-                onChange={handleChange}
-                value={lectureData.course_id}
-              />
-
+              {courses.length > 0 ? (
+                <select
+                  name="course_id"
+                  className="w-full border p-4 rounded-xl outline-none bg-white"
+                  onChange={handleChange}
+                  value={lectureData.course_id}
+                  required
+                >
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title} (ID: {c.id} / Code: {c.course_id})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  name="course_id"
+                  placeholder="Enter course ID (e.g. 1)"
+                  className="w-full border p-4 rounded-xl outline-none"
+                  onChange={handleChange}
+                  value={lectureData.course_id}
+                  required
+                />
+              )}
             </div>
 
             {/* VIDEO URL / GOOGLE DRIVE LINK */}
