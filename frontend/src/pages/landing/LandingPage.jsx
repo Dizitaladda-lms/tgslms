@@ -438,27 +438,22 @@ const prevSlide = () => {
   className="bg-[#0B1220] text-white border-b-4 border-[#D4A017]"
 >
 
-  <div className="max-w-7xl mx-auto px-6 py-6">
+  <div className="w-full px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
 
     <div
-className="
-relative
-lg:min-lg:h-[320px]
-min-h-[300px]
-flex
-flex-col
-lg:block
-items-center
-"
->
+      className="
+        relative
+        w-full
+        flex
+        flex-col
+        lg:block
+        items-center
+      "
+    >
 
       {/* ================= LOGO ================= */}
 
-      <div className="relative
-lg:absolute
-left-0
-top-0
-mb-8">
+      <div className="relative lg:absolute left-0 lg:left-2 top-0 lg:top-1 mb-6 lg:mb-0">
 
         <div
           className="
@@ -486,17 +481,19 @@ mb-8">
 
       <div
         className="
-       relative
-lg:absolute
-right-0
-top-0
-flex
-flex-col
-w-full
-sm:w-[320px]
-lg:w-[220px]
-mt-8
-lg:mt-0
+          relative
+          lg:absolute
+          right-0
+          lg:right-2
+          top-0
+          lg:top-1
+          flex
+          flex-col
+          w-full
+          sm:w-[260px]
+          lg:w-[200px]
+          mt-6
+          lg:mt-0
         "
       >
 
@@ -525,17 +522,16 @@ lg:mt-0
 
       <div
         className="
-        lg:h-[320px]
-min-h-[300px]
-        flex
-        flex-col
-        justify-end
-        items-center
-        text-center
-        px-4
-md:px-10
-lg:px-[260px]
-        pb-2
+          flex
+          flex-col
+          justify-center
+          items-center
+          text-center
+          px-4
+          md:px-10
+          lg:px-56
+          pt-2
+          pb-4
         "
       >
 
