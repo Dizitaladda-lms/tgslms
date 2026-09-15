@@ -1644,26 +1644,7 @@ class FallbackStore {
         if (parsed.assignment_submissions) this.data.assignment_submissions = parsed.assignment_submissions;
         if (parsed.activities) this.data.activities = parsed.activities;
         if (parsed.video_progress) this.data.video_progress = parsed.video_progress;
-        if (parsed.certificates && parsed.certificates.length > 0) {
-          this.data.certificates = parsed.certificates;
-        } else {
-          this.data.certificates = [
-            {
-              id: 1,
-              student_id: 1,
-              user_id: 3,
-              course_id: 1,
-              certificate_code: "TSG-CERT-2026-10492",
-              pdf_url: null,
-              status: "Pending",
-              grade: "Grade A+",
-              issued_by: "Admin",
-              completion_percent: 100,
-              requested_at: new Date(Date.now() - 3600000).toISOString(),
-              issue_date: null,
-            },
-          ];
-        }
+        if (parsed.certificates) this.data.certificates = parsed.certificates;
       }
     } catch (e) {
       console.warn("FallbackStore: Could not load disk cache, starting with default seed data.");
@@ -1946,6 +1927,15 @@ class FallbackStore {
       const id = Number(params[0]);
       const user = this.data.users.find((u) => u.id === id);
       return { rows: user ? [user] : [], rowCount: user ? 1 : 0 };
+    }
+
+    if (upperQ.includes("FROM USERS") && !upperQ.includes("INSERT") && !upperQ.includes("UPDATE") && !upperQ.includes("DELETE") && !upperQ.includes("COUNT")) {
+      let list = this.data.users || [];
+      if (upperQ.includes("ROLE = $1") || upperQ.includes("ROLE = 'STUDENT'")) {
+        const targetRole = params[0] || (upperQ.includes("'STUDENT'") ? "student" : "");
+        if (targetRole) list = list.filter(u => u.role === targetRole);
+      }
+      return { rows: list, rowCount: list.length };
     }
 
     if (upperQ.includes("INSERT INTO USERS")) {
