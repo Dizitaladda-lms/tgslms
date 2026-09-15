@@ -47,6 +47,7 @@ router.post("/", verifyToken, checkRole("admin"), async (req, res, next) => {
       name,
       email,
       phone,
+      dob,
       course,
       teacher,
       teacher_id,
@@ -80,18 +81,18 @@ router.post("/", verifyToken, checkRole("admin"), async (req, res, next) => {
 
     // 1. Create in users table so student can log in
     const userRes = await client.query(
-      `INSERT INTO users (name, full_name, email, password, role, phone, status)
-       VALUES ($1, $2, $3, $4, 'student', $5, $6)
+      `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+       VALUES ($1, $2, $3, $4, 'student', $5, $6, $7)
        RETURNING id`,
-      [name, name, email, hashedPassword, phone, status || "Active"]
+      [name, name, email, hashedPassword, phone, dob || null, status || "Active"]
     );
     const newUserId = userRes.rows[0].id;
 
     // 2. Create in students table for extended profile & management
     const studentRes = await client.query(
       `INSERT INTO students
-       (user_id, student_id, password, name, email, phone, course, teacher, teacher_id, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       (user_id, student_id, password, name, email, phone, dob, course, teacher, teacher_id, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         newUserId,
@@ -100,6 +101,7 @@ router.post("/", verifyToken, checkRole("admin"), async (req, res, next) => {
         name,
         email,
         phone,
+        dob || null,
         course,
         teacher,
         teacher_id || null,
@@ -138,6 +140,7 @@ router.get("/me/profile", verifyToken, async (req, res, next) => {
          s.name,
          s.email,
          s.phone,
+         COALESCE(s.dob, u.dob) as dob,
          s.course,
          s.teacher,
          s.teacher_id,
@@ -164,7 +167,7 @@ router.get("/me/profile", verifyToken, async (req, res, next) => {
     if (result.rows.length === 0) {
       // Fallback: user might not have a separate students row yet
       const userRes = await pool.query(
-        "SELECT id, name, email, phone, role, avatar, created_at FROM users WHERE id = $1",
+        "SELECT id, name, email, phone, role, avatar, dob, created_at FROM users WHERE id = $1",
         [userId]
       );
       return res.json({

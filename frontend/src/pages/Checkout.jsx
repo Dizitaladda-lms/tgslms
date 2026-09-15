@@ -20,6 +20,7 @@ import {
   PhoneCall,
   Mail,
   UserCheck,
+  Calendar,
 } from "lucide-react";
 import api from "../lib/api";
 
@@ -45,6 +46,7 @@ const Checkout = () => {
     lastName: storedUser?.name ? storedUser.name.split(" ").slice(1).join(" ") : "",
     email: storedUser?.email || "",
     phone: storedUser?.phone || "",
+    dob: storedUser?.dob || "",
     state: "",
     city: "",
     address: "",
@@ -165,6 +167,10 @@ const Checkout = () => {
       setErrorMsg("Please enter a valid 10-digit Mobile Number for official registration.");
       return;
     }
+    if (!formData.dob) {
+      setErrorMsg("Please select your Date of Birth for official enrollment & annual birthday celebrations.");
+      return;
+    }
     if (!formData.agreeTerms) {
       setErrorMsg("Please accept the Terms & Conditions to proceed with enrollment.");
       return;
@@ -190,6 +196,7 @@ const Checkout = () => {
           lastName: formData.lastName.trim(),
           email: formData.email.trim().toLowerCase(),
           phone: formData.phone.trim(),
+          dob: formData.dob.trim(),
           state: formData.state.trim(),
           city: formData.city.trim(),
         },
@@ -208,7 +215,7 @@ const Checkout = () => {
         key: keyId || "rzp_test_TWPxFYGnxRpKCL",
         amount: order.amount,
         currency: order.currency || "INR",
-        name: "DIZITAL ADDA LMS",
+        name: "TSG LMS",
         description: `Enrollment: ${course.title}`,
         order_id: order.id,
         prefill: {
@@ -238,6 +245,7 @@ const Checkout = () => {
                 lastName: formData.lastName.trim(),
                 email: formData.email.trim().toLowerCase(),
                 phone: formData.phone.trim(),
+                dob: formData.dob.trim(),
                 state: formData.state.trim(),
                 city: formData.city.trim(),
               },
@@ -248,7 +256,11 @@ const Checkout = () => {
                 localStorage.setItem("token", verifyRes.data.token);
               }
               if (verifyRes.data.user) {
-                localStorage.setItem("user", JSON.stringify(verifyRes.data.user));
+                const userWithDob = {
+                  ...verifyRes.data.user,
+                  dob: verifyRes.data.user.dob || formData.dob,
+                };
+                localStorage.setItem("user", JSON.stringify(userWithDob));
               }
 
               setCredentials(verifyRes.data.credentials);
@@ -656,6 +668,33 @@ const Checkout = () => {
                   </span>
                 </div>
 
+                {/* Date of Birth (DOB) */}
+                <div className="sm:col-span-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Date of Birth <span className="text-red-500">*</span>
+                    </label>
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#D4A017] bg-[#0B1220] px-2.5 py-0.5 rounded-full shadow-xs">
+                      🎂 Birthday Surprises & Wishes
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      name="dob"
+                      required
+                      max={new Date().toISOString().split("T")[0]}
+                      value={formData.dob}
+                      onChange={handleInputChange}
+                      className="w-full border border-slate-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#7C2D12] transition pl-11 bg-white text-slate-800 font-medium"
+                    />
+                    <Calendar className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                  </div>
+                  <span className="text-[11px] text-slate-500 mt-1 block">
+                    Used for your official student record & annual personalized birthday celebrations from Team TSG!
+                  </span>
+                </div>
+
                 {/* State */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
@@ -719,7 +758,7 @@ const Checkout = () => {
                     className="mt-1 w-4 h-4 text-[#7C2D12] rounded border-slate-300 focus:ring-[#7C2D12]"
                   />
                   <span className="text-xs text-slate-600 leading-relaxed">
-                    I agree to the Dizital Adda Terms of Enrollment. I understand that my course access will be provisioned immediately and portal credentials will be generated upon successful payment.
+                    I agree to the TSG Terms of Enrollment. I understand that my course access will be provisioned immediately and portal credentials will be generated upon successful payment.
                   </span>
                 </label>
               </div>

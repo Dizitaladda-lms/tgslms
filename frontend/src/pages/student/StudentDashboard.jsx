@@ -15,6 +15,11 @@ import {
   FaVideo,
   FaQuestionCircle,
   FaExternalLinkAlt,
+  FaBirthdayCake,
+  FaGift,
+  FaTimes,
+  FaStar,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import api from "../../lib/api";
 
@@ -23,6 +28,10 @@ function StudentDashboard() {
   const [courses, setCourses] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Birthday Celebration State
+  const [showBirthdayModal, setShowBirthdayModal] = useState(false);
+  const [birthdayModalDismissed, setBirthdayModalDismissed] = useState(false);
 
   // Settings & Password Change Modal State
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -35,6 +44,7 @@ function StudentDashboard() {
   const [profileForm, setProfileForm] = useState({
     name: "",
     phone: "",
+    dob: "",
   });
   const [settingsMsg, setSettingsMsg] = useState({ type: "", text: "" });
   const [savingSettings, setSavingSettings] = useState(false);
@@ -118,8 +128,9 @@ function StudentDashboard() {
       const res = await api.put("/api/user/profile", {
         name: profileForm.name || studentName,
         phone: profileForm.phone || profile?.phone,
+        dob: profileForm.dob || profile?.dob || "",
       });
-      setSettingsMsg({ type: "success", text: res.data?.message || "Profile updated successfully!" });
+      setSettingsMsg({ type: "success", text: res.data?.message || "Profile updated successfully! ✅" });
       if (res.data?.user) {
         setProfile((prev) => ({ ...prev, ...res.data.user }));
         localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -156,6 +167,60 @@ function StudentDashboard() {
     profile?.course_title || profile?.course || (courses.length > 0 ? courses[0].title : "Enrolled Learning Track");
   const studentCode = profile?.student_id || profile?.course_code || "DA-STU";
 
+  // Check if today is student's birthday
+  const checkIsBirthdayToday = (dobStr) => {
+    if (!dobStr) return false;
+    try {
+      const today = new Date();
+      const currentMonth = today.getMonth(); // 0 to 11
+      const currentDay = today.getDate(); // 1 to 31
+
+      if (typeof dobStr === "string") {
+        const cleanDob = dobStr.trim();
+        if (cleanDob.includes("-")) {
+          const parts = cleanDob.split("-");
+          if (parts.length >= 3) {
+            if (parts[0].length === 4) {
+              // YYYY-MM-DD
+              const m = parseInt(parts[1], 10) - 1;
+              const d = parseInt(parts[2].slice(0, 2), 10);
+              return m === currentMonth && d === currentDay;
+            } else {
+              // DD-MM-YYYY
+              const d = parseInt(parts[0], 10);
+              const m = parseInt(parts[1], 10) - 1;
+              return m === currentMonth && d === currentDay;
+            }
+          }
+        } else if (cleanDob.includes("/")) {
+          const parts = cleanDob.split("/");
+          if (parts.length >= 3) {
+            const d = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            return m === currentMonth && d === currentDay;
+          }
+        }
+      }
+      const parsed = new Date(dobStr);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.getMonth() === currentMonth && parsed.getDate() === currentDay;
+      }
+    } catch (err) {
+      console.warn("DOB evaluation notice:", err);
+    }
+    return false;
+  };
+
+  const studentDob = profile?.dob || storedUser?.dob || "";
+  const isBirthday = checkIsBirthdayToday(studentDob);
+
+  // Auto-open birthday celebration when today is student's birthday
+  useEffect(() => {
+    if (isBirthday && !birthdayModalDismissed) {
+      setShowBirthdayModal(true);
+    }
+  }, [isBirthday, studentDob, birthdayModalDismissed]);
+
   const overallProgress =
     courses.length > 0
       ? Math.round(courses.reduce((sum, c) => sum + (c.progressPercent || 0), 0) / courses.length)
@@ -174,11 +239,11 @@ function StudentDashboard() {
           {/* BRAND LOGO & BADGE */}
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border-2 border-[#D4A017] bg-black flex items-center justify-center overflow-hidden">
-                <span className="text-xs font-black text-[#D4A017] tracking-tighter">DA</span>
+              <div className="w-10 h-10 rounded-full border-2 border-[#D4A017] bg-[#0B1220] flex items-center justify-center overflow-hidden">
+                <span className="text-xs font-black text-[#D4A017] tracking-tighter">TSG</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-white">DIZITAL ADDA</h1>
+                <h1 className="text-xl font-bold tracking-tight text-white">TSG LMS</h1>
                 <p className="text-[11px] text-[#D4A017] font-semibold tracking-wider uppercase">
                   Student Learning Portal
                 </p>
@@ -210,6 +275,7 @@ function StudentDashboard() {
                 setProfileForm({
                   name: profile?.name || storedUser?.name || "",
                   phone: profile?.phone || storedUser?.phone || "",
+                  dob: profile?.dob || storedUser?.dob || "",
                 });
                 setSettingsMsg({ type: "", text: "" });
               }}
@@ -230,6 +296,43 @@ function StudentDashboard() {
           </div>
         </div>
       </header>
+
+      {/* =========================================================
+          FESTIVE BIRTHDAY CELEBRATION TOP BANNER
+      ========================================================= */}
+      {isBirthday && (
+        <aside aria-label="Birthday Greeting" className="bg-gradient-to-r from-[#0B1220] via-[#7C2D12] to-[#0B1220] border-b-2 border-[#D4A017] text-white py-3 px-6 shadow-md relative overflow-hidden">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl select-none" style={{ animation: "birthdayGlow 2.5s infinite" }}>
+                🎂
+              </span>
+              <div>
+                <div className="flex items-center gap-2 justify-center sm:justify-start">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#D4A017] bg-white/10 px-2.5 py-0.5 rounded-full">
+                    🎉 Happy Birthday, {studentName}!
+                  </span>
+                  <span className="hidden md:inline text-xs text-amber-200">
+                    Roll ID: {studentCode}
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm font-semibold text-slate-100 mt-0.5">
+                  Today is your special day! Team TSG and all your mentors wish you an extraordinary year of learning and breakthrough career milestones! 🎈
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowBirthdayModal(true)}
+                className="bg-[#D4A017] hover:bg-[#b58710] text-[#0B1220] font-black text-xs px-4 py-2 rounded-xl shadow transition flex items-center gap-2 cursor-pointer"
+              >
+                <FaGift />
+                <span>Open Birthday Celebration 🎁</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
 
       {/* =========================================================
           MAIN CONTAINER
@@ -884,6 +987,28 @@ function StudentDashboard() {
                 </div>
 
                 <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Date of Birth
+                    </label>
+                    <span className="text-[10px] font-bold text-[#D4A017] bg-[#0B1220] px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <FaBirthdayCake />
+                      <span>Birthday Surprises</span>
+                    </span>
+                  </div>
+                  <input
+                    type="date"
+                    max={new Date().toISOString().split("T")[0]}
+                    value={profileForm.dob || ""}
+                    onChange={(e) => setProfileForm({ ...profileForm, dob: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C2D12]"
+                  />
+                  <span className="text-[11px] text-slate-400 mt-1 block">
+                    Save your birthday to receive personal celebrations and mentor blessings on your portal!
+                  </span>
+                </div>
+
+                <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
                     Registered Email (Portal User ID)
                   </label>
@@ -895,6 +1020,20 @@ function StudentDashboard() {
                   />
                 </div>
 
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSettingsModal(false);
+                      setShowBirthdayModal(true);
+                    }}
+                    className="w-full bg-amber-50 hover:bg-amber-100 border border-[#D4A017] text-[#0B1220] font-bold py-2 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <FaGift className="text-[#D4A017]" />
+                    <span>Preview TSG Birthday Celebration 🎁</span>
+                  </button>
+                </div>
+
                 <button
                   type="submit"
                   disabled={savingSettings}
@@ -904,6 +1043,172 @@ function StudentDashboard() {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          FESTIVE TSG BIRTHDAY CELEBRATION MODAL
+      ========================================================= */}
+      {showBirthdayModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          {/* Falling Confetti Particles Layer */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[...Array(30)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-xs"
+                style={{
+                  top: "-20px",
+                  left: `${(i * 3.4) % 100}%`,
+                  width: `${(i % 3 + 1) * 6}px`,
+                  height: `${(i % 2 + 1) * 10}px`,
+                  backgroundColor: [
+                    "#D4A017",
+                    "#FF4757",
+                    "#2ED573",
+                    "#1E90FF",
+                    "#FFA502",
+                    "#9B59B6",
+                    "#FF6B81",
+                  ][i % 7],
+                  transform: `rotate(${i * 27}deg)`,
+                  animation: `birthdayConfetti ${2.4 + (i % 5) * 0.4}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.1}s`,
+                  opacity: 0.9,
+                }}
+              />
+            ))}
+          </div>
+
+          <style>{`
+            @keyframes birthdayConfetti {
+              0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+              50% { transform: translateY(280px) rotate(180deg); opacity: 0.9; }
+              100% { transform: translateY(640px) rotate(360deg); opacity: 0; }
+            }
+            @keyframes birthdayGlow {
+              0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(212,160,23,0.5)); }
+              50% { transform: scale(1.08); filter: drop-shadow(0 0 28px rgba(212,160,23,0.9)); }
+            }
+          `}</style>
+
+          {/* Modal Container */}
+          <div className="relative w-full max-w-lg bg-[#0B1220] text-white rounded-3xl border-2 border-[#D4A017] shadow-2xl overflow-hidden z-10 p-7 sm:p-9 text-center">
+            {/* Indian Tricolor Accent Strip */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 flex">
+              <div className="flex-1 bg-[#FF9933]"></div>
+              <div className="flex-1 bg-white"></div>
+              <div className="flex-1 bg-[#138808]"></div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setShowBirthdayModal(false);
+                setBirthdayModalDismissed(true);
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition cursor-pointer"
+              title="Close Celebration"
+            >
+              <FaTimes size={18} />
+            </button>
+
+            {/* Animated Cake & Celebration Icon */}
+            <div className="inline-block relative my-2">
+              <div
+                className="text-6xl sm:text-7xl select-none"
+                style={{ animation: "birthdayGlow 2.5s ease-in-out infinite" }}
+              >
+                🎂
+              </div>
+              <span className="absolute -top-1 -right-2 text-2xl">✨</span>
+              <span className="absolute -bottom-1 -left-2 text-2xl">🎈</span>
+            </div>
+
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-[#D4A017]/15 border border-[#D4A017] text-[#D4A017] text-[11px] font-black tracking-widest uppercase px-4 py-1.5 rounded-full mb-3 shadow-xs">
+              <FaGift />
+              <span>Official TSG Birthday Celebration</span>
+            </div>
+
+            {/* Greeting */}
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+              Happy Birthday, <br />
+              <span className="text-[#D4A017] underline decoration-[#7C2D12] decoration-2 underline-offset-4">
+                {studentName}
+              </span>! 🎉
+            </h2>
+
+            <p className="text-xs text-slate-400 font-mono mt-1">
+              Student Roll ID: <span className="text-amber-200 font-semibold">{studentCode}</span>
+            </p>
+
+            {/* Personalized Mentor Wish Box */}
+            <div className="mt-4 bg-[#1E293B]/80 border border-slate-700 rounded-2xl p-4.5 text-left text-xs sm:text-sm text-slate-200 leading-relaxed space-y-2">
+              <p>
+                Dear <strong className="text-white">{studentName}</strong>,
+              </p>
+              <p>
+                On this wonderful day, <strong className="text-[#D4A017]">Team TSG</strong> and all your mentors send you our warmest wishes and hearty congratulations! 🌟
+              </p>
+              <p className="text-slate-300">
+                May this year unlock breakthrough problem-solving skills, extraordinary coding milestones, and remarkable success on your path to becoming an industry-leading tech professional.
+              </p>
+              <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-[#D4A017]">
+                <span>— With pride & best wishes, Team TSG</span>
+                <span>⭐ Birthday Scholar</span>
+              </div>
+            </div>
+
+            {/* Celebratory Perks Box */}
+            <div className="mt-4 grid grid-cols-2 gap-3 text-left">
+              <div className="bg-[#131F37] border border-[#D4A017]/30 rounded-xl p-3">
+                <div className="flex items-center gap-1.5 text-[#D4A017] text-xs font-bold mb-1">
+                  <FaStar size={12} />
+                  <span>Priority Mentorship</span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Any doubts submitted today receive express priority from the instructor team!
+                </p>
+              </div>
+              <div className="bg-[#131F37] border border-[#D4A017]/30 rounded-xl p-3">
+                <div className="flex items-center gap-1.5 text-[#D4A017] text-xs font-bold mb-1">
+                  <FaAward size={12} />
+                  <span>Learning Spirit</span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Every milestone is built one day at a time. Keep building, keep conquering!
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={() => {
+                  setShowBirthdayModal(false);
+                  setBirthdayModalDismissed(true);
+                }}
+                className="w-full bg-[#D4A017] hover:bg-[#b58710] text-[#0B1220] font-black py-3 rounded-xl transition shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Thank You, Team TSG! 🚀</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowBirthdayModal(false);
+                  setBirthdayModalDismissed(true);
+                  const coursesSection = document.getElementById("my-courses-section");
+                  if (coursesSection) {
+                    coursesSection.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 rounded-xl transition text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer border border-slate-700"
+              >
+                <FaBookOpen />
+                <span>Continue Learning</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

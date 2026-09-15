@@ -10,7 +10,7 @@ router.get("/profile", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.id;
     const result = await pool.query(
-      "SELECT id, name, full_name, email, role, phone, avatar, created_at FROM users WHERE id = $1",
+      "SELECT id, name, full_name, email, role, phone, avatar, dob, created_at FROM users WHERE id = $1",
       [userId]
     );
 
@@ -27,11 +27,11 @@ router.get("/profile", verifyToken, async (req, res, next) => {
   }
 });
 
-// UPDATE PROFILE (Name, Phone, Avatar)
+// UPDATE PROFILE (Name, Phone, Avatar, DOB)
 router.put("/profile", verifyToken, async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { name, phone, avatar } = req.body;
+    const { name, phone, avatar, dob } = req.body;
 
     const updateRes = await pool.query(
       `UPDATE users 
@@ -39,10 +39,11 @@ router.put("/profile", verifyToken, async (req, res, next) => {
            full_name = COALESCE($1, full_name),
            phone = COALESCE($2, phone),
            avatar = COALESCE($3, avatar),
+           dob = COALESCE($4, dob),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4
-       RETURNING id, name, email, role, phone, avatar`,
-      [name?.trim() || null, phone?.trim() || null, avatar || null, userId]
+       WHERE id = $5
+       RETURNING id, name, email, role, phone, avatar, dob`,
+      [name?.trim() || null, phone?.trim() || null, avatar || null, dob?.trim() || null, userId]
     );
 
     // Also sync students table if student record exists
@@ -51,9 +52,10 @@ router.put("/profile", verifyToken, async (req, res, next) => {
        SET name = COALESCE($1, name),
            phone = COALESCE($2, phone),
            image = COALESCE($3, image),
+           dob = COALESCE($4, dob),
            updated_at = CURRENT_TIMESTAMP
-       WHERE user_id = $4`,
-      [name?.trim() || null, phone?.trim() || null, avatar || null, userId]
+       WHERE user_id = $5`,
+      [name?.trim() || null, phone?.trim() || null, avatar || null, dob?.trim() || null, userId]
     );
 
     res.json({

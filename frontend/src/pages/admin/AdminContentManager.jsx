@@ -623,18 +623,21 @@ export default function AdminContentManager() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Video Stream URL (MP4, YouTube, Vimeo, or Cloudinary)
+                        <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                          <span>Video Stream URL (Google Drive, YouTube, MP4)</span>
+                          <span className="text-[10px] font-bold text-[#D4A017] bg-[#0B1220] px-2 py-0.5 rounded-md">
+                            🛡️ Anti-Piracy Watermark Protected
+                          </span>
                         </label>
                         <input
                           type="url"
-                          placeholder="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                          placeholder="e.g. https://drive.google.com/file/d/1A2B3C.../view or https://youtu.be/..."
                           value={lectureForm.video_url}
                           onChange={(e) => setLectureForm({ ...lectureForm, video_url: e.target.value })}
                           className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-[#7C2D12]"
                         />
-                        <span className="text-[11px] text-slate-400 mt-1 block">
-                          Leave empty to use high-quality HD sample lecture video.
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          💡 <strong>Google Drive Links Supported:</strong> Paste any Google Drive video link. (Ensure Drive file sharing is set to <em>"Anyone with the link can view"</em>). All drive videos stream with dynamic student watermark & anti-screen recording shield!
                         </span>
                       </div>
 

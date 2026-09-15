@@ -20,6 +20,7 @@ import {
   FaPaperPlane,
 } from "react-icons/fa";
 import api from "../../lib/api";
+import SecureVideoPlayer from "../../components/SecureVideoPlayer";
 
 const LearningPage = () => {
   const navigate = useNavigate();
@@ -29,6 +30,21 @@ const LearningPage = () => {
   const [lectures, setLectures] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    api
+      .get("/api/students/me/profile")
+      .then((res) => {
+        if (res.data?.student) setProfile(res.data.student);
+      })
+      .catch(() => {});
+  }, []);
+
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const studentName = profile?.name || storedUser?.name || "Student";
+  const studentEmail = profile?.email || storedUser?.email || "student@tsglms.com";
+  const studentCode = profile?.student_id || profile?.course_code || `TSG-STU-${storedUser?.id || "001"}`;
 
   // Learning Mode: "lectures" | "quizzes" | "assignments"
   const [learningMode, setLearningMode] = useState("lectures");
@@ -209,7 +225,7 @@ const LearningPage = () => {
 
             <div className="hidden sm:block border-l border-slate-700 pl-4">
               <h1 className="text-base font-bold text-white truncate max-w-md">
-                {course?.title || "Dizital Adda Classroom"}
+                {course?.title || "TSG Classroom"}
               </h1>
               <p className="text-[11px] text-[#D4A017] font-semibold">
                 Instructor: {course?.teacher || "Dr. Gulshan Kumar"}
@@ -264,8 +280,8 @@ const LearningPage = () => {
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             }`}
           >
-            <FaFileAlt className={learningMode === "quizzes" ? "text-[#D4A017]" : "text-slate-500"} />
-            <span>Tests & Quizzes ({quizzes.length})</span>
+            <FaTasks className={learningMode === "quizzes" ? "text-[#D4A017]" : "text-slate-500"} />
+            <span>Quizzes & Mock Tests ({quizzes.length})</span>
           </button>
 
           <button
@@ -291,26 +307,52 @@ const LearningPage = () => {
           <div className="flex-1 space-y-6">
             {selectedLecture ? (
               <div>
-                {/* VIDEO CONTAINER */}
-                <div className="bg-black rounded-2xl overflow-hidden shadow-lg border border-slate-200">
-                  {selectedLecture.video_url && selectedLecture.video_url.includes("youtube.com") ? (
-                    <iframe
-                      title={selectedLecture.title}
-                      src={selectedLecture.video_url.replace("watch?v=", "embed/")}
-                      className="w-full aspect-video"
-                      allowFullScreen
-                    ></iframe>
-                  ) : (
-                    <video
-                      controls
-                      key={selectedLecture.id}
-                      src={selectedLecture.video_url}
-                      className="w-full aspect-video bg-black"
-                    >
-                      Your browser does not support HTML video.
-                    </video>
-                  )}
-                </div>
+                {/* SECURE VIDEO CONTAINER WITH ANTI-PIRACY, DRIVE STREAM & WATERMARK */}
+                <SecureVideoPlayer
+                  key={selectedLecture.id}
+                  videoUrl={selectedLecture.video_url}
+                  lectureTitle={selectedLecture.title}
+                  lectureId={selectedLecture.id}
+                  courseId={course?.id}
+                  durationMinutes={parseInt(selectedLecture.duration, 10) || 20}
+                  initialWatchedSeconds={selectedLecture.watched_seconds || 0}
+                  isCompleted={Boolean(selectedLecture.is_completed)}
+                  studentInfo={{
+                    name: studentName,
+                    email: studentEmail,
+                    studentId: studentCode,
+                  }}
+                  onProgressUpdate={async ({ lectureId, courseId, watchedSeconds, completed }) => {
+                    try {
+                      await api.post("/api/progress/update", {
+                        lectureId,
+                        courseId,
+                        watchedSeconds,
+                        completed,
+                      });
+                    } catch (err) {
+                      // ignore background sync notice
+                    }
+                  }}
+                  onAutoComplete={async (lecId, watchedSec) => {
+                    try {
+                      await api.post("/api/progress/update", {
+                        lectureId: lecId,
+                        courseId: course?.id,
+                        completed: true,
+                        watchedSeconds: watchedSec,
+                      });
+                      setLectures((prev) =>
+                        prev.map((l) => (l.id === lecId ? { ...l, is_completed: true } : l))
+                      );
+                      setSelectedLecture((prev) =>
+                        prev?.id === lecId ? { ...prev, is_completed: true } : prev
+                      );
+                    } catch (err) {
+                      console.error("Auto complete sync notice:", err);
+                    }
+                  }}
+                />
 
                 {/* LECTURE HEADER & ACTIONS */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mt-5">

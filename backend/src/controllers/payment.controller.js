@@ -66,6 +66,9 @@ const createOrder = async (req, res, next) => {
       );
       if (existingUser.rows.length > 0) {
         userId = existingUser.rows[0].id;
+        if (studentDetails?.dob) {
+          await pool.query("UPDATE users SET dob = $1 WHERE id = $2 AND (dob IS NULL OR dob = '')", [studentDetails.dob, userId]).catch(() => {});
+        }
       } else {
         const studentName =
           [studentDetails.firstName, studentDetails.lastName].filter(Boolean).join(" ").trim() ||
@@ -73,10 +76,10 @@ const createOrder = async (req, res, next) => {
         const tempPass = "DA@" + Math.floor(100000 + Math.random() * 900000);
         const hashed = await bcrypt.hash(tempPass, 10);
         const newU = await pool.query(
-          `INSERT INTO users (name, full_name, email, password, role, phone, status)
-           VALUES ($1, $2, $3, $4, 'student', $5, 'Active')
+          `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+           VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
            RETURNING id`,
-          [studentName, studentName, email, hashed, studentDetails.phone || null]
+          [studentName, studentName, email, hashed, studentDetails.phone || null, studentDetails.dob || null]
         );
         userId = newU.rows[0].id;
       }
@@ -230,12 +233,16 @@ const verifyPayment = async (req, res, next) => {
     if (!finalUser && studentDetails?.email) {
       const studentEmail = studentDetails.email.trim().toLowerCase();
       const existingUserRes = await pool.query(
-        "SELECT id, name, email, role, phone, avatar FROM users WHERE LOWER(email) = $1",
+        "SELECT id, name, email, role, phone, avatar, dob FROM users WHERE LOWER(email) = $1",
         [studentEmail]
       );
       if (existingUserRes.rows.length > 0) {
         finalUser = existingUserRes.rows[0];
         userId = finalUser.id;
+        if (studentDetails?.dob) {
+          await pool.query("UPDATE users SET dob = $1 WHERE id = $2", [studentDetails.dob, finalUser.id]).catch(() => {});
+          finalUser.dob = studentDetails.dob;
+        }
       }
     }
 
@@ -249,21 +256,25 @@ const verifyPayment = async (req, res, next) => {
 
       try {
         const newUserRes = await pool.query(
-          `INSERT INTO users (name, full_name, email, password, role, phone, status)
-           VALUES ($1, $2, $3, $4, 'student', $5, 'Active')
-           RETURNING id, name, email, role, phone, avatar`,
-          [studentName, studentName, studentEmail, hashedTempPassword, studentDetails?.phone || null]
+          `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+           VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
+           RETURNING id, name, email, role, phone, avatar, dob`,
+          [studentName, studentName, studentEmail, hashedTempPassword, studentDetails?.phone || null, studentDetails?.dob || null]
         );
         finalUser = newUserRes.rows[0];
         userId = finalUser.id;
       } catch (insertUserErr) {
         const fallbackUser = await pool.query(
-          "SELECT id, name, email, role, phone, avatar FROM users WHERE LOWER(email) = $1",
+          "SELECT id, name, email, role, phone, avatar, dob FROM users WHERE LOWER(email) = $1",
           [studentEmail]
         );
         if (fallbackUser.rows.length > 0) {
           finalUser = fallbackUser.rows[0];
           userId = finalUser.id;
+          if (studentDetails?.dob) {
+            await pool.query("UPDATE users SET dob = $1 WHERE id = $2", [studentDetails.dob, finalUser.id]).catch(() => {});
+            finalUser.dob = studentDetails.dob;
+          }
         } else {
           throw insertUserErr;
         }
@@ -291,15 +302,15 @@ const verifyPayment = async (req, res, next) => {
         studentCode = studentCheck.rows[0].student_id;
         await pool.query(
           `UPDATE students 
-           SET course_id = $1, course_code = $2, course = $3, password = $4, updated_at = CURRENT_TIMESTAMP
-           WHERE id = $5`,
-          [course.id, course.course_id || String(course.id), course.title, hashedTempPassword, studentRecordId]
+           SET course_id = $1, course_code = $2, course = $3, password = $4, dob = COALESCE($5, dob), updated_at = CURRENT_TIMESTAMP
+           WHERE id = $6`,
+          [course.id, course.course_id || String(course.id), course.title, hashedTempPassword, studentDetails?.dob || finalUser?.dob || null, studentRecordId]
         );
       } else {
         studentCode = `DA-STU-${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`;
         const newStudent = await pool.query(
-          `INSERT INTO students (user_id, student_id, name, email, password, phone, course, course_id, course_code, status)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Active')
+          `INSERT INTO students (user_id, student_id, name, email, password, phone, dob, course, course_id, course_code, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Active')
            RETURNING id`,
           [
             userId,
@@ -308,6 +319,7 @@ const verifyPayment = async (req, res, next) => {
             finalUser?.email || "",
             hashedTempPassword,
             finalUser?.phone || null,
+            studentDetails?.dob || finalUser?.dob || null,
             course.title,
             course.id,
             course.course_id || String(course.id),
@@ -418,6 +430,7 @@ const verifyPayment = async (req, res, next) => {
         role: finalUser.role,
         phone: finalUser.phone,
         avatar: finalUser.avatar,
+        dob: finalUser.dob || studentDetails?.dob || null,
       },
       credentials: {
         username: finalUser.email,

@@ -72,6 +72,7 @@ const loginUser = async (req, res, next) => {
         email: user.email,
         role: user.role,
         avatar: user.avatar,
+        dob: user.dob || null,
       },
     });
   } catch (error) {
@@ -85,7 +86,7 @@ const loginUser = async (req, res, next) => {
 const registerUser = async (req, res, next) => {
   const client = await pool.connect();
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, dob } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -111,19 +112,19 @@ const registerUser = async (req, res, next) => {
     await client.query("BEGIN");
 
     const userRes = await client.query(
-      `INSERT INTO users (name, full_name, email, password, role, phone, status)
-       VALUES ($1, $2, $3, $4, 'student', $5, 'Active')
-       RETURNING id, name, email, role`,
-      [name, name, email.trim().toLowerCase(), hashedPassword, phone || null]
+      `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+       VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
+       RETURNING id, name, email, role, dob`,
+      [name, name, email.trim().toLowerCase(), hashedPassword, phone || null, dob || null]
     );
 
     const newUser = userRes.rows[0];
     const studentCode = `STU-${Date.now().toString().slice(-4)}`;
 
     await client.query(
-      `INSERT INTO students (user_id, student_id, name, email, password, phone, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'Active')`,
-      [newUser.id, studentCode, name, email, hashedPassword, phone || null]
+      `INSERT INTO students (user_id, student_id, name, email, password, phone, dob, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'Active')`,
+      [newUser.id, studentCode, name, email, hashedPassword, phone || null, dob || null]
     );
 
     await client.query("COMMIT");
@@ -162,7 +163,7 @@ const getMe = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const userQuery = await pool.query(
-      "SELECT id, name, full_name, email, role, phone, specialization, avatar, status, created_at FROM users WHERE id = $1",
+      "SELECT id, name, full_name, email, role, phone, dob, specialization, avatar, status, created_at FROM users WHERE id = $1",
       [userId]
     );
 

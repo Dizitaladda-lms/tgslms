@@ -1613,6 +1613,7 @@ class FallbackStore {
       assignment_submissions: [],
       payments: [],
       activities: [],
+      video_progress: [],
     };
     this.loadFromDisk();
   }
@@ -1641,6 +1642,7 @@ class FallbackStore {
         if (parsed.assignments) this.data.assignments = parsed.assignments;
         if (parsed.assignment_submissions) this.data.assignment_submissions = parsed.assignment_submissions;
         if (parsed.activities) this.data.activities = parsed.activities;
+        if (parsed.video_progress) this.data.video_progress = parsed.video_progress;
       }
     } catch (e) {
       console.warn("FallbackStore: Could not load disk cache, starting with default seed data.");
@@ -1823,7 +1825,19 @@ class FallbackStore {
         const matchedCourseId = targetCourse ? targetCourse.id : Number(courseIdStr);
         filtered = filtered.filter((l) => Number(l.course_id) === Number(matchedCourseId));
       }
-      return { rows: filtered, rowCount: filtered.length };
+      const userId = params.length > 1 ? Number(params[1]) : 0;
+      const progressList = this.data.video_progress || [];
+      const rows = filtered.map((l) => {
+        const vp = progressList.find(
+          (p) => Number(p.lecture_id) === Number(l.id) && (userId === 0 || Number(p.user_id) === userId)
+        );
+        return {
+          ...l,
+          is_completed: Boolean(vp?.completed),
+          watched_seconds: Number(vp?.watched_seconds) || 0,
+        };
+      });
+      return { rows, rowCount: rows.length };
     }
 
     // 2e. Add Course: INSERT INTO courses (...) VALUES (...) RETURNING *
@@ -1901,19 +1915,31 @@ class FallbackStore {
     }
 
     if (upperQ.includes("INSERT INTO USERS")) {
+      const colMatch = q.match(/\((.*?)\)\s*VALUES/i);
+      const cols = colMatch
+        ? colMatch[1].split(",").map((c) => c.trim().toLowerCase())
+        : ["name", "full_name", "email", "password", "role", "phone", "dob", "status"];
+      const record = {};
+      cols.forEach((col, idx) => {
+        if (params[idx] !== undefined) record[col] = params[idx];
+      });
+
       const isLiteralStudent = upperQ.includes("'STUDENT'");
-      const role = isLiteralStudent ? "student" : (params[4] || "student").toLowerCase();
-      const phone = isLiteralStudent ? (params[4] || null) : (params[5] || null);
+      const role = record.role || (isLiteralStudent ? "student" : (params[4] || "student").toLowerCase());
+      const phone = record.phone || (isLiteralStudent ? (params[4] || null) : (params[5] || null));
+      const dob = record.dob || null;
+
       const newUser = {
         id: this.data.users.length + 1,
-        name: params[0] || "Student",
-        full_name: params[1] || params[0] || "Student",
-        email: (params[2] || "").toLowerCase().trim(),
-        password: params[3],
+        name: record.name || params[0] || "Student",
+        full_name: record.full_name || record.name || params[1] || params[0] || "Student",
+        email: (record.email || params[2] || "").toLowerCase().trim(),
+        password: record.password || params[3],
         role,
         phone,
+        dob,
         status: "Active",
-        avatar: "https://ui-avatars.com/api/?name=" + encodeURIComponent(params[0] || "Student") + "&background=0B1220&color=D4A017&bold=true",
+        avatar: "https://ui-avatars.com/api/?name=" + encodeURIComponent(record.name || params[0] || "Student") + "&background=0B1220&color=D4A017&bold=true",
         created_at: new Date().toISOString(),
       };
       this.data.users.push(newUser);
@@ -1932,6 +1958,10 @@ class FallbackStore {
           user.name = params[0];
           user.full_name = params[0];
           if (params[1] !== undefined) user.phone = params[1];
+        }
+        if (upperQ.includes("DOB")) {
+          const dobVal = params.find((p) => typeof p === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p));
+          if (dobVal) user.dob = dobVal;
         }
         user.updated_at = new Date().toISOString();
         this.saveToDisk();
@@ -1955,6 +1985,7 @@ class FallbackStore {
       );
       const combined = {
         ...student,
+        dob: student.dob || user?.dob || null,
         avatar: user?.avatar || null,
         role: user?.role || "student",
         course_numeric_id: course?.id || null,
@@ -1971,7 +2002,7 @@ class FallbackStore {
       const colMatch = q.match(/\((.*?)\)\s*VALUES/i);
       const cols = colMatch
         ? colMatch[1].split(",").map((c) => c.trim().toLowerCase())
-        : ["user_id", "student_id", "name", "email", "password", "phone", "course", "course_id", "course_code", "status"];
+        : ["user_id", "student_id", "name", "email", "password", "phone", "dob", "course", "course_id", "course_code", "status"];
 
       const record = {};
       cols.forEach((col, idx) => {
@@ -1990,6 +2021,7 @@ class FallbackStore {
         email: (record.email || "").toLowerCase().trim(),
         password: record.password || null,
         phone: record.phone || null,
+        dob: record.dob || null,
         course: record.course || "Advanced Digital Marketing",
         batch: record.batch || "Regular 2026",
         status: record.status || "Active",
@@ -2436,6 +2468,53 @@ class FallbackStore {
     }
 
     // ----------------------------------------------------
+    // VIDEO PROGRESS MANAGEMENT (UPSERT & SELECT)
+    // ----------------------------------------------------
+    if (upperQ.includes("INSERT INTO VIDEO_PROGRESS")) {
+      if (!this.data.video_progress) this.data.video_progress = [];
+      const userId = Number(params[0]);
+      const lectureId = Number(params[1]);
+      const courseId = params[2] ? Number(params[2]) : null;
+      const completed = Boolean(params[3]);
+      const watchedSeconds = Number(params[4]) || 0;
+
+      let record = this.data.video_progress.find(
+        vp => Number(vp.user_id) === userId && Number(vp.lecture_id) === lectureId
+      );
+
+      if (record) {
+        record.completed = completed;
+        record.watched_seconds = watchedSeconds;
+        if (courseId) record.course_id = courseId;
+        record.updated_at = new Date().toISOString();
+      } else {
+        record = {
+          id: this.data.video_progress.length + 1,
+          user_id: userId,
+          student_id: userId,
+          lecture_id: lectureId,
+          course_id: courseId,
+          completed,
+          watched_seconds: watchedSeconds,
+          updated_at: new Date().toISOString(),
+        };
+        this.data.video_progress.push(record);
+      }
+      this.saveToDisk();
+      return { rows: [record], rowCount: 1 };
+    }
+
+    if (upperQ.includes("FROM VIDEO_PROGRESS") && !upperQ.includes("COUNT")) {
+      if (!this.data.video_progress) this.data.video_progress = [];
+      let list = this.data.video_progress;
+      if (params.length > 0 && params[0] !== undefined) {
+        const uId = Number(params[0]);
+        list = list.filter(vp => Number(vp.user_id) === uId || Number(vp.student_id) === uId);
+      }
+      return { rows: list, rowCount: list.length };
+    }
+
+    // ----------------------------------------------------
     // ANALYTICS & AGGREGATE DASHBOARD QUERIES
     // ----------------------------------------------------
     if (upperQ.includes("SELECT COUNT(*)")) {
@@ -2446,10 +2525,41 @@ class FallbackStore {
         return { rows: [{ count: this.data.students?.length || 0 }], rowCount: 1 };
       }
       if (upperQ.includes("FROM LECTURES")) {
-        return { rows: [{ count: this.data.lectures?.length || 0 }], rowCount: 1 };
+        let list = this.data.lectures || [];
+        if (upperQ.includes("COURSE_ID = $1") && params && params.length > 0) {
+          const cId = Number(params[0]);
+          list = list.filter(l => Number(l.course_id) === cId);
+        }
+        return { rows: [{ count: list.length }], rowCount: 1 };
       }
       if (upperQ.includes("FROM SECTIONS")) {
         return { rows: [{ count: this.data.sections?.length || 0 }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM VIDEO_PROGRESS")) {
+        let list = this.data.video_progress || [];
+        if (upperQ.includes("COMPLETED = TRUE")) {
+          list = list.filter(vp => Boolean(vp.completed));
+        }
+        if (params && params.length > 0) {
+          const uId = Number(params[0]);
+          list = list.filter(vp => Number(vp.user_id) === uId || Number(vp.student_id) === uId);
+          if (params.length > 1 && params[1] !== undefined) {
+            const cId = Number(params[1]);
+            list = list.filter(vp => Number(vp.course_id) === cId);
+          }
+        }
+        return { rows: [{ count: list.length }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM ASSIGNMENT_SUBMISSIONS")) {
+        let list = this.data.assignment_submissions || [];
+        if (params && params.length > 0) {
+          const sId = Number(params[0]);
+          list = list.filter(as => Number(as.student_id) === sId);
+        }
+        return { rows: [{ count: list.length }], rowCount: 1 };
+      }
+      if (upperQ.includes("FROM TEST_RESULTS")) {
+        return { rows: [{ count: 0 }], rowCount: 1 };
       }
       if (upperQ.includes("FROM USERS")) {
         let list = this.data.users || [];

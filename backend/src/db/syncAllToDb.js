@@ -112,6 +112,8 @@ async function syncDatabase(providedPool = null) {
         "ALTER TABLE courses ADD COLUMN IF NOT EXISTS rating NUMERIC(3, 2) DEFAULT 4.9;",
         "ALTER TABLE students ADD COLUMN IF NOT EXISTS course_id INTEGER;",
         "ALTER TABLE students ADD COLUMN IF NOT EXISTS course_code VARCHAR(100);",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(50);",
+        "ALTER TABLE students ADD COLUMN IF NOT EXISTS dob VARCHAR(50);",
         "ALTER TABLE students ADD COLUMN IF NOT EXISTS batch VARCHAR(100) DEFAULT 'Regular 2026';",
         "ALTER TABLE students ADD COLUMN IF NOT EXISTS image TEXT;",
         "ALTER TABLE orders ADD COLUMN IF NOT EXISTS student_id INTEGER;",
@@ -179,14 +181,15 @@ async function syncDatabase(providedPool = null) {
         }
 
         const query = `
-          INSERT INTO users (id, name, full_name, email, password, role, phone, specialization, status, avatar, created_at)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          INSERT INTO users (id, name, full_name, email, password, role, phone, dob, specialization, status, avatar, created_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
           ON CONFLICT (email) DO UPDATE SET
             name = EXCLUDED.name,
             full_name = EXCLUDED.full_name,
             password = EXCLUDED.password,
             role = EXCLUDED.role,
             phone = EXCLUDED.phone,
+            dob = EXCLUDED.dob,
             specialization = EXCLUDED.specialization,
             status = EXCLUDED.status,
             avatar = EXCLUDED.avatar
@@ -200,6 +203,7 @@ async function syncDatabase(providedPool = null) {
           u.password,
           role,
           phone,
+          u.dob || null,
           u.specialization || null,
           u.status || "Active",
           u.avatar || null,
@@ -381,12 +385,14 @@ async function syncDatabase(providedPool = null) {
 
         await client.query(
           `INSERT INTO students (
-             id, user_id, student_id, course_id, course_code, name, email, password, phone, course, batch, status, created_at
+             id, user_id, student_id, course_id, course_code, name, email, password, phone, dob, course, batch, status, created_at
            )
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
            ON CONFLICT (student_id) DO UPDATE SET
              name = EXCLUDED.name,
              email = EXCLUDED.email,
+             phone = EXCLUDED.phone,
+             dob = EXCLUDED.dob,
              course_id = EXCLUDED.course_id,
              course_code = EXCLUDED.course_code,
              batch = EXCLUDED.batch,
@@ -401,6 +407,7 @@ async function syncDatabase(providedPool = null) {
             st.email,
             st.password,
             st.phone || null,
+            st.dob || null,
             st.course || null,
             st.batch || "Regular 2026",
             st.status || "Active",

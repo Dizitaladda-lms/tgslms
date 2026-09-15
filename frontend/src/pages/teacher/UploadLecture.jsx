@@ -10,97 +10,56 @@ const UploadLecture = () => {
     title: "",
     description: "",
     course_id: "",
+    video_url: "",
   });
 
   const [video, setVideo] = useState(null);
-
   const [pdf, setPdf] = useState(null);
-
   const [loading, setLoading] = useState(false);
 
   // INPUT CHANGE
-
   const handleChange = (e) => {
-
     setLectureData({
       ...lectureData,
       [e.target.name]: e.target.value,
     });
-
   };
 
   // VIDEO CHANGE
-
   const handleVideoChange = (e) => {
-
     setVideo(e.target.files[0]);
-
   };
 
   // PDF CHANGE
-
   const handlePdfChange = (e) => {
-
     setPdf(e.target.files[0]);
-
   };
 
   // SUBMIT
-
   const handleSubmit = async (e) => {
-
     e.preventDefault();
-
     try {
-
-      if (!video) {
-
-        alert("Please select video");
-
+      if (!video && !lectureData.video_url?.trim()) {
+        alert("Please provide a Google Drive / Video URL or select a video file.");
         return;
-
-      }
-
-      if (!pdf) {
-
-        alert("Please select PDF");
-
-        return;
-
       }
 
       setLoading(true);
 
       const formData = new FormData();
+      formData.append("title", lectureData.title);
+      formData.append("description", lectureData.description);
+      formData.append("course_id", lectureData.course_id);
 
-      // TEXT DATA
-
-      formData.append(
-        "title",
-        lectureData.title
-      );
-
-      formData.append(
-        "description",
-        lectureData.description
-      );
-
-      formData.append(
-        "course_id",
-        lectureData.course_id
-      );
-
-      // FILES
-
-      formData.append(
-        "video",
-        video
-      );
-
-      formData.append(
-        "pdf",
-        pdf
-      );
+      if (lectureData.video_url?.trim()) {
+        formData.append("video_url", lectureData.video_url.trim());
+      }
+      if (video) {
+        formData.append("video", video);
+      }
+      if (pdf) {
+        formData.append("pdf", pdf);
+      }
 
       console.log(
         "Sending Files To Backend..."
@@ -135,6 +94,7 @@ const UploadLecture = () => {
         title: "",
         description: "",
         course_id: "",
+        video_url: "",
       });
 
       setVideo(null);
@@ -241,23 +201,41 @@ const UploadLecture = () => {
 
             </div>
 
-            {/* VIDEO */}
-
+            {/* VIDEO URL / GOOGLE DRIVE LINK */}
             <div>
-
               <label className="block mb-2 font-medium">
-
-                Upload Video
-
+                Video Stream URL (Google Drive / YouTube / Cloud Link)
               </label>
+              <input
+                type="url"
+                name="video_url"
+                placeholder="e.g. https://drive.google.com/file/d/.../view"
+                className="w-full border p-4 rounded-xl outline-none"
+                onChange={handleChange}
+                value={lectureData.video_url}
+              />
+              <p className="text-xs text-zinc-500 mt-1">
+                Supports Google Drive view links (with "Anyone with link can view"), YouTube, or MP4 URLs. Protected by TSG Anti-Piracy Watermark & Video Shield.
+              </p>
+            </div>
 
+            <div className="flex items-center gap-3 my-2">
+              <div className="flex-1 h-[1px] bg-zinc-200" />
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Or Upload Video File</span>
+              <div className="flex-1 h-[1px] bg-zinc-200" />
+            </div>
+
+            {/* VIDEO FILE */}
+            <div>
+              <label className="block mb-2 font-medium">
+                Upload Video File (Optional if URL provided)
+              </label>
               <input
                 type="file"
                 accept="video/*"
                 className="w-full border p-4 rounded-xl outline-none"
                 onChange={handleVideoChange}
               />
-
             </div>
 
             {/* PDF */}
