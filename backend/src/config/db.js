@@ -47,35 +47,37 @@ if (connectionString) {
         console.log("PostgreSQL Database Connected Successfully ✅");
         client.release();
 
-        // Auto-check and synchronize full store if database is empty or missing courses
-        setTimeout(async () => {
-          try {
-            const check = await realPool.query("SELECT COUNT(*) FROM courses");
-            const count = parseInt(check.rows[0].count, 10);
-            let targetCount = 17;
+        // Auto-check and synchronize full store if database is empty or missing courses (only outside serverless)
+        if (!process.env.VERCEL) {
+          setTimeout(async () => {
             try {
-              const storePath = path.join(__dirname, "..", "..", "data", "lms_store.json");
-              if (fs.existsSync(storePath)) {
-                const s = JSON.parse(fs.readFileSync(storePath, "utf8"));
-                if (Array.isArray(s.courses)) targetCount = s.courses.length;
-              }
-            } catch (e) {}
+              const check = await realPool.query("SELECT COUNT(*) FROM courses");
+              const count = parseInt(check.rows[0].count, 10);
+              let targetCount = 17;
+              try {
+                const storePath = path.join(__dirname, "..", "..", "data", "lms_store.json");
+                if (fs.existsSync(storePath)) {
+                  const s = JSON.parse(fs.readFileSync(storePath, "utf8"));
+                  if (Array.isArray(s.courses)) targetCount = s.courses.length;
+                }
+              } catch (e) {}
 
-            if (count < targetCount) {
-              console.log(`📦 Database has ${count} courses (< ${targetCount}). Auto-synchronizing full LMS database...`);
-              const { syncDatabase } = require("../db/syncAllToDb");
-              await syncDatabase(realPool);
+              if (count < targetCount) {
+                console.log(`📦 Database has ${count} courses (< ${targetCount}). Auto-synchronizing full LMS database...`);
+                const { syncDatabase } = require("../db/syncAllToDb");
+                await syncDatabase(realPool);
+              }
+            } catch (autoSyncErr) {
+              console.log("ℹ️ Tables uninitialized in PostgreSQL. Executing schema & initial sync...");
+              try {
+                const { syncDatabase } = require("../db/syncAllToDb");
+                await syncDatabase(realPool);
+              } catch (err2) {
+                console.warn("⚠️ Auto-sync notice:", err2.message);
+              }
             }
-          } catch (autoSyncErr) {
-            console.log("ℹ️ Tables uninitialized in PostgreSQL. Executing schema & initial sync...");
-            try {
-              const { syncDatabase } = require("../db/syncAllToDb");
-              await syncDatabase(realPool);
-            } catch (err2) {
-              console.warn("⚠️ Auto-sync notice:", err2.message);
-            }
-          }
-        }, 1500);
+          }, 1500);
+        }
       })
       .catch((error) => {
         isPostgresAvailable = false;
@@ -101,11 +103,7 @@ const pool = {
   getRealPool: () => (isPostgresAvailable ? realPool : null),
 
   async query(text, params = []) {
-    if (connectionString) {
-      // Direct PostgreSQL Mode: Strict execution directly against DB
-      if (!realPool || !isPostgresAvailable) {
-        throw new Error("PostgreSQL database is connecting or unavailable. Direct DB save failed.");
-      }
+    if (connectionString && realPool) {
       return await realPool.query(text, params);
     }
     // Only if DATABASE_URL is completely unset in dev, fallback to local store
@@ -113,10 +111,7 @@ const pool = {
   },
 
   async connect() {
-    if (connectionString) {
-      if (!realPool || !isPostgresAvailable) {
-        throw new Error("PostgreSQL database is connecting or unavailable. Direct DB connection failed.");
-      }
+    if (connectionString && realPool) {
       return await realPool.connect();
     }
 
