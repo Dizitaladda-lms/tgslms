@@ -1,8 +1,21 @@
 import axios from "axios";
 
-// Authoritative Live Production Backend URL
-const rawUrl = import.meta.env.VITE_API_URL || "https://tsg-qlb1.onrender.com";
-const baseURL = rawUrl.trim().replace(/\/+$/, "");
+// Dynamic Base URL:
+// 1. If explicit valid VITE_API_URL provided, use it.
+// 2. In production (e.g. Vercel deployment), use same-origin "" so /api routes hit the Vercel backend directly.
+// 3. In local dev on localhost, default to http://localhost:5000.
+const getBaseUrl = () => {
+  const envUrl = (import.meta.env.VITE_API_URL || "").trim();
+  if (envUrl && !envUrl.includes("tsg-qlb1.onrender.com") && !envUrl.includes("vercel.com/")) {
+    return envUrl.replace(/\/+$/, "");
+  }
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    return ""; // Same origin on Vercel deployment
+  }
+  return "http://localhost:5000";
+};
+
+const baseURL = getBaseUrl();
 
 const api = axios.create({
   baseURL,
