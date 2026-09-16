@@ -2,9 +2,14 @@ const fs = require("fs");
 const path = require("path");
 const pool = require("../config/db");
 
-const CERT_UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads", "certificates");
-if (!fs.existsSync(CERT_UPLOADS_DIR)) {
-  fs.mkdirSync(CERT_UPLOADS_DIR, { recursive: true });
+// Safe uploads directory handler (gracefully ignores read-only serverless environments like Vercel)
+try {
+  const CERT_UPLOADS_DIR = path.join(__dirname, "..", "..", "data", "uploads", "certificates");
+  if (!fs.existsSync(CERT_UPLOADS_DIR)) {
+    fs.mkdirSync(CERT_UPLOADS_DIR, { recursive: true });
+  }
+} catch (e) {
+  // Ignored in read-only / serverless environments
 }
 
 // ==========================================
