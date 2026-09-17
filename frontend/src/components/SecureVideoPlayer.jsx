@@ -89,9 +89,11 @@ const SecureVideoPlayer = ({
   const parsedVideo = parseVideoUrl(videoUrl);
 
   // Security & Shield States
+  const [isBlackout, setIsBlackout] = useState(false);
   const [isShieldBlocked, setIsShieldBlocked] = useState(false);
   const [shieldReason, setShieldReason] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const isInteractingWithPlayer = useRef(false);
 
   // Playback & Progress States
   const [isPlaying, setIsPlaying] = useState(true);
@@ -129,10 +131,10 @@ const SecureVideoPlayer = ({
   }, []);
 
   // =========================================================================
-  // 2. ACTIVE ANTI-CAPTURE & ANTI-RECORDING SENSORS
+  // 2. ACTIVE ANTI-CAPTURE & ANTI-RECORDING BLACKOUT SENSORS
   // =========================================================================
   const triggerSecurityCurtain = useCallback((reason) => {
-    setIsShieldBlocked(true);
+    setIsBlackout(true);
     setShieldReason(reason);
     setIsPlaying(false);
     if (videoRef.current) {
@@ -141,68 +143,82 @@ const SecureVideoPlayer = ({
   }, []);
 
   useEffect(() => {
-    // A. Detect Tab Switching (Only when tab actually hidden, auto-resumes when returning)
+    // A. Detect Window Blur (Snipping Tool, Lightshot, Win+Shift+S, App Switch, OBS)
+    // When Snipping Tool opens, the browser window immediately blurs.
+    const handleWindowBlur = () => {
+      // Delay by 75ms: check if focus went to the video player iframe inside our container
+      setTimeout(() => {
+        const activeEl = document.activeElement;
+        const isInsidePlayer =
+          containerRef.current &&
+          activeEl &&
+          (containerRef.current.contains(activeEl) || activeEl.tagName === "IFRAME");
+
+        if (isInsidePlayer) {
+          // User clicked inside video iframe (play/pause/volume) - DO NOT blackout
+          return;
+        }
+
+        // True blur: Snipping Tool overlay, taskbar screenshot, recording overlay, or app switch
+        setIsBlackout(true);
+      }, 75);
+    };
+
+    // B. Detect Window Focus (Smooth auto-restore when user returns to LMS)
+    const handleWindowFocus = () => {
+      setIsBlackout(false);
+      setShieldReason("");
+      setIsPlaying(true);
+      if (videoRef.current) {
+        videoRef.current.play().catch(() => {});
+      }
+    };
+
+    // C. Detect Tab Switching (hidden / visible)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        triggerSecurityCurtain("Browser tab switched. Video paused for security.");
+        setIsBlackout(true);
       } else if (document.visibilityState === "visible") {
-        // Auto-resume smoothly when student comes back to class
-        setIsShieldBlocked(false);
-        setShieldReason("");
-        setIsPlaying(true);
+        setIsBlackout(false);
         if (videoRef.current) {
           videoRef.current.play().catch(() => {});
         }
       }
     };
 
-    // B. Intercept Screen Sharing (Zoom / Meet / Discord / Web Screen Recorders)
+    // D. Intercept Screen Sharing (Zoom / Meet / Discord / Web Screen Recorders)
     if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-      const originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
       navigator.mediaDevices.getDisplayMedia = async (...args) => {
-        triggerSecurityCurtain("Screen sharing / Web capture detected. Video stream protected.");
+        setIsBlackout(true);
         throw new Error("Screen sharing is restricted on copyright-protected content.");
       };
     }
 
-    // C. Intercept Screen Capture & DevTools Keyboard Shortcuts
+    // E. Intercept Screen Capture & DevTools Keyboard Shortcuts
     const handleKeyDown = (e) => {
-      // PrintScreen key
+      // 1. PrintScreen key (PrintScreen or keycode 44)
       if (e.key === "PrintScreen" || e.keyCode === 44) {
-        e.preventDefault();
+        setIsBlackout(true);
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText("");
           }
-        } catch (err) {
-          // ignore
-        }
-        triggerSecurityCurtain("Screenshot shortcut (PrintScreen) intercepted.");
-        setToastMessage("⚠️ Screenshots are strictly prohibited by TSG Copyright Protection.");
-        setTimeout(() => {
-          setIsShieldBlocked(false);
-          setIsPlaying(true);
-          setToastMessage("");
-        }, 2500);
-        return false;
+        } catch (err) {}
+        setTimeout(() => setIsBlackout(false), 2200);
+        return;
       }
 
-      // Win + Shift + S (Windows Snipping Tool) or Cmd + Shift + 4 (Mac)
+      // 2. Snipping Tool Shortcuts: Win + Shift + S, Cmd + Shift + 3/4/5, Ctrl + Shift + S, Alt + PrintScreen
       if (
-        (e.key === "S" || e.key === "s") &&
-        (e.metaKey || e.ctrlKey) &&
-        e.shiftKey
+        (e.shiftKey && (e.metaKey || e.ctrlKey) && ["S", "s", "3", "4", "5"].includes(e.key)) ||
+        (e.altKey && (e.key === "PrintScreen" || e.keyCode === 44))
       ) {
-        e.preventDefault();
-        triggerSecurityCurtain("Snipping Tool / Screen capture shortcut detected.");
-        setTimeout(() => {
-          setIsShieldBlocked(false);
-          setIsPlaying(true);
-        }, 2500);
-        return false;
+        setIsBlackout(true);
+        setTimeout(() => setIsBlackout(false), 2500);
+        return;
       }
 
-      // F12 or Inspect Element (Ctrl+Shift+I / Ctrl+Shift+C / Ctrl+Shift+J)
+      // 3. F12 or Inspect Element (Ctrl+Shift+I / Ctrl+Shift+C / Ctrl+Shift+J)
       if (
         e.key === "F12" ||
         e.keyCode === 123 ||
@@ -211,26 +227,48 @@ const SecureVideoPlayer = ({
           ["I", "i", "C", "c", "J", "j"].includes(e.key))
       ) {
         e.preventDefault();
-        triggerSecurityCurtain("Developer Inspection Tools are disabled on secure video.");
+        setIsBlackout(true);
+        setTimeout(() => setIsBlackout(false), 2000);
         return false;
       }
 
-      // Ctrl + U (View Source), Ctrl + S (Save Page), Ctrl + P (Print)
+      // 4. Ctrl + U (View Source), Ctrl + S (Save Page), Ctrl + P (Print)
       if (
         (e.ctrlKey || e.metaKey) &&
         ["u", "U", "s", "S", "p", "P"].includes(e.key)
       ) {
         e.preventDefault();
+        setIsBlackout(true);
+        setTimeout(() => setIsBlackout(false), 1500);
         return false;
       }
     };
 
+    // F. Keyup event for PrintScreen (Windows often sends PrintScreen on keyup)
+    const handleKeyUp = (e) => {
+      if (e.key === "PrintScreen" || e.keyCode === 44) {
+        setIsBlackout(true);
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText("");
+          }
+        } catch (err) {}
+        setTimeout(() => setIsBlackout(false), 2200);
+      }
+    };
+
+    window.addEventListener("blur", handleWindowBlur);
+    window.addEventListener("focus", handleWindowFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
 
     return () => {
+      window.removeEventListener("blur", handleWindowBlur);
+      window.removeEventListener("focus", handleWindowFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
     };
   }, [triggerSecurityCurtain]);
 
@@ -322,43 +360,33 @@ const SecureVideoPlayer = ({
     <div
       ref={containerRef}
       onContextMenu={(e) => e.preventDefault()}
-      className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-800 select-none group"
+      onMouseEnter={() => {
+        isInteractingWithPlayer.current = true;
+      }}
+      onMouseLeave={() => {
+        isInteractingWithPlayer.current = false;
+      }}
+      className="secure-video-container relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-800 select-none group"
       style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
+      <style>{`
+        @media print {
+          .secure-video-container, video, iframe {
+            display: none !important;
+            visibility: hidden !important;
+          }
+        }
+      `}</style>
+
       {/* ===================================================================
-          1. ACTIVE ANTI-CAPTURE SECURITY CURTAIN (TRIGGERED ON BLUR/SCREENSHOT)
+          1. PURE BLACK SCREEN PROTECTION OVERLAY (SCREENSHOT & RECORDING BLACKOUT)
       ==================================================================== */}
-      {isShieldBlocked && (
-        <div className="absolute inset-0 z-50 bg-[#0B1220] flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-          <div className="w-16 h-16 rounded-full bg-red-950/80 border-2 border-red-500/60 flex items-center justify-center mb-4 text-red-400">
-            <Lock size={32} />
-          </div>
-          <div className="inline-flex items-center gap-2 bg-[#D4A017]/15 border border-[#D4A017] text-[#D4A017] text-[11px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full mb-3">
-            <ShieldAlert size={14} />
-            <span>TSG Anti-Piracy Shield Active</span>
-          </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white max-w-md">
-            Video Masked for Security Protection
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-md mt-2 leading-relaxed">
-            {shieldReason ||
-              "Screen recording, screenshot hotkeys, or switching applications is blocked to protect intellectual property."}
-          </p>
-
-          <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
-            <button
-              onClick={handleResumePlayback}
-              className="bg-[#D4A017] hover:bg-[#b58710] text-[#0B1220] font-black px-6 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-lg flex items-center gap-2 cursor-pointer"
-            >
-              <RotateCcw size={16} />
-              <span>Resume Lecture Stream</span>
-            </button>
-          </div>
-
-          <p className="text-[11px] text-slate-500 font-mono mt-4">
-            Session ID: {studentRoll} • {studentEmail}
-          </p>
-        </div>
+      {isBlackout && (
+        <div
+          className="absolute inset-0 z-50 bg-black flex items-center justify-center pointer-events-none select-none transition-opacity duration-75"
+          style={{ backgroundColor: "#000000" }}
+          aria-hidden="true"
+        />
       )}
 
       {/* ===================================================================
@@ -427,8 +455,13 @@ const SecureVideoPlayer = ({
       )}
 
       {/* ===================================================================
-          5. VIDEO EMBED/PLAYER SURFACE
+          5. VIDEO EMBED/PLAYER SURFACE (MASKED TO 0 OPACITY DURING BLACKOUT)
       ==================================================================== */}
+      <div
+        className={`w-full h-full ${
+          isBlackout ? "opacity-0 pointer-events-none invisible" : "opacity-100 visible"
+        }`}
+      >
       {parsedVideo.type === "drive" && (
         <iframe
           title={lectureTitle}
@@ -477,6 +510,7 @@ const SecureVideoPlayer = ({
           </p>
         </div>
       )}
+      </div>
 
       {/* ===================================================================
           6. LIVE SECURITY & WATCH PROGRESS STATUS BAR (SUBTLE BOTTOM OVERLAY)
