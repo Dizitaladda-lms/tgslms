@@ -141,19 +141,29 @@ const SecureVideoPlayer = ({
   }, []);
 
   useEffect(() => {
-    // A. Detect Window Blur (Triggered by Snipping Tool, OBS, Window Switcher, Lightshot)
-    const handleWindowBlur = () => {
-      triggerSecurityCurtain(
-        "Screen capture or external application focus detected. Content masked for copyright security."
-      );
-    };
-
-    // B. Detect Tab Switching
+    // A. Detect Tab Switching (Only when tab actually hidden, auto-resumes when returning)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         triggerSecurityCurtain("Browser tab switched. Video paused for security.");
+      } else if (document.visibilityState === "visible") {
+        // Auto-resume smoothly when student comes back to class
+        setIsShieldBlocked(false);
+        setShieldReason("");
+        setIsPlaying(true);
+        if (videoRef.current) {
+          videoRef.current.play().catch(() => {});
+        }
       }
     };
+
+    // B. Intercept Screen Sharing (Zoom / Meet / Discord / Web Screen Recorders)
+    if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+      const originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
+      navigator.mediaDevices.getDisplayMedia = async (...args) => {
+        triggerSecurityCurtain("Screen sharing / Web capture detected. Video stream protected.");
+        throw new Error("Screen sharing is restricted on copyright-protected content.");
+      };
+    }
 
     // C. Intercept Screen Capture & DevTools Keyboard Shortcuts
     const handleKeyDown = (e) => {
@@ -169,7 +179,11 @@ const SecureVideoPlayer = ({
         }
         triggerSecurityCurtain("Screenshot shortcut (PrintScreen) intercepted.");
         setToastMessage("⚠️ Screenshots are strictly prohibited by TSG Copyright Protection.");
-        setTimeout(() => setToastMessage(""), 4000);
+        setTimeout(() => {
+          setIsShieldBlocked(false);
+          setIsPlaying(true);
+          setToastMessage("");
+        }, 2500);
         return false;
       }
 
@@ -181,6 +195,10 @@ const SecureVideoPlayer = ({
       ) {
         e.preventDefault();
         triggerSecurityCurtain("Snipping Tool / Screen capture shortcut detected.");
+        setTimeout(() => {
+          setIsShieldBlocked(false);
+          setIsPlaying(true);
+        }, 2500);
         return false;
       }
 
@@ -207,12 +225,10 @@ const SecureVideoPlayer = ({
       }
     };
 
-    window.addEventListener("blur", handleWindowBlur);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener("blur", handleWindowBlur);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("keydown", handleKeyDown);
     };
