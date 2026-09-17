@@ -31,6 +31,9 @@ const getCourses = async (req, res, next) => {
 
     const result = await pool.query(query, params);
 
+    // Edge Caching: 10k users arriving in 1 sec will be served from CDN Edge cache without touching DB
+    res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+
     res.status(200).json({
       success: true,
       courses: result.rows,
@@ -81,6 +84,9 @@ const getSingleCourse = async (req, res, next) => {
       ...sec,
       lectures: lecturesResult.rows.filter((lec) => lec.section_id === sec.id),
     }));
+
+    // Edge Caching: High concurrency course page views served from CDN edge
+    res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
 
     res.status(200).json({
       success: true,
