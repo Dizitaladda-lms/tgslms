@@ -20,9 +20,11 @@ import {
   FaPaperPlane,
   FaLock,
   FaUnlock,
+  FaRobot,
 } from "react-icons/fa";
 import api from "../../lib/api";
 import SecureVideoPlayer from "../../components/SecureVideoPlayer";
+import AiMentorModal from "../../components/AiMentorModal";
 
 // Helper to compute sequential locking (Lesson N is locked until Lesson N-1 is completed)
 const computeSequentialLocks = (rawLectures, userRole) => {
@@ -76,6 +78,7 @@ const LearningPage = () => {
   const [selectedLecture, setSelectedLecture] = useState(null);
   const [marking, setMarking] = useState(false);
   const [activeTab, setActiveTab] = useState("overview"); // overview | notes | doubts
+  const [aiMentorOpen, setAiMentorOpen] = useState(false);
 
   // Locked Modal & Celebration Banner States
   const [lockAlertModal, setLockAlertModal] = useState({
@@ -702,22 +705,55 @@ const LearningPage = () => {
                     )}
 
                     {activeTab === "doubts" && (
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div>
-                          <h4 className="font-bold text-[#0B1220]">Have questions about this session?</h4>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            Directly message mentor on the student WhatsApp hotline.
-                          </p>
+                      <div className="space-y-4">
+                        {/* 1. AI MENTOR INSTANT SOLVER BANNER */}
+                        <div className="bg-gradient-to-r from-[#0B1220] to-[#7C2D12] text-white rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-amber-400/30">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-400 text-[#0B1220] flex items-center justify-center text-2xl font-bold shadow-md shrink-0">
+                              <FaRobot />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-sm sm:text-base text-white">
+                                  TSG AI Doubt Solver 🤖
+                                </h4>
+                                <span className="text-[10px] bg-emerald-500/30 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">
+                                  Instant 24/7
+                                </span>
+                              </div>
+                              <p className="text-xs text-amber-200/90 mt-0.5 max-w-md">
+                                Is lecture me koi bhi doubt ya concept samajh na aaya ho, AI se turant pucho — Hindi/English me step-by-step samjhayega!
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setAiMentorOpen(true)}
+                            className="bg-amber-400 hover:bg-amber-300 text-[#0B1220] font-black text-xs px-5 py-3 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer shrink-0 hover:scale-105 active:scale-95"
+                          >
+                            <FaRobot className="text-sm" />
+                            <span>Ask AI Doubt Mentor →</span>
+                          </button>
                         </div>
-                        <a
-                          href="https://wa.me/918810606010?text=Hi,%20I%20have%20a%20doubt%20in%20lecture%20session"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 shadow-sm"
-                        >
-                          <FaWhatsapp className="text-sm" />
-                          <span>Chat with Mentor</span>
-                        </a>
+
+                        {/* 2. HUMAN FACULTY WHATSAPP CARD */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                          <div>
+                            <h4 className="font-bold text-[#0B1220] text-xs sm:text-sm">Need 1-on-1 Human Faculty Assistance?</h4>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Complex doubts can be discussed directly with the course instructor on WhatsApp.
+                            </p>
+                          </div>
+                          <a
+                            href="https://wa.me/918810606010?text=Hi,%20I%20have%20a%20doubt%20in%20lecture%20session"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 shadow-sm"
+                          >
+                            <FaWhatsapp className="text-sm" />
+                            <span>Chat on WhatsApp</span>
+                          </a>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1296,6 +1332,35 @@ const LearningPage = () => {
           </div>
         </div>
       )}
+
+      {/* =========================================================
+          FLOATING 24/7 AI DOUBT MENTOR WIDGET
+      ========================================================= */}
+      <button
+        type="button"
+        onClick={() => setAiMentorOpen(true)}
+        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-[#0B1220] via-[#1E293B] to-[#7C2D12] text-white p-3 sm:px-5 sm:py-3.5 rounded-full shadow-2xl border-2 border-amber-400 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 cursor-pointer group"
+        title="Ask AI Mentor for help"
+      >
+        <div className="w-8 h-8 rounded-full bg-amber-400 text-[#0B1220] flex items-center justify-center font-bold text-sm shadow-sm group-hover:rotate-12 transition">
+          <FaRobot />
+        </div>
+        <div className="hidden sm:block text-left">
+          <div className="text-xs font-black tracking-wide flex items-center gap-1.5 text-white">
+            <span>AI Doubt Mentor</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          </div>
+          <div className="text-[10px] text-amber-200">24/7 Instant Solver</div>
+        </div>
+      </button>
+
+      {/* AI MENTOR MODAL */}
+      <AiMentorModal
+        isOpen={aiMentorOpen}
+        onClose={() => setAiMentorOpen(false)}
+        courseTitle={course?.title}
+        lectureTitle={selectedLecture?.title}
+      />
     </div>
   );
 };
