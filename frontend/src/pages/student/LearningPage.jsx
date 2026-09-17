@@ -1,5 +1,5 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Fragment } from "react";
 import {
   FaPlayCircle,
   FaCheckCircle,
@@ -789,7 +789,7 @@ const LearningPage = () => {
                     const isNewModule = idx === 0 || currModule !== prevModule;
 
                     return (
-                      <React.Fragment key={lec.id}>
+                      <Fragment key={lec.id}>
                         {isNewModule && (
                           <div className="bg-slate-100/95 border-y border-slate-200/80 px-4 py-2.5 flex items-center justify-between sticky top-0 z-10 shadow-xs">
                             <div className="flex items-center gap-2 min-w-0">
@@ -872,7 +872,7 @@ const LearningPage = () => {
                           )}
                         </div>
                       </div>
-                    </React.Fragment>
+                    </Fragment>
                   );
                   })
                 )}
