@@ -23,6 +23,7 @@ router.post(
 
 // Get lectures (Public or enrolled student progress check)
 router.get("/", optionalAuth, getLectures);
+router.get("/:course_id", optionalAuth, getLectures);
 
 // Delete lecture (Admin or Teacher)
 router.delete("/:id", verifyToken, checkRole("admin", "teacher"), deleteLecture);

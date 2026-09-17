@@ -14,6 +14,7 @@ const { checkRole } = require("../middleware/role.middleware");
 
 // Public or authenticated sections retrieval
 router.get("/", optionalAuth, getSections);
+router.get("/:course_id", optionalAuth, getSections);
 
 // Create section (Admin / Teacher)
 router.post(

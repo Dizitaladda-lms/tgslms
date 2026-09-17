@@ -784,9 +784,26 @@ const LearningPage = () => {
                     const isCompleted = lec.is_completed;
                     const isCurrentActive = !isLocked && !isCompleted;
 
+                    const currModule = lec.section_title || "Course Curriculum";
+                    const prevModule = idx > 0 ? (lectures[idx - 1]?.section_title || "Course Curriculum") : null;
+                    const isNewModule = idx === 0 || currModule !== prevModule;
+
                     return (
+                      <React.Fragment key={lec.id}>
+                        {isNewModule && (
+                          <div className="bg-slate-100/95 border-y border-slate-200/80 px-4 py-2.5 flex items-center justify-between sticky top-0 z-10 shadow-xs">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-2 h-2 rounded-full bg-[#7C2D12] shrink-0"></span>
+                              <span className="text-xs font-bold text-slate-800 truncate tracking-tight">
+                                {currModule}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-[#7C2D12] bg-[#7C2D12]/10 px-2 py-0.5 rounded shrink-0">
+                              MODULE
+                            </span>
+                          </div>
+                        )}
                       <div
-                        key={lec.id}
                         onClick={() => handleLectureClick(lec, idx)}
                         className={`p-3.5 transition flex items-start gap-3 relative ${
                           isLocked
@@ -855,7 +872,8 @@ const LearningPage = () => {
                           )}
                         </div>
                       </div>
-                    );
+                    </React.Fragment>
+                  );
                   })
                 )}
               </div>

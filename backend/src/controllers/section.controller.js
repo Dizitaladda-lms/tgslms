@@ -69,7 +69,11 @@ exports.createSection = async (req, res) => {
 
 exports.getSections = async (req, res) => {
   try {
-    const rawCourseId = req.query.courseId || req.query.course_id;
+    const rawCourseId =
+      req.params.course_id ||
+      req.params.id ||
+      req.query.courseId ||
+      req.query.course_id;
     let query = "SELECT * FROM sections ORDER BY order_num ASC, id ASC";
     let params = [];
 

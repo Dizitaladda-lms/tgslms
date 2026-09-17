@@ -108,7 +108,11 @@ const uploadLecture = async (req, res, next) => {
 // ==========================================
 const getLectures = async (req, res, next) => {
   try {
-    const courseId = req.query.courseId || req.query.course_id;
+    const courseId =
+      req.params.course_id ||
+      req.params.id ||
+      req.query.courseId ||
+      req.query.course_id;
     const userId = req.user?.id;
 
     let query;

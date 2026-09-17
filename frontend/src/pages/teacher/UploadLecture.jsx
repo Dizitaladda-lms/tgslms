@@ -4,10 +4,16 @@ import TeacherSidebar from "../../components/teacher/TeacherSidebar";
 
 const UploadLecture = () => {
   const [courses, setCourses] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [newSectionTitle, setNewSectionTitle] = useState("");
+  const [showAddSection, setShowAddSection] = useState(false);
+  const [creatingSection, setCreatingSection] = useState(false);
+
   const [lectureData, setLectureData] = useState({
     title: "",
     description: "",
     course_id: "",
+    section_id: "",
     video_url: "",
   });
 
@@ -26,6 +32,53 @@ const UploadLecture = () => {
       })
       .catch((err) => console.warn("Failed to load courses:", err));
   }, []);
+
+  // Fetch sections/modules when course changes
+  useEffect(() => {
+    if (!lectureData.course_id) {
+      setSections([]);
+      return;
+    }
+    api.get(`/api/sections/${lectureData.course_id}`)
+      .then((res) => {
+        const secList = res.data?.sections || res.data || [];
+        setSections(secList);
+        if (secList.length > 0) {
+          setLectureData((prev) => ({ ...prev, section_id: String(secList[0].id) }));
+        } else {
+          setLectureData((prev) => ({ ...prev, section_id: "" }));
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to load sections for course:", err);
+        setSections([]);
+      });
+  }, [lectureData.course_id]);
+
+  const handleCreateSection = async () => {
+    if (!newSectionTitle.trim()) {
+      alert("Please enter a module title.");
+      return;
+    }
+    try {
+      setCreatingSection(true);
+      const res = await api.post("/api/sections/create", {
+        title: newSectionTitle.trim(),
+        courseId: lectureData.course_id,
+      });
+      const created = res.data?.section;
+      if (created) {
+        setSections((prev) => [...prev, created]);
+        setLectureData((prev) => ({ ...prev, section_id: String(created.id) }));
+        setNewSectionTitle("");
+        setShowAddSection(false);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to create module");
+    } finally {
+      setCreatingSection(false);
+    }
+  };
 
   // INPUT CHANGE
   const handleChange = (e) => {
@@ -60,6 +113,9 @@ const UploadLecture = () => {
       formData.append("title", lectureData.title);
       formData.append("description", lectureData.description);
       formData.append("course_id", lectureData.course_id);
+      if (lectureData.section_id) {
+        formData.append("section_id", lectureData.section_id);
+      }
 
       if (lectureData.video_url?.trim()) {
         formData.append("video_url", lectureData.video_url.trim());
@@ -89,6 +145,7 @@ const UploadLecture = () => {
         title: "",
         description: "",
         course_id: courses.length > 0 ? String(courses[0].id) : "",
+        section_id: sections.length > 0 ? String(sections[0].id) : "",
         video_url: "",
       });
 
@@ -148,7 +205,7 @@ const UploadLecture = () => {
             {/* COURSE SELECTOR */}
             <div>
               <label className="block mb-2 font-medium">
-                Select Course
+                Select Course *
               </label>
               {courses.length > 0 ? (
                 <select
@@ -175,6 +232,67 @@ const UploadLecture = () => {
                   required
                 />
               )}
+            </div>
+
+            {/* CURRICULUM MODULE / CHAPTER SELECTOR */}
+            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-5 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="block font-bold text-sm text-[#7C2D12]">
+                    Select Curriculum Module / Chapter *
+                  </label>
+                  <p className="text-xs text-amber-800/80">
+                    Bache ko pata chalega ki yeh video kis chapter/module ka hissa hai.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddSection(!showAddSection)}
+                  className="text-xs font-bold text-[#7C2D12] hover:text-amber-950 bg-white border border-amber-300 px-3 py-1.5 rounded-lg transition self-start sm:self-auto cursor-pointer shadow-sm"
+                >
+                  {showAddSection ? "Cancel" : "+ Naya Module Banayein"}
+                </button>
+              </div>
+
+              {/* Inline Add Module Bar */}
+              {showAddSection && (
+                <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-amber-200">
+                  <input
+                    type="text"
+                    placeholder="e.g. Module 3: Advanced Google Search Ads"
+                    value={newSectionTitle}
+                    onChange={(e) => setNewSectionTitle(e.target.value)}
+                    className="flex-1 bg-white border border-amber-300 rounded-xl px-4 py-2 text-sm text-slate-800 outline-none focus:border-[#7C2D12]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateSection}
+                    disabled={creatingSection}
+                    className="bg-[#7C2D12] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-amber-950 transition cursor-pointer shrink-0 disabled:opacity-50"
+                  >
+                    {creatingSection ? "Creating..." : "Save Module"}
+                  </button>
+                </div>
+              )}
+
+              {/* Module Dropdown */}
+              <select
+                name="section_id"
+                value={lectureData.section_id}
+                onChange={handleChange}
+                className="w-full border border-amber-300 p-3.5 rounded-xl outline-none bg-white text-sm font-medium text-slate-800"
+              >
+                {sections.length === 0 ? (
+                  <option value="">No module in this course yet — Click "+ Naya Module Banayein" above</option>
+                ) : (
+                  sections.map((sec, idx) => (
+                    <option key={sec.id} value={sec.id}>
+                      Module {idx + 1}: {sec.title} (ID: {sec.id})
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
 
             {/* VIDEO URL / GOOGLE DRIVE LINK */}
