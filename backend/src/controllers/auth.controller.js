@@ -111,12 +111,27 @@ const registerUser = async (req, res, next) => {
 
     await client.query("BEGIN");
 
-    const userRes = await client.query(
-      `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
-       VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
-       RETURNING id, name, email, role, dob`,
-      [name, name, email.trim().toLowerCase(), hashedPassword, phone || null, dob || null]
-    );
+    let userRes;
+    try {
+      userRes = await client.query(
+        `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+         VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
+         RETURNING id, name, email, role, dob`,
+        [name, name, email.trim().toLowerCase(), hashedPassword, phone || null, dob || null]
+      );
+    } catch (insertErr) {
+      if (insertErr.message && insertErr.message.includes("dob")) {
+        await client.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(50)").catch(() => {});
+        userRes = await client.query(
+          `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+           VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
+           RETURNING id, name, email, role, dob`,
+          [name, name, email.trim().toLowerCase(), hashedPassword, phone || null, dob || null]
+        );
+      } else {
+        throw insertErr;
+      }
+    }
 
     const newUser = userRes.rows[0];
     const studentCode = `STU-${Date.now().toString().slice(-4)}`;

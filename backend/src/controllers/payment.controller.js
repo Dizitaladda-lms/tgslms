@@ -75,12 +75,27 @@ const createOrder = async (req, res, next) => {
           "Student";
         const tempPass = "DA@" + Math.floor(100000 + Math.random() * 900000);
         const hashed = await bcrypt.hash(tempPass, 10);
-        const newU = await pool.query(
-          `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
-           VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
-           RETURNING id`,
-          [studentName, studentName, email, hashed, studentDetails.phone || null, studentDetails.dob || null]
-        );
+        let newU;
+        try {
+          newU = await pool.query(
+            `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+             VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
+             RETURNING id`,
+            [studentName, studentName, email, hashed, studentDetails.phone || null, studentDetails.dob || null]
+          );
+        } catch (insertErr) {
+          if (insertErr.message && insertErr.message.includes("dob")) {
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(50)").catch(() => {});
+            newU = await pool.query(
+              `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+               VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
+               RETURNING id`,
+              [studentName, studentName, email, hashed, studentDetails.phone || null, studentDetails.dob || null]
+            );
+          } else {
+            throw insertErr;
+          }
+        }
         userId = newU.rows[0].id;
       }
     }
@@ -255,12 +270,27 @@ const verifyPayment = async (req, res, next) => {
         studentDetails?.email?.trim().toLowerCase() || `student_${Date.now()}@dizitaladda.com`;
 
       try {
-        const newUserRes = await pool.query(
-          `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
-           VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
-           RETURNING id, name, email, role, phone, avatar, dob`,
-          [studentName, studentName, studentEmail, hashedTempPassword, studentDetails?.phone || null, studentDetails?.dob || null]
-        );
+        let newUserRes;
+        try {
+          newUserRes = await pool.query(
+            `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+             VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
+             RETURNING id, name, email, role, phone, avatar, dob`,
+            [studentName, studentName, studentEmail, hashedTempPassword, studentDetails?.phone || null, studentDetails?.dob || null]
+          );
+        } catch (dbColErr) {
+          if (dbColErr.message && dbColErr.message.includes("dob")) {
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(50)").catch(() => {});
+            newUserRes = await pool.query(
+              `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
+               VALUES ($1, $2, $3, $4, 'student', $5, $6, 'Active')
+               RETURNING id, name, email, role, phone, avatar, dob`,
+              [studentName, studentName, studentEmail, hashedTempPassword, studentDetails?.phone || null, studentDetails?.dob || null]
+            );
+          } else {
+            throw dbColErr;
+          }
+        }
         finalUser = newUserRes.rows[0];
         userId = finalUser.id;
       } catch (insertUserErr) {

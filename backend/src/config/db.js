@@ -47,6 +47,19 @@ if (connectionString) {
         console.log("PostgreSQL Database Connected Successfully ✅");
         client.release();
 
+        // Auto-patch missing columns on users and other tables
+        realPool
+          .query(`
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(50);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS specialization VARCHAR(255);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar VARCHAR(500);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active';
+          `)
+          .catch((err) => console.warn("Schema auto-patch notice:", err.message));
+
         // Auto-check and synchronize full store if database is empty or missing courses (only outside serverless)
         if (!process.env.VERCEL) {
           setTimeout(async () => {
