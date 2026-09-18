@@ -42,6 +42,8 @@ const uploadLecture = async (req, res, next) => {
       section_id,
       duration,
       is_free_preview,
+      order_num,
+      lecture_number,
       video_url: manualVideoUrl,
       pdf_url: manualPdfUrl,
     } = req.body;
@@ -52,6 +54,14 @@ const uploadLecture = async (req, res, next) => {
         message: "Lecture title and course_id are required",
       });
     }
+
+    // Auto-patch columns if missing
+    await pool
+      .query(
+        `ALTER TABLE lectures ADD COLUMN IF NOT EXISTS order_num INTEGER DEFAULT 1;
+         ALTER TABLE lectures ADD COLUMN IF NOT EXISTS lecture_number INTEGER DEFAULT 1;`
+      )
+      .catch(() => {});
 
     let videoUrl = manualVideoUrl || "";
     let pdfUrl = manualPdfUrl || "";
@@ -75,10 +85,22 @@ const uploadLecture = async (req, res, next) => {
       videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     }
 
+    // Auto-calculate sequence order within this module / course if not specified
+    let finalOrder = parseInt(order_num || lecture_number, 10);
+    if (!finalOrder || isNaN(finalOrder)) {
+      const orderQuery = await pool.query(
+        `SELECT COALESCE(MAX(COALESCE(order_num, lecture_number, 0)), 0) + 1 as next_order
+         FROM lectures
+         WHERE course_id = $1 AND (section_id = $2 OR ($2 IS NULL AND section_id IS NULL))`,
+        [Number(course_id), section_id ? Number(section_id) : null]
+      );
+      finalOrder = Number(orderQuery.rows[0]?.next_order) || 1;
+    }
+
     const result = await pool.query(
       `INSERT INTO lectures
-       (course_id, section_id, title, description, video_url, pdf_url, duration, is_free_preview)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       (course_id, section_id, title, description, video_url, pdf_url, duration, is_free_preview, order_num, lecture_number)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         Number(course_id),
@@ -87,14 +109,16 @@ const uploadLecture = async (req, res, next) => {
         description || "",
         videoUrl,
         pdfUrl,
-        duration || "15m",
+        duration || "25m",
         Boolean(is_free_preview),
+        finalOrder,
+        finalOrder,
       ]
     );
 
     res.status(201).json({
       success: true,
-      message: "Lecture uploaded and created successfully 🚀",
+      message: `Lecture ${finalOrder} uploaded and created successfully 🚀`,
       lecture: result.rows[0],
     });
   } catch (error) {
@@ -123,6 +147,7 @@ const getLectures = async (req, res, next) => {
         SELECT
           l.*,
           s.title as section_title,
+          COALESCE(s.order_num, s.id, 0) as section_order,
           COALESCE(vp.completed, false) as is_completed,
           COALESCE(vp.watched_seconds, 0) as watched_seconds
         FROM lectures l
@@ -130,7 +155,7 @@ const getLectures = async (req, res, next) => {
         LEFT JOIN sections s ON l.section_id = s.id
         LEFT JOIN video_progress vp ON (vp.lecture_id = l.id AND vp.user_id = $2)
         WHERE (c.id::text = $1 OR c.course_id = $1)
-        ORDER BY COALESCE(l.section_id, 0) ASC, l.order_num ASC, l.id ASC
+        ORDER BY COALESCE(s.order_num, s.id, 0) ASC, COALESCE(l.order_num, l.lecture_number, l.id, 0) ASC, l.id ASC
       `;
       params = [String(courseId), userId || 0];
     } else {

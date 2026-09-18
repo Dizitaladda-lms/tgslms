@@ -14,9 +14,12 @@ const UploadLecture = () => {
     description: "",
     course_id: "",
     section_id: "",
+    lecture_number: "1",
+    duration: "25m",
     video_url: "",
   });
 
+  const [existingCourseLectures, setExistingCourseLectures] = useState([]);
   const [video, setVideo] = useState(null);
   const [pdf, setPdf] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -33,12 +36,15 @@ const UploadLecture = () => {
       .catch((err) => console.warn("Failed to load courses:", err));
   }, []);
 
-  // Fetch sections/modules when course changes
+  // Fetch sections/modules AND existing lectures when course changes
   useEffect(() => {
     if (!lectureData.course_id) {
       setSections([]);
+      setExistingCourseLectures([]);
       return;
     }
+
+    // 1. Fetch modules
     api.get(`/api/sections/${lectureData.course_id}`)
       .then((res) => {
         const secList = res.data?.sections || res.data || [];
@@ -53,7 +59,27 @@ const UploadLecture = () => {
         console.warn("Failed to load sections for course:", err);
         setSections([]);
       });
+
+    // 2. Fetch existing lectures to auto-calculate sequence order
+    api.get(`/api/lectures/${lectureData.course_id}`)
+      .then((res) => {
+        const lecList = res.data?.lectures || res.data || [];
+        setExistingCourseLectures(Array.isArray(lecList) ? lecList : []);
+      })
+      .catch((err) => {
+        console.warn("Failed to load lectures for course:", err);
+        setExistingCourseLectures([]);
+      });
   }, [lectureData.course_id]);
+
+  // Auto-calculate next lecture sequence number when module/section changes
+  useEffect(() => {
+    const existingInModule = existingCourseLectures.filter(
+      (l) => String(l.section_id || "") === String(lectureData.section_id || "")
+    );
+    const nextSeq = existingInModule.length + 1;
+    setLectureData((prev) => ({ ...prev, lecture_number: String(nextSeq) }));
+  }, [lectureData.section_id, existingCourseLectures]);
 
   const handleCreateSection = async () => {
     if (!newSectionTitle.trim()) {
@@ -116,6 +142,9 @@ const UploadLecture = () => {
       if (lectureData.section_id) {
         formData.append("section_id", lectureData.section_id);
       }
+      formData.append("order_num", lectureData.lecture_number || "1");
+      formData.append("lecture_number", lectureData.lecture_number || "1");
+      formData.append("duration", lectureData.duration || "25m");
 
       if (lectureData.video_url?.trim()) {
         formData.append("video_url", lectureData.video_url.trim());
@@ -293,6 +322,66 @@ const UploadLecture = () => {
                   ))
                 )}
               </select>
+            </div>
+
+            {/* LECTURE SEQUENCE NUMBER WITHIN MODULE */}
+            <div className="bg-slate-50 border border-slate-300 rounded-2xl p-5 space-y-3">
+              <div>
+                <label className="block font-bold text-sm text-[#0B1220]">
+                  Lecture Sequence Number (In This Module) *
+                </label>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Yeh video is module me konsa lecture hai (e.g. Lecture 1, Lecture 2, Lecture 3...). Student ko isi sequence me step-by-step unlock hoga.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs font-black text-[#7C2D12] bg-amber-100/90 border border-amber-300 px-3.5 py-2.5 rounded-xl uppercase tracking-wider">
+                  Lecture Number
+                </span>
+                <input
+                  type="number"
+                  min="1"
+                  max="99"
+                  name="lecture_number"
+                  value={lectureData.lecture_number || 1}
+                  onChange={handleChange}
+                  className="w-28 border-2 border-slate-300 p-2.5 rounded-xl font-black text-center text-lg outline-none focus:border-[#7C2D12] bg-white text-slate-900"
+                  required
+                />
+                <span className="text-xs text-slate-500 font-semibold">
+                  {existingCourseLectures.filter(l => String(l.section_id || "") === String(lectureData.section_id || "")).length > 0 
+                    ? `(Is module me pehle se ${existingCourseLectures.filter(l => String(l.section_id || "") === String(lectureData.section_id || "")).length} lectures uploaded hain)`
+                    : `(Yeh is module ka pehla lecture hoga)`}
+                </span>
+              </div>
+
+              {/* Preview of existing lectures in selected module */}
+              {existingCourseLectures.filter(l => String(l.section_id || "") === String(lectureData.section_id || "")).length > 0 && (
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                    Current Module Sequence:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {existingCourseLectures
+                      .filter(l => String(l.section_id || "") === String(lectureData.section_id || ""))
+                      .map((lec, idx) => (
+                        <span
+                          key={lec.id || idx}
+                          className="text-[11px] bg-white border border-slate-300 px-2.5 py-1 rounded-lg text-slate-700 font-medium flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <span className="font-bold text-[#7C2D12] bg-amber-50 px-1 py-0.2 rounded text-[10px]">
+                            L{lec.order_num || lec.lecture_number || idx + 1}
+                          </span>
+                          <span className="truncate max-w-[150px]">{lec.title}</span>
+                        </span>
+                      ))}
+                    <span className="text-[11px] bg-amber-500 text-white font-black px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-xs animate-pulse">
+                      <span>👉 Next: Lecture {lectureData.lecture_number}</span>
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* VIDEO URL / GOOGLE DRIVE LINK */}

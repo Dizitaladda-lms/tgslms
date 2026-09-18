@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-
 import api from "../lib/api";
-
 import { Link } from "react-router-dom";
+import CourseCard from "../components/course/CourseCard";
 
 function Courses() {
 
@@ -171,77 +170,10 @@ function Courses() {
         </div>
 
         {/* GRID */}
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 mt-16">
-
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-14">
           {filteredCourses.map((course) => (
-
-            <div
-              key={course.id}
-              className="bg-white rounded-[35px] overflow-hidden shadow-xl hover:-translate-y-3 transition duration-300"
-            >
-
-              <div className="relative">
-
-                <img
-                  src={course.image}
-                  alt={course.title}
-                  className="h-72 w-full object-cover"
-                />
-
-                <span className="absolute top-5 left-5 bg-white text-blue-900 px-5 py-2 rounded-full font-semibold shadow-lg">
-
-                  Featured
-
-                </span>
-
-              </div>
-
-              <div className="p-8">
-
-                <div className="flex justify-between items-center">
-
-                  <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
-
-                    {course.category}
-
-                  </span>
-
-                  <span className="text-2xl font-bold text-blue-900">
-
-                    {course.price}
-
-                  </span>
-
-                </div>
-
-                <h2 className="text-3xl font-bold text-slate-800 mt-6">
-
-                  {course.title}
-
-                </h2>
-
-                <p className="text-slate-500 mt-4 text-lg">
-
-                  {course.duration}
-
-                </p>
-
-                <Link
-                  to={`/course/${course.id}`}
-                  className="block mt-8 w-full bg-blue-900 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-blue-800 transition text-center"
-                >
-
-                  Enroll Now
-
-                </Link>
-
-              </div>
-
-            </div>
-
+            <CourseCard key={course.id} course={course} />
           ))}
-
         </div>
 
       </div>

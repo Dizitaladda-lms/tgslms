@@ -824,19 +824,41 @@ const LearningPage = () => {
                     const prevModule = idx > 0 ? (lectures[idx - 1]?.section_title || "Course Curriculum") : null;
                     const isNewModule = idx === 0 || currModule !== prevModule;
 
+                    // Module-specific statistics & sequencing
+                    const moduleLectures = lectures.filter(
+                      (l) => (l.section_title || "Course Curriculum") === currModule
+                    );
+                    const moduleCompletedCount = moduleLectures.filter((l) => l.is_completed).length;
+                    const modulePercent =
+                      moduleLectures.length > 0
+                        ? Math.round((moduleCompletedCount / moduleLectures.length) * 100)
+                        : 0;
+
+                    const moduleLecIndex = moduleLectures.findIndex((l) => l.id === lec.id) + 1;
+                    const lectureSeqNum = lec.order_num || lec.lecture_number || moduleLecIndex;
+
                     return (
                       <Fragment key={lec.id}>
                         {isNewModule && (
-                          <div className="bg-slate-100/95 border-y border-slate-200/80 px-4 py-2.5 flex items-center justify-between sticky top-0 z-10 shadow-xs">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="w-2 h-2 rounded-full bg-[#7C2D12] shrink-0"></span>
-                              <span className="text-xs font-bold text-slate-800 truncate tracking-tight">
-                                {currModule}
+                          <div className="bg-slate-100/95 border-y border-slate-200 px-4 py-2.5 sticky top-0 z-10 shadow-xs backdrop-blur-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-2 h-2 rounded-full bg-[#7C2D12] shrink-0"></span>
+                                <span className="text-xs font-bold text-slate-900 truncate tracking-tight uppercase">
+                                  {currModule}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-bold text-[#7C2D12] bg-[#7C2D12]/10 border border-[#7C2D12]/20 px-2 py-0.5 rounded shrink-0">
+                                {moduleCompletedCount}/{moduleLectures.length} Done ({modulePercent}%)
                               </span>
                             </div>
-                            <span className="text-[10px] font-bold text-[#7C2D12] bg-[#7C2D12]/10 px-2 py-0.5 rounded shrink-0">
-                              MODULE
-                            </span>
+                            {/* Mini module progress track */}
+                            <div className="w-full bg-slate-200 rounded-full h-1 mt-1.5 overflow-hidden">
+                              <div
+                                className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+                                style={{ width: `${modulePercent}%` }}
+                              ></div>
+                            </div>
                           </div>
                         )}
                       <div
@@ -878,7 +900,7 @@ const LearningPage = () => {
                                   : "text-[#7C2D12] font-semibold"
                               }`}
                             >
-                              Lesson {idx + 1} {isCompleted ? "• Completed ✅" : isLocked ? "• 🔒 Locked" : isCurrentActive ? "• Active" : ""}
+                              Lecture {lectureSeqNum} (Lesson {idx + 1}) {isCompleted ? "• Completed ✅" : isLocked ? "• 🔒 Locked" : isCurrentActive ? "• Active" : ""}
                             </span>
                             <span
                               className={`text-[10px] font-medium ${
