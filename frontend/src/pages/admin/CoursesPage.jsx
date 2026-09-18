@@ -43,6 +43,7 @@ export default function CoursesPage() {
     is_free_preview: false,
   });
   const [uploadingLecture, setUploadingLecture] = useState(false);
+  const [deletingLecture, setDeletingLecture] = useState(false);
 
   // New Module State
   const [newSectionTitle, setNewSectionTitle] = useState("");
@@ -371,11 +372,12 @@ export default function CoursesPage() {
           <button
             type="button"
             onClick={handleClearAllDummyLectures}
-            className="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 text-xs font-bold py-2 px-3.5 rounded-lg transition flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
+            disabled={deletingLecture}
+            className="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 text-xs font-bold py-2 px-3.5 rounded-lg transition flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
             title="Delete all dummy/placeholder lectures from database & system"
           >
             <FaTrash className="text-[11px]" />
-            <span>Delete Fake Lectures 🗑️</span>
+            <span>{deletingLecture ? "Purging Lectures..." : "Delete Fake Lectures 🗑️"}</span>
           </button>
         </div>
       </div>
@@ -544,11 +546,12 @@ export default function CoursesPage() {
                 <button
                   type="button"
                   onClick={handleClearAllDummyLectures}
-                  className="ml-auto text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer my-1.5 shadow-xs shrink-0"
+                  disabled={deletingLecture}
+                  className="ml-auto text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer my-1.5 shadow-xs shrink-0 disabled:opacity-50"
                   title="Purge all dummy lectures from DB and website"
                 >
                   <FaTrash className="text-[10px]" />
-                  <span>Purge Dummy Lectures</span>
+                  <span>{deletingLecture ? "Purging..." : "Purge Dummy Lectures"}</span>
                 </button>
               )}
             </div>
