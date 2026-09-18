@@ -36,7 +36,7 @@ export default function AdminLayout({ children, title, subtitle, onSyncComplete 
     try {
       setIsSyncing(true);
       setSyncNotice("Syncing...");
-      const response = await api.post("/api/admin/sync-database");
+      const response = await api.post("/api/admin/sync-database", {}, { timeout: 180000 });
       const message =
         response.data?.message ||
         `Database synchronized! Found ${response.data?.count || 17} courses.`;

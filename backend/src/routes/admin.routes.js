@@ -52,6 +52,60 @@ router.post("/sync-database", async (req, res, next) => {
 });
 
 // ==========================
+// 1.2 CLEAR ALL DUMMY LECTURES (ADMIN ACTION)
+// ==========================
+router.post("/clear-all-lectures", async (req, res, next) => {
+  try {
+    console.log("🧹 Admin action: Clearing all dummy lectures from Database & Local Store...");
+
+    // 1. Delete progress records
+    await pool.query("DELETE FROM video_progress;").catch(() => {});
+
+    // 2. Delete all lectures
+    const delRes = await pool.query("DELETE FROM lectures RETURNING id;");
+    const deletedCount = delRes.rows?.length || delRes.rowCount || 0;
+
+    // 3. Reset course lecture counters
+    await pool.query("UPDATE courses SET total_lectures = 0;").catch(() => {});
+
+    // 4. Reset sequence
+    try {
+      await pool.query("SELECT setval(pg_get_serial_sequence('lectures', 'id'), 1, false);");
+    } catch (_) {}
+
+    // 5. Update local JSON file if exists
+    try {
+      const fs = require("fs");
+      const path = require("path");
+      const storePath = path.join(__dirname, "..", "..", "data", "lms_store.json");
+      if (fs.existsSync(storePath)) {
+        const store = JSON.parse(fs.readFileSync(storePath, "utf8"));
+        store.lectures = [];
+        store.video_progress = [];
+        if (Array.isArray(store.courses)) {
+          store.courses.forEach((c) => {
+            c.total_lectures = 0;
+          });
+        }
+        fs.writeFileSync(storePath, JSON.stringify(store, null, 2), "utf8");
+      }
+    } catch (_) {}
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully deleted all ${deletedCount} dummy lectures! Database & website are now completely clean for uploading real lectures. 🎬`,
+      deletedCount,
+    });
+  } catch (error) {
+    console.error("Clear dummy lectures error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to clear lectures: " + error.message,
+    });
+  }
+});
+
+// ==========================
 // 2. GET ALL TEACHERS
 // ==========================
 router.get("/teachers", async (req, res, next) => {

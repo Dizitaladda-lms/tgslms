@@ -189,23 +189,23 @@ async function syncDatabase(providedPool = null) {
     // 3. SYNC USERS (Skip if already in DB)
     if (Array.isArray(store.users) && store.users.length > 0) {
       console.log(`👤 Checking ${store.users.length} Users...`);
+      const existingUsersRes = await client.query(
+        `SELECT id, LOWER(TRIM(email)) AS email_key FROM users`
+      );
+      const existingUserMap = new Map();
+      const takenUserIds = new Set();
+      for (const r of existingUsersRes.rows) {
+        if (r.email_key) existingUserMap.set(r.email_key, r.id);
+        takenUserIds.add(Number(r.id));
+      }
+
       for (const u of store.users) {
         const normalizedEmail = (u.email || "").toLowerCase().trim();
         if (!normalizedEmail) continue;
 
-        // Check if user already exists by email OR id
-        const existing = await client.query(
-          `SELECT id, email FROM users WHERE LOWER(email) = LOWER($1) OR id = $2`,
-          [normalizedEmail, u.id]
-        );
-
-        const existingByEmail = existing.rows.find(
-          (r) => (r.email || "").toLowerCase() === normalizedEmail
-        );
-
-        if (existingByEmail) {
+        if (existingUserMap.has(normalizedEmail)) {
           // Already in DB -> SKIP!
-          userIdMap.set(u.id, existingByEmail.id);
+          userIdMap.set(u.id, existingUserMap.get(normalizedEmail));
           results.usersSkipped++;
           continue;
         }
@@ -219,10 +219,8 @@ async function syncDatabase(providedPool = null) {
           role = "student";
         }
 
-        // Not in DB by email. Check if u.id is taken by a different user
-        const existingById = existing.rows.find((r) => Number(r.id) === Number(u.id));
         let actualId;
-        if (existingById) {
+        if (takenUserIds.has(Number(u.id))) {
           // u.id taken -> insert with auto-generated ID
           const insertRes = await client.query(
             `INSERT INTO users (name, full_name, email, password, role, phone, dob, specialization, status, avatar, created_at)
@@ -268,6 +266,8 @@ async function syncDatabase(providedPool = null) {
           actualId = insertRes.rows[0]?.id || u.id;
         }
 
+        takenUserIds.add(Number(actualId));
+        existingUserMap.set(normalizedEmail, actualId);
         userIdMap.set(u.id, actualId);
         results.usersSynced++;
       }
@@ -277,32 +277,35 @@ async function syncDatabase(providedPool = null) {
     // 4. SYNC COURSES (Skip if already in DB)
     if (Array.isArray(store.courses) && store.courses.length > 0) {
       console.log(`📚 Checking ${store.courses.length} Courses...`);
+      const existingCoursesRes = await client.query(
+        `SELECT id, course_id, LOWER(TRIM(title)) AS title_key FROM courses`
+      );
+      const existingCourseMap = new Map();
+      const takenCourseIds = new Set();
+      for (const r of existingCoursesRes.rows) {
+        if (r.course_id) existingCourseMap.set(`cid:::${r.course_id}`, r.id);
+        if (r.title_key) existingCourseMap.set(`title:::${r.title_key}`, r.id);
+        takenCourseIds.add(Number(r.id));
+      }
+
       for (const c of store.courses) {
-        // Check if course already in DB by course_id OR title
-        const existing = await client.query(
-          `SELECT id, course_id, title FROM courses WHERE course_id = $1 OR LOWER(title) = LOWER($2) OR id = $3`,
-          [c.course_id, (c.title || "").trim(), c.id]
-        );
+        const titleKey = (c.title || "").trim().toLowerCase();
+        const matchedId =
+          existingCourseMap.get(`cid:::${c.course_id}`) ||
+          existingCourseMap.get(`title:::${titleKey}`);
 
-        const match = existing.rows.find(
-          (r) =>
-            r.course_id === c.course_id ||
-            (r.title || "").toLowerCase() === (c.title || "").toLowerCase()
-        );
-
-        if (match) {
+        if (matchedId) {
           // Already in DB -> SKIP!
-          courseIdMap.set(c.id, match.id);
-          courseIdMap.set(c.course_id, match.id);
+          courseIdMap.set(c.id, matchedId);
+          courseIdMap.set(c.course_id, matchedId);
           results.coursesSkipped++;
           continue;
         }
 
         const teacherId = c.teacher_id ? (userIdMap.get(c.teacher_id) || null) : null;
-        const existingById = existing.rows.find((r) => Number(r.id) === Number(c.id));
         let actualId;
 
-        if (existingById) {
+        if (takenCourseIds.has(Number(c.id))) {
           // c.id taken -> insert with auto-generated ID
           const insertRes = await client.query(
             `INSERT INTO courses (
@@ -312,7 +315,7 @@ async function syncDatabase(providedPool = null) {
                rating, created_at, updated_at
              )
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-             RETURNING id, course_id`,
+             RETURNING id`,
             [
               c.course_id,
               c.title,
@@ -345,7 +348,7 @@ async function syncDatabase(providedPool = null) {
              )
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
              ON CONFLICT (id) DO NOTHING
-             RETURNING id, course_id`,
+             RETURNING id`,
             [
               c.id,
               c.course_id,
@@ -370,6 +373,9 @@ async function syncDatabase(providedPool = null) {
           actualId = insertRes.rows[0]?.id || c.id;
         }
 
+        takenCourseIds.add(Number(actualId));
+        if (c.course_id) existingCourseMap.set(`cid:::${c.course_id}`, actualId);
+        if (titleKey) existingCourseMap.set(`title:::${titleKey}`, actualId);
         courseIdMap.set(c.id, actualId);
         courseIdMap.set(c.course_id, actualId);
         results.coursesSynced++;
@@ -380,27 +386,32 @@ async function syncDatabase(providedPool = null) {
     // 5. SYNC SECTIONS (MODULES) (Skip if already in DB)
     if (Array.isArray(store.sections) && store.sections.length > 0) {
       console.log(`📑 Checking ${store.sections.length} Sections...`);
+      const existingSectionsRes = await client.query(
+        `SELECT id, course_id, LOWER(TRIM(title)) AS title_key FROM sections`
+      );
+      const existingSectionMap = new Map();
+      const takenSectionIds = new Set();
+      for (const r of existingSectionsRes.rows) {
+        existingSectionMap.set(`${r.course_id}:::${r.title_key}`, r.id);
+        takenSectionIds.add(Number(r.id));
+      }
+
       for (const s of store.sections) {
         const actualCourseId = courseIdMap.get(s.course_id) || s.course_id;
         if (!actualCourseId) continue;
 
-        // Check if section already in DB by course_id + title
-        const existing = await client.query(
-          `SELECT id, course_id, title FROM sections WHERE course_id = $1 AND LOWER(TRIM(title)) = LOWER(TRIM($2))`,
-          [actualCourseId, s.title]
-        );
+        const titleKey = (s.title || "").trim().toLowerCase();
+        const sectionKey = `${actualCourseId}:::${titleKey}`;
 
-        if (existing.rows.length > 0) {
+        if (existingSectionMap.has(sectionKey)) {
           // Already in DB -> SKIP!
-          sectionIdMap.set(s.id, existing.rows[0].id);
+          sectionIdMap.set(s.id, existingSectionMap.get(sectionKey));
           results.sectionsSkipped++;
           continue;
         }
 
-        // Not in DB -> check if s.id is free
-        const idCheck = await client.query(`SELECT id FROM sections WHERE id = $1`, [s.id]);
         let actualSectionId;
-        if (idCheck.rows.length > 0) {
+        if (takenSectionIds.has(Number(s.id))) {
           // s.id taken -> insert with auto-generated id
           const insertRes = await client.query(
             `INSERT INTO sections (course_id, title, order_num, created_at)
@@ -421,35 +432,51 @@ async function syncDatabase(providedPool = null) {
           actualSectionId = insertRes.rows[0]?.id || s.id;
         }
 
+        takenSectionIds.add(Number(actualSectionId));
+        existingSectionMap.set(sectionKey, actualSectionId);
         sectionIdMap.set(s.id, actualSectionId);
         results.sectionsSynced++;
       }
       console.log(`✅ Sections: ${results.sectionsSynced} inserted, ${results.sectionsSkipped} skipped (already in DB).`);
     }
 
-    // 6. SYNC LECTURES (Skip if already in DB)
-    if (Array.isArray(store.lectures) && store.lectures.length > 0) {
+    // 6. SYNC LECTURES (Purge if empty, or Skip if already in DB)
+    if (!Array.isArray(store.lectures) || store.lectures.length === 0) {
+      console.log("🧹 Purging all legacy dummy lectures from database (Clean slate for real lectures)...");
+      await client.query("DELETE FROM video_progress;").catch(() => {});
+      await client.query("DELETE FROM lectures;").catch(() => {});
+      await client.query("UPDATE courses SET total_lectures = 0;").catch(() => {});
+      try {
+        await client.query("SELECT setval(pg_get_serial_sequence('lectures', 'id'), 1, false);");
+      } catch (_) {}
+      console.log("✅ All dummy lectures successfully purged from PostgreSQL database.");
+    } else {
       console.log(`🎬 Checking ${store.lectures.length} Lectures...`);
+      const existingLecturesRes = await client.query(
+        `SELECT id, course_id, LOWER(TRIM(title)) AS title_key FROM lectures`
+      );
+      const existingLectureSet = new Set();
+      const takenLectureIds = new Set();
+      for (const r of existingLecturesRes.rows) {
+        existingLectureSet.add(`${r.course_id}:::${r.title_key}`);
+        takenLectureIds.add(Number(r.id));
+      }
+
       for (const l of store.lectures) {
         const actualCourseId = courseIdMap.get(l.course_id) || l.course_id;
         const actualSectionId = l.section_id ? (sectionIdMap.get(l.section_id) || l.section_id) : null;
         if (!actualCourseId) continue;
 
-        // Check if lecture already in DB by course_id + title
-        const existing = await client.query(
-          `SELECT id, title FROM lectures WHERE course_id = $1 AND LOWER(TRIM(title)) = LOWER(TRIM($2))`,
-          [actualCourseId, l.title]
-        );
+        const titleKey = (l.title || "").trim().toLowerCase();
+        const lectureKey = `${actualCourseId}:::${titleKey}`;
 
-        if (existing.rows.length > 0) {
+        if (existingLectureSet.has(lectureKey)) {
           // Already in DB -> SKIP!
           results.lecturesSkipped++;
           continue;
         }
 
-        // Not in DB -> check if l.id is free
-        const idCheck = await client.query(`SELECT id FROM lectures WHERE id = $1`, [l.id]);
-        if (idCheck.rows.length > 0) {
+        if (takenLectureIds.has(Number(l.id))) {
           // l.id taken -> insert with auto-generated id
           await client.query(
             `INSERT INTO lectures (
@@ -493,7 +520,10 @@ async function syncDatabase(providedPool = null) {
               l.created_at || new Date(),
             ]
           );
+          takenLectureIds.add(Number(l.id));
         }
+
+        existingLectureSet.add(lectureKey);
         results.lecturesSynced++;
       }
       console.log(`✅ Lectures: ${results.lecturesSynced} inserted, ${results.lecturesSkipped} skipped (already in DB).`);
@@ -502,26 +532,33 @@ async function syncDatabase(providedPool = null) {
     // 7. SYNC STUDENTS (Skip if already in DB)
     if (Array.isArray(store.students) && store.students.length > 0) {
       console.log(`🎓 Checking ${store.students.length} Students...`);
+      const existingStudentsRes = await client.query(
+        `SELECT id, student_id, LOWER(TRIM(email)) AS email_key FROM students`
+      );
+      const existingStudentKeys = new Set();
+      const takenStudentIds = new Set();
+      for (const r of existingStudentsRes.rows) {
+        if (r.student_id) existingStudentKeys.add(`sid:::${r.student_id}`);
+        if (r.email_key) existingStudentKeys.add(`email:::${r.email_key}`);
+        takenStudentIds.add(Number(r.id));
+      }
+
       for (const st of store.students) {
         const actualUserId = userIdMap.get(st.user_id) || st.user_id;
         const actualCourseId = st.course_id ? (courseIdMap.get(st.course_id) || st.course_id) : null;
         if (!actualUserId) continue;
 
-        // Check if student already in DB by student_id OR email
-        const existing = await client.query(
-          `SELECT id, student_id, email FROM students WHERE student_id = $1 OR LOWER(email) = LOWER($2)`,
-          [st.student_id, (st.email || "").trim()]
-        );
-
-        if (existing.rows.length > 0) {
+        const emailKey = (st.email || "").trim().toLowerCase();
+        if (
+          (st.student_id && existingStudentKeys.has(`sid:::${st.student_id}`)) ||
+          (emailKey && existingStudentKeys.has(`email:::${emailKey}`))
+        ) {
           // Already in DB -> SKIP!
           results.studentsSkipped++;
           continue;
         }
 
-        // Not in DB -> check if st.id is free
-        const idCheck = await client.query(`SELECT id FROM students WHERE id = $1`, [st.id]);
-        if (idCheck.rows.length > 0) {
+        if (takenStudentIds.has(Number(st.id))) {
           await client.query(
             `INSERT INTO students (
                user_id, student_id, course_id, course_code, name, email, password, phone, dob, course, batch, status, created_at
@@ -567,7 +604,11 @@ async function syncDatabase(providedPool = null) {
               st.created_at || new Date(),
             ]
           );
+          takenStudentIds.add(Number(st.id));
         }
+
+        if (st.student_id) existingStudentKeys.add(`sid:::${st.student_id}`);
+        if (emailKey) existingStudentKeys.add(`email:::${emailKey}`);
         results.studentsSynced++;
       }
       console.log(`✅ Students: ${results.studentsSynced} inserted, ${results.studentsSkipped} skipped (already in DB).`);
@@ -576,24 +617,31 @@ async function syncDatabase(providedPool = null) {
     // 8. SYNC QUIZZES & QUESTIONS (Skip if already in DB)
     if (Array.isArray(store.quizzes) && store.quizzes.length > 0) {
       console.log(`❓ Checking ${store.quizzes.length} Quizzes...`);
+      const existingQuizzesRes = await client.query(
+        `SELECT id, course_id, LOWER(TRIM(title)) AS title_key FROM quizzes`
+      );
+      const existingQuizMap = new Map();
+      const takenQuizIds = new Set();
+      for (const r of existingQuizzesRes.rows) {
+        existingQuizMap.set(`${r.course_id}:::${r.title_key}`, r.id);
+        takenQuizIds.add(Number(r.id));
+      }
+
       for (const q of store.quizzes) {
         const actualCourseId = courseIdMap.get(q.course_id) || q.course_id;
         if (!actualCourseId) continue;
 
-        const existing = await client.query(
-          `SELECT id FROM quizzes WHERE course_id = $1 AND LOWER(TRIM(title)) = LOWER(TRIM($2))`,
-          [actualCourseId, q.title]
-        );
+        const titleKey = (q.title || "").trim().toLowerCase();
+        const quizKey = `${actualCourseId}:::${titleKey}`;
 
-        if (existing.rows.length > 0) {
-          quizIdMap.set(q.id, existing.rows[0].id);
+        if (existingQuizMap.has(quizKey)) {
+          quizIdMap.set(q.id, existingQuizMap.get(quizKey));
           results.quizzesSkipped++;
           continue;
         }
 
-        const idCheck = await client.query(`SELECT id FROM quizzes WHERE id = $1`, [q.id]);
         let actualQuizId;
-        if (idCheck.rows.length > 0) {
+        if (takenQuizIds.has(Number(q.id))) {
           const res = await client.query(
             `INSERT INTO quizzes (course_id, title, passing_score, created_at)
              VALUES ($1, $2, $3, $4)
@@ -612,6 +660,8 @@ async function syncDatabase(providedPool = null) {
           actualQuizId = res.rows[0]?.id || q.id;
         }
 
+        takenQuizIds.add(Number(actualQuizId));
+        existingQuizMap.set(quizKey, actualQuizId);
         quizIdMap.set(q.id, actualQuizId);
         results.quizzesSynced++;
       }
@@ -620,22 +670,27 @@ async function syncDatabase(providedPool = null) {
 
     if (Array.isArray(store.quiz_questions) && store.quiz_questions.length > 0) {
       console.log(`❓ Checking ${store.quiz_questions.length} Quiz Questions...`);
+      const existingQRes = await client.query(
+        `SELECT id, quiz_id, LOWER(TRIM(question)) AS question_key FROM quiz_questions`
+      );
+      const existingQSet = new Set();
+      const takenQIds = new Set();
+      for (const r of existingQRes.rows) {
+        existingQSet.add(`${r.quiz_id}:::${r.question_key}`);
+        takenQIds.add(Number(r.id));
+      }
+
       for (const qq of store.quiz_questions) {
         const actualQuizId = quizIdMap.get(qq.quiz_id) || qq.quiz_id;
         if (!actualQuizId) continue;
 
-        const existing = await client.query(
-          `SELECT id FROM quiz_questions WHERE quiz_id = $1 AND LOWER(TRIM(question)) = LOWER(TRIM($2))`,
-          [actualQuizId, qq.question]
-        );
-
-        if (existing.rows.length > 0) {
+        const qKey = `${actualQuizId}:::${(qq.question || "").trim().toLowerCase()}`;
+        if (existingQSet.has(qKey)) {
           results.quizQuestionsSkipped++;
           continue;
         }
 
-        const idCheck = await client.query(`SELECT id FROM quiz_questions WHERE id = $1`, [qq.id]);
-        if (idCheck.rows.length > 0) {
+        if (takenQIds.has(Number(qq.id))) {
           await client.query(
             `INSERT INTO quiz_questions (quiz_id, question, option_a, option_b, option_c, option_d, correct_option, options, created_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
@@ -669,7 +724,10 @@ async function syncDatabase(providedPool = null) {
               qq.created_at || new Date(),
             ]
           );
+          takenQIds.add(Number(qq.id));
         }
+
+        existingQSet.add(qKey);
         results.quizQuestionsSynced++;
       }
       console.log(`✅ Quiz Questions: ${results.quizQuestionsSynced} inserted, ${results.quizQuestionsSkipped} skipped (already in DB).`);
@@ -678,22 +736,27 @@ async function syncDatabase(providedPool = null) {
     // 9. SYNC ASSIGNMENTS (Skip if already in DB)
     if (Array.isArray(store.assignments) && store.assignments.length > 0) {
       console.log(`📝 Checking ${store.assignments.length} Assignments...`);
+      const existingAssignRes = await client.query(
+        `SELECT id, course_id, LOWER(TRIM(title)) AS title_key FROM assignments`
+      );
+      const existingAssignSet = new Set();
+      const takenAssignIds = new Set();
+      for (const r of existingAssignRes.rows) {
+        existingAssignSet.add(`${r.course_id}:::${r.title_key}`);
+        takenAssignIds.add(Number(r.id));
+      }
+
       for (const a of store.assignments) {
         const actualCourseId = courseIdMap.get(a.course_id) || a.course_id;
         if (!actualCourseId) continue;
 
-        const existing = await client.query(
-          `SELECT id FROM assignments WHERE course_id = $1 AND LOWER(TRIM(title)) = LOWER(TRIM($2))`,
-          [actualCourseId, a.title]
-        );
-
-        if (existing.rows.length > 0) {
+        const aKey = `${actualCourseId}:::${(a.title || "").trim().toLowerCase()}`;
+        if (existingAssignSet.has(aKey)) {
           results.assignmentsSkipped++;
           continue;
         }
 
-        const idCheck = await client.query(`SELECT id FROM assignments WHERE id = $1`, [a.id]);
-        if (idCheck.rows.length > 0) {
+        if (takenAssignIds.has(Number(a.id))) {
           await client.query(
             `INSERT INTO assignments (course_id, title, description, due_date, max_marks, resource_url, created_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7)`,
@@ -706,7 +769,10 @@ async function syncDatabase(providedPool = null) {
              ON CONFLICT (id) DO NOTHING`,
             [a.id, actualCourseId, a.title, a.description || "", a.due_date || null, a.max_marks || 100, a.resource_url || null, a.created_at || new Date()]
           );
+          takenAssignIds.add(Number(a.id));
         }
+
+        existingAssignSet.add(aKey);
         results.assignmentsSynced++;
       }
       console.log(`✅ Assignments: ${results.assignmentsSynced} inserted, ${results.assignmentsSkipped} skipped (already in DB).`);
@@ -715,18 +781,16 @@ async function syncDatabase(providedPool = null) {
     // 10. SYNC ORDERS & PAYMENTS & ENROLLMENTS (Skip if already in DB)
     if (Array.isArray(store.orders) && store.orders.length > 0) {
       console.log(`💳 Checking ${store.orders.length} Orders...`);
+      const existingOrdersRes = await client.query(`SELECT id, razorpay_order_id FROM orders`);
+      const existingOrderIds = new Set(existingOrdersRes.rows.map((r) => r.razorpay_order_id));
+
       for (const o of store.orders) {
         const actualUserId = userIdMap.get(o.user_id) || o.user_id;
         const actualCourseId = courseIdMap.get(o.course_id) || o.course_id;
         if (!actualUserId || !actualCourseId) continue;
 
         const orderIdStr = o.razorpay_order_id || `order_mock_${o.id}`;
-        const existing = await client.query(
-          `SELECT id FROM orders WHERE razorpay_order_id = $1`,
-          [orderIdStr]
-        );
-
-        if (existing.rows.length > 0) {
+        if (existingOrderIds.has(orderIdStr)) {
           results.ordersSkipped++;
           continue;
         }
@@ -751,6 +815,7 @@ async function syncDatabase(providedPool = null) {
             o.created_at || new Date(),
           ]
         );
+        existingOrderIds.add(orderIdStr);
         results.ordersSynced++;
       }
       console.log(`✅ Orders: ${results.ordersSynced} inserted, ${results.ordersSkipped} skipped (already in DB).`);
@@ -758,18 +823,16 @@ async function syncDatabase(providedPool = null) {
 
     if (Array.isArray(store.payments) && store.payments.length > 0) {
       console.log(`💰 Checking ${store.payments.length} Payments...`);
+      const existingPaymentsRes = await client.query(`SELECT id, razorpay_payment_id FROM payments`);
+      const existingPaymentIds = new Set(existingPaymentsRes.rows.map((r) => r.razorpay_payment_id));
+
       for (const p of store.payments) {
         const actualUserId = userIdMap.get(p.user_id) || p.user_id;
         const actualCourseId = courseIdMap.get(p.course_id) || p.course_id;
         if (!actualUserId || !actualCourseId) continue;
 
         const paymentIdStr = p.razorpay_payment_id || `pay_mock_${p.id}`;
-        const existing = await client.query(
-          `SELECT id FROM payments WHERE razorpay_payment_id = $1`,
-          [paymentIdStr]
-        );
-
-        if (existing.rows.length > 0) {
+        if (existingPaymentIds.has(paymentIdStr)) {
           results.paymentsSkipped++;
           continue;
         }
@@ -788,10 +851,11 @@ async function syncDatabase(providedPool = null) {
             p.razorpay_order_id || null,
             p.razorpay_signature || null,
             p.amount || 0,
-            p.status || "Success",
+            p.status || "captured",
             p.created_at || new Date(),
           ]
         );
+        existingPaymentIds.add(paymentIdStr);
         results.paymentsSynced++;
       }
       console.log(`✅ Payments: ${results.paymentsSynced} inserted, ${results.paymentsSkipped} skipped (already in DB).`);
@@ -799,17 +863,18 @@ async function syncDatabase(providedPool = null) {
 
     if (Array.isArray(store.enrollments) && store.enrollments.length > 0) {
       console.log(`🎟️ Checking ${store.enrollments.length} Enrollments...`);
+      const existingEnrollmentsRes = await client.query(`SELECT user_id, course_id FROM enrollments`);
+      const existingEnrollmentKeys = new Set(
+        existingEnrollmentsRes.rows.map((r) => `${r.user_id}:::${r.course_id}`)
+      );
+
       for (const e of store.enrollments) {
         const actualUserId = userIdMap.get(e.user_id) || e.user_id;
         const actualCourseId = courseIdMap.get(e.course_id) || e.course_id;
         if (!actualUserId || !actualCourseId) continue;
 
-        const existing = await client.query(
-          `SELECT id FROM enrollments WHERE user_id = $1 AND course_id = $2`,
-          [actualUserId, actualCourseId]
-        );
-
-        if (existing.rows.length > 0) {
+        const enrollmentKey = `${actualUserId}:::${actualCourseId}`;
+        if (existingEnrollmentKeys.has(enrollmentKey)) {
           results.enrollmentsSkipped++;
           continue;
         }
@@ -832,6 +897,7 @@ async function syncDatabase(providedPool = null) {
             e.created_at || new Date(),
           ]
         );
+        existingEnrollmentKeys.add(enrollmentKey);
         results.enrollmentsSynced++;
       }
       console.log(`✅ Enrollments: ${results.enrollmentsSynced} inserted, ${results.enrollmentsSkipped} skipped (already in DB).`);

@@ -156,6 +156,10 @@ export default function CoursesPage() {
       alert("Please enter a lecture title.");
       return;
     }
+    if (!lectureForm.video_url || !lectureForm.video_url.trim()) {
+      alert("Please provide a valid video stream link (Google Drive, YouTube, or direct video URL).");
+      return;
+    }
     try {
       setUploadingLecture(true);
       const targetSeq = nextLectureNumber;
@@ -166,10 +170,8 @@ export default function CoursesPage() {
         duration: lectureForm.duration || "25m",
         order_num: targetSeq,
         lecture_number: targetSeq,
-        video_url:
-          lectureForm.video_url ||
-          "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        pdf_url: lectureForm.pdf_url || null,
+        video_url: lectureForm.video_url.trim(),
+        pdf_url: lectureForm.pdf_url?.trim() || null,
         description: lectureForm.description || "",
         is_free_preview: lectureForm.is_free_preview,
       });
@@ -192,11 +194,39 @@ export default function CoursesPage() {
       const lecRes = await api.get(`/api/lectures/${studioCourse.id}`);
       setStudioLectures(lecRes.data?.lectures || lecRes.data || []);
       setStudioTab("modules");
+      await fetchCourses();
     } catch (err) {
       console.error("Upload error:", err);
       alert(err.response?.data?.message || "Failed to upload video lecture.");
     } finally {
       setUploadingLecture(false);
+    }
+  };
+
+  // Clear all dummy/fake lectures across the system
+  const handleClearAllDummyLectures = async () => {
+    if (
+      !window.confirm(
+        "⚠️ WARNING: Kya aap sach me saare dummy/fake lectures database aur website se DELETE karna chahte hain?\n\nIske baad website bilkul clean ho jayegi aur aap direct real recorded lectures upload kar sakenge!"
+      )
+    ) {
+      return;
+    }
+    try {
+      setDeletingLecture(true);
+      const res = await api.post("/api/admin/clear-all-lectures");
+      showNotification("success", res.data?.message || "All dummy lectures deleted successfully! 🎬");
+      if (studioCourse) {
+        setStudioLectures([]);
+        const lecRes = await api.get(`/api/lectures/${studioCourse.id}`);
+        setStudioLectures(lecRes.data?.lectures || lecRes.data || []);
+      }
+      await fetchCourses();
+    } catch (err) {
+      console.error("Clear dummy lectures error:", err);
+      showNotification("error", err.response?.data?.message || "Failed to clear dummy lectures");
+    } finally {
+      setDeletingLecture(false);
     }
   };
 
@@ -337,6 +367,16 @@ export default function CoursesPage() {
             <FaPlus />
             <span>Add Course</span>
           </Link>
+
+          <button
+            type="button"
+            onClick={handleClearAllDummyLectures}
+            className="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 text-xs font-bold py-2 px-3.5 rounded-lg transition flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
+            title="Delete all dummy/placeholder lectures from database & system"
+          >
+            <FaTrash className="text-[11px]" />
+            <span>Delete Fake Lectures 🗑️</span>
+          </button>
         </div>
       </div>
 
@@ -499,6 +539,18 @@ export default function CoursesPage() {
                 <FaLayerGroup />
                 <span>Modules & Existing Lectures ({studioLectures.length})</span>
               </button>
+
+              {studioLectures.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAllDummyLectures}
+                  className="ml-auto text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer my-1.5 shadow-xs shrink-0"
+                  title="Purge all dummy lectures from DB and website"
+                >
+                  <FaTrash className="text-[10px]" />
+                  <span>Purge Dummy Lectures</span>
+                </button>
+              )}
             </div>
 
             {/* MODAL CONTENT BODY */}

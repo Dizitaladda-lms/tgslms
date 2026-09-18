@@ -198,6 +198,10 @@ export default function AdminContentManager() {
       showBanner("error", "Lecture title is required");
       return;
     }
+    if (!lectureForm.video_url || !lectureForm.video_url.trim()) {
+      showBanner("error", "Please provide a valid video link (Google Drive, YouTube, or direct video URL)");
+      return;
+    }
     try {
       setSavingLecture(true);
       await api.post("/api/lectures/upload", {
@@ -205,8 +209,8 @@ export default function AdminContentManager() {
         section_id: lectureForm.section_id ? Number(lectureForm.section_id) : null,
         title: lectureForm.title.trim(),
         duration: lectureForm.duration || "25m",
-        video_url: lectureForm.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        pdf_url: lectureForm.pdf_url,
+        video_url: lectureForm.video_url.trim(),
+        pdf_url: lectureForm.pdf_url?.trim() || null,
         description: lectureForm.description,
         is_free_preview: lectureForm.is_free_preview,
       });
