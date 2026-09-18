@@ -124,6 +124,10 @@ app.get("/api/health", (req, res) => {
   res.json({
     success: true,
     status: "healthy",
+    database: {
+      configured: require("./config/db").hasConfiguredDatabase(),
+      connected: require("./config/db").isPostgres(),
+    },
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });

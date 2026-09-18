@@ -3,7 +3,10 @@ services:
     name: backend
     runtime: node
     rootDir: backend
-    buildCommand: npm install
+    # DATABASE_URL is supplied by Render's environment settings. Running the
+    # idempotent migration here guarantees the lectures table exists before the
+    # API starts accepting uploads.
+    buildCommand: npm install && npm run db:migrate
     startCommand: node src/server.js
     envVars:
       - key: NODE_ENV

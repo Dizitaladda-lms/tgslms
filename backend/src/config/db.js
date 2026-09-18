@@ -113,11 +113,21 @@ if (connectionString) {
 // Unified Direct & Resilient Pool Interface
 const pool = {
   isPostgres: () => isPostgresAvailable,
+  hasConfiguredDatabase: () => Boolean(connectionString),
   getRealPool: () => (isPostgresAvailable ? realPool : null),
 
   async query(text, params = []) {
     if (connectionString && realPool) {
       return await realPool.query(text, params);
+    }
+    // A serverless filesystem is ephemeral. Never pretend that data has been
+    // saved to a database when a production DATABASE_URL is absent.
+    if (isProduction) {
+      const error = new Error(
+        "Persistent database is not configured. Set DATABASE_URL on the API deployment before creating or updating LMS data."
+      );
+      error.statusCode = 503;
+      throw error;
     }
     // Only if DATABASE_URL is completely unset in dev, fallback to local store
     return await fallbackStore.handleQuery(text, params);
@@ -126,6 +136,14 @@ const pool = {
   async connect() {
     if (connectionString && realPool) {
       return await realPool.connect();
+    }
+
+    if (isProduction) {
+      const error = new Error(
+        "Persistent database is not configured. Set DATABASE_URL on the API deployment before creating or updating LMS data."
+      );
+      error.statusCode = 503;
+      throw error;
     }
 
     // Mock client for transactions (BEGIN, COMMIT, ROLLBACK) and queries when no DB is configured

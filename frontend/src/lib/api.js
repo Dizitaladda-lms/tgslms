@@ -1,12 +1,13 @@
 import axios from "axios";
 
 // Dynamic Base URL:
-// 1. If explicit valid VITE_API_URL provided, use it.
-// 2. In production (e.g. Vercel deployment), use same-origin "" so /api routes hit the Vercel backend directly.
-// 3. In local dev on localhost, default to http://localhost:5000.
+// 1. An explicitly configured VITE_API_URL always wins. This is required when
+//    the static frontend is deployed separately from the Express API (Vercel + Render).
+// 2. Otherwise, production uses same-origin Vercel functions.
+// 3. Local development defaults to the local Express server.
 const getBaseUrl = () => {
   const envUrl = (import.meta.env.VITE_API_URL || "").trim();
-  if (envUrl && !envUrl.includes("tsg-qlb1.onrender.com") && !envUrl.includes("vercel.com/")) {
+  if (envUrl) {
     return envUrl.replace(/\/+$/, "");
   }
   if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
