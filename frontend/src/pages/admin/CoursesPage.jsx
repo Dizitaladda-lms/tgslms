@@ -111,6 +111,39 @@ export default function CoursesPage() {
     fetchCourses(); // refresh lecture counts
   };
 
+  // Computed properties for selected module and sequence
+  const selectedModule = useMemo(() => {
+    return studioSections.find((s) => String(s.id) === String(lectureForm.section_id));
+  }, [studioSections, lectureForm.section_id]);
+
+  const selectedModuleLectures = useMemo(() => {
+    if (!lectureForm.section_id) return [];
+    return studioLectures.filter((l) => String(l.section_id) === String(lectureForm.section_id));
+  }, [studioLectures, lectureForm.section_id]);
+
+  const nextLectureNumber = selectedModuleLectures.length + 1;
+
+  // Auto-load default modules if course has 0 modules
+  const handleAutoLoadDefaultModules = async () => {
+    if (!studioCourse) return;
+    try {
+      setAddingSection(true);
+      const secRes = await api.get(`/api/sections/${studioCourse.id}`);
+      const secs = secRes.data?.sections || secRes.data || [];
+      setStudioSections(Array.isArray(secs) ? secs : []);
+      if (secs.length > 0) {
+        setLectureForm((prev) => ({ ...prev, section_id: secs[0].id }));
+        showNotification("success", `Loaded ${secs.length} curriculum modules for "${studioCourse.title}"!`);
+      } else {
+        showNotification("info", "No default modules found. Create one with the bar above.");
+      }
+    } catch (err) {
+      alert("Failed to load modules: " + (err.response?.data?.message || err.message));
+    } finally {
+      setAddingSection(false);
+    }
+  };
+
   // Upload new lecture
   const handleUploadLecture = async (e) => {
     e.preventDefault();
@@ -120,11 +153,14 @@ export default function CoursesPage() {
     }
     try {
       setUploadingLecture(true);
+      const targetSeq = nextLectureNumber;
       await api.post("/api/lectures/upload", {
         course_id: studioCourse.id,
         section_id: lectureForm.section_id ? Number(lectureForm.section_id) : null,
         title: lectureForm.title.trim(),
         duration: lectureForm.duration || "25m",
+        order_num: targetSeq,
+        lecture_number: targetSeq,
         video_url:
           lectureForm.video_url ||
           "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
@@ -133,16 +169,19 @@ export default function CoursesPage() {
         is_free_preview: lectureForm.is_free_preview,
       });
 
-      showNotification("success", `Recorded video lecture "${lectureForm.title}" uploaded successfully! 🚀`);
-      setLectureForm({
+      showNotification(
+        "success",
+        `Lecture #${targetSeq} ("${lectureForm.title}") uploaded successfully to ${selectedModule?.title || "Module"}! 🚀`
+      );
+      setLectureForm((prev) => ({
+        ...prev,
         title: "",
-        section_id: studioSections[0]?.id || "",
         duration: "25m",
         video_url: "",
         pdf_url: "",
         description: "",
         is_free_preview: false,
-      });
+      }));
 
       // Refresh studio lectures
       const lecRes = await api.get(`/api/lectures/${studioCourse.id}`);
@@ -162,11 +201,11 @@ export default function CoursesPage() {
     if (!newSectionTitle.trim()) return;
     try {
       setAddingSection(true);
-      const res = await api.post("/api/sections", {
+      await api.post("/api/sections", {
         course_id: studioCourse.id,
         title: newSectionTitle.trim(),
       });
-      showNotification("success", "Curriculum module created successfully!");
+      showNotification("success", `Curriculum module "${newSectionTitle.trim()}" created successfully!`);
       setNewSectionTitle("");
       // Refresh sections
       const secRes = await api.get(`/api/sections/${studioCourse.id}`);
@@ -499,7 +538,7 @@ export default function CoursesPage() {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Lesson 4: Google Ads Search Campaigns"
+                        placeholder={`e.g. Lecture ${nextLectureNumber}: Advanced Practical Implementation`}
                         value={lectureForm.title}
                         onChange={(e) => setLectureForm({ ...lectureForm, title: e.target.value })}
                         className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:bg-white focus:border-[#D4A017] focus:outline-none"
@@ -507,24 +546,66 @@ export default function CoursesPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Select Curriculum Module *
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Select Curriculum Module *
+                        </label>
+                        {studioSections.length > 0 && (
+                          <span className="text-[11px] font-bold text-[#7C2D12]">
+                            {studioSections.length} Modules Available
+                          </span>
+                        )}
+                      </div>
                       <select
                         value={lectureForm.section_id}
                         onChange={(e) => setLectureForm({ ...lectureForm, section_id: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:bg-white focus:border-[#D4A017] focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:bg-white focus:border-[#D4A017] focus:outline-none font-medium"
                       >
                         {studioSections.length === 0 ? (
-                          <option value="">No modules created yet (Add one above)</option>
+                          <option value="">No modules created yet (Click Quick Add or Auto-Load below)</option>
                         ) : (
-                          studioSections.map((sec) => (
-                            <option key={sec.id} value={sec.id}>
-                              {sec.title}
-                            </option>
-                          ))
+                          studioSections.map((sec, sIdx) => {
+                            const count = studioLectures.filter((l) => Number(l.section_id) === Number(sec.id)).length;
+                            return (
+                              <option key={sec.id} value={sec.id}>
+                                [Module {sIdx + 1}] {sec.title} ({count} {count === 1 ? "lecture" : "lectures"})
+                              </option>
+                            );
+                          })
                         )}
                       </select>
+
+                      {/* DYNAMIC SEQUENCE INDICATOR */}
+                      {selectedModule ? (
+                        <div className="mt-1.5 p-2 rounded-lg bg-amber-50/90 border border-amber-200 flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="font-bold text-[#7C2D12] shrink-0">Target:</span>
+                            <span className="font-bold text-slate-800 truncate">
+                              {selectedModule.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 font-bold shrink-0 ml-2">
+                            <span className="text-slate-500 text-[11px]">
+                              Existing: {selectedModuleLectures.length}
+                            </span>
+                            <span className="bg-[#7C2D12] text-white px-2 py-0.5 rounded text-[10px] shadow-xs">
+                              Will be Lecture #{nextLectureNumber} 🎬
+                            </span>
+                          </div>
+                        </div>
+                      ) : studioSections.length === 0 ? (
+                        <div className="mt-1.5 flex items-center justify-between gap-2 p-2 rounded-lg bg-orange-50 border border-orange-200 text-xs">
+                          <span className="text-orange-800 font-medium">No modules loaded for this course.</span>
+                          <button
+                            type="button"
+                            onClick={handleAutoLoadDefaultModules}
+                            disabled={addingSection}
+                            className="bg-[#0B1220] hover:bg-[#7C2D12] text-[#D4A017] hover:text-white px-2.5 py-1 rounded text-xs font-bold transition shrink-0 cursor-pointer"
+                          >
+                            {addingSection ? "Loading..." : "⚡ Auto-Load Course Modules"}
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div>
@@ -602,24 +683,26 @@ export default function CoursesPage() {
                   </div>
                 </form>
               ) : (
-                /* ================= TAB 2: MODULES & LECTURES LIST ================= */
+                /* ================= TAB 2: MODULES & LECTURES LIST (GROUPED BY MODULE) ================= */
                 <div className="space-y-4">
                   {studioLectures.length === 0 ? (
-                    <div className="py-8 text-center text-slate-500">
-                      <p className="text-sm">No lectures uploaded for this course yet.</p>
+                    <div className="py-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                      <p className="text-sm font-semibold text-slate-700">No lectures uploaded for this course yet.</p>
+                      <p className="text-xs text-slate-400 mt-1">Select a curriculum module and upload recorded video lectures.</p>
                       <button
                         onClick={() => setStudioTab("upload")}
-                        className="mt-2 text-xs font-bold text-[#7C2D12] hover:underline"
+                        className="mt-3 inline-flex items-center gap-1.5 bg-[#7C2D12] text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm hover:bg-amber-900 transition cursor-pointer"
                       >
-                        Click here to upload the first video lecture
+                        <FaCloudUploadAlt />
+                        <span>Upload First Lecture to Module</span>
                       </button>
                     </div>
-                  ) : (
-                    <div className="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden">
+                  ) : studioSections.length === 0 ? (
+                    <div className="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden bg-white">
                       {studioLectures.map((lec, idx) => (
                         <div
                           key={lec.id}
-                          className="p-3.5 bg-white hover:bg-slate-50 transition flex items-center justify-between gap-4"
+                          className="p-3.5 hover:bg-slate-50 transition flex items-center justify-between gap-4"
                         >
                           <div className="flex items-center gap-3">
                             <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0">
@@ -665,6 +748,153 @@ export default function CoursesPage() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  ) : (
+                    /* Grouped view by module */
+                    <div className="space-y-4">
+                      {studioSections.map((sec, sIdx) => {
+                        const secLectures = studioLectures.filter(
+                          (l) => Number(l.section_id) === Number(sec.id)
+                        );
+                        return (
+                          <div
+                            key={sec.id}
+                            className="border border-slate-200 rounded-xl overflow-hidden shadow-xs bg-white"
+                          >
+                            {/* MODULE HEADER */}
+                            <div className="bg-[#0B1220] text-white px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-[#D4A017]">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="bg-[#D4A017] text-[#0B1220] font-black text-xs px-2 py-0.5 rounded shrink-0">
+                                  Module {sIdx + 1}
+                                </span>
+                                <h4 className="font-bold text-sm text-slate-100 truncate">
+                                  {sec.title}
+                                </h4>
+                              </div>
+                              <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                                <span className="text-xs bg-slate-800 text-amber-300 px-2.5 py-0.5 rounded font-bold border border-slate-700">
+                                  {secLectures.length} {secLectures.length === 1 ? "Lecture" : "Lectures"}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setLectureForm((prev) => ({ ...prev, section_id: sec.id }));
+                                    setStudioTab("upload");
+                                  }}
+                                  className="bg-[#7C2D12] hover:bg-amber-900 text-white text-xs font-bold px-3 py-1 rounded transition flex items-center gap-1 cursor-pointer"
+                                >
+                                  <FaPlus className="text-[10px]" />
+                                  <span>Add Lecture</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* LECTURES UNDER THIS MODULE */}
+                            <div className="divide-y divide-slate-100">
+                              {secLectures.length === 0 ? (
+                                <div className="p-4 text-center text-xs text-slate-400 bg-slate-50/60">
+                                  No lectures uploaded in this module yet. Click "+ Add Lecture" above.
+                                </div>
+                              ) : (
+                                secLectures.map((lec, lIdx) => (
+                                  <div
+                                    key={lec.id}
+                                    className="p-3.5 hover:bg-amber-50/40 transition flex items-center justify-between gap-4"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <span className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-[#7C2D12] font-black text-xs flex items-center justify-center shrink-0">
+                                        {lec.lecture_number || lIdx + 1}
+                                      </span>
+                                      <div className="min-w-0">
+                                        <span className="font-bold text-slate-800 text-xs sm:text-sm block truncate">
+                                          {lec.title}
+                                        </span>
+                                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+                                          <span className="flex items-center gap-1">
+                                            <FaClock className="text-[10px]" />
+                                            {lec.duration || "25m"}
+                                          </span>
+                                          <span className="text-slate-400 font-semibold">
+                                            • Lecture {lec.lecture_number || lIdx + 1} of {secLectures.length}
+                                          </span>
+                                          {lec.is_free_preview && (
+                                            <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-semibold border border-emerald-200">
+                                              Free Preview
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      {lec.video_url && (
+                                        <a
+                                          href={lec.video_url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded text-xs transition"
+                                          title="Open Video Stream"
+                                        >
+                                          <FaExternalLinkAlt />
+                                        </a>
+                                      )}
+                                      <button
+                                        onClick={() => handleDeleteLecture(lec.id, lec.title)}
+                                        className="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white p-2 rounded text-xs transition cursor-pointer"
+                                        title="Delete Lecture"
+                                      >
+                                        <FaTrash />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* UNASSIGNED LECTURES (if any exist) */}
+                      {(() => {
+                        const secIds = new Set(studioSections.map((s) => Number(s.id)));
+                        const unassigned = studioLectures.filter(
+                          (l) => !l.section_id || !secIds.has(Number(l.section_id))
+                        );
+                        if (unassigned.length === 0) return null;
+                        return (
+                          <div className="border border-amber-200 rounded-xl overflow-hidden shadow-xs bg-white">
+                            <div className="bg-amber-100 text-amber-900 px-4 py-2.5 flex items-center justify-between border-b border-amber-200">
+                              <span className="font-bold text-xs">General / Unassigned Lectures</span>
+                              <span className="text-xs font-bold text-amber-800">{unassigned.length} Lectures</span>
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                              {unassigned.map((lec, idx) => (
+                                <div key={lec.id} className="p-3.5 flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-3">
+                                    <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0">
+                                      {idx + 1}
+                                    </span>
+                                    <div>
+                                      <span className="font-bold text-slate-800 text-xs sm:text-sm block">{lec.title}</span>
+                                      <span className="text-[11px] text-slate-500">{lec.duration || "25m"}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {lec.video_url && (
+                                      <a href={lec.video_url} target="_blank" rel="noreferrer" className="p-2 bg-slate-100 rounded text-xs">
+                                        <FaExternalLinkAlt />
+                                      </a>
+                                    )}
+                                    <button onClick={() => handleDeleteLecture(lec.id, lec.title)} className="p-2 bg-red-50 text-red-600 rounded text-xs">
+                                      <FaTrash />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
