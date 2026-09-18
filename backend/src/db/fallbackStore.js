@@ -1667,8 +1667,8 @@ class FallbackStore {
     const q = (text || "").trim();
     const upperQ = q.toUpperCase();
 
-    // 1. Transactions
-    if (upperQ === "BEGIN" || upperQ === "COMMIT" || upperQ === "ROLLBACK") {
+    // 1. Transactions & Schema Alters
+    if (upperQ === "BEGIN" || upperQ === "COMMIT" || upperQ === "ROLLBACK" || upperQ.startsWith("ALTER TABLE")) {
       return { rows: [], rowCount: 0 };
     }
 
@@ -1815,16 +1815,144 @@ class FallbackStore {
       return { rows: filtered, rowCount: filtered.length };
     }
 
-    // 2d. Course Sections: SELECT * FROM sections WHERE course_id = $1
-    if (upperQ.includes("FROM SECTIONS") && upperQ.includes("COURSE_ID = $1")) {
-      const courseId = Number(params[0]);
-      const sections = this.data.sections.filter((s) => s.course_id === courseId);
+    // 2d. Course Sections: SELECT * FROM sections
+    if (upperQ.includes("FROM SECTIONS") && !upperQ.includes("DELETE") && !upperQ.includes("COUNT")) {
+      if (!this.data.sections) this.data.sections = [];
+      let sections = [...this.data.sections];
+      if (upperQ.includes("COURSE_ID = $1") || upperQ.includes("COURSE_ID")) {
+        const rawId = params[0];
+        const targetCourse = this.data.courses.find(
+          (c) => String(c.id) === String(rawId) || c.course_id === String(rawId)
+        );
+        const numericCourseId = targetCourse ? targetCourse.id : Number(rawId);
+        sections = sections.filter((s) => Number(s.course_id) === Number(numericCourseId));
+      }
+      sections.sort((a, b) => (Number(a.order_num || a.id) || 0) - (Number(b.order_num || b.id) || 0));
       return { rows: sections, rowCount: sections.length };
     }
 
-    // 2e. Course Lectures (supports courseId numeric or slug)
+    if (upperQ.includes("INSERT INTO SECTIONS")) {
+      if (!this.data.sections) this.data.sections = [];
+      const title = String(params[0] || "Module").trim();
+      const courseId = Number(params[1]);
+      const existingInCourse = this.data.sections.filter((s) => Number(s.course_id) === courseId);
+      const orderNum = params[2] !== undefined ? Number(params[2]) : existingInCourse.length + 1;
+      const nextId = this.data.sections.length > 0 ? Math.max(...this.data.sections.map((s) => Number(s.id) || 0)) + 1 : 1;
+      const newSection = {
+        id: nextId,
+        course_id: courseId,
+        title,
+        order_num: orderNum,
+        created_at: new Date().toISOString(),
+      };
+      this.data.sections.push(newSection);
+      this.saveToDisk();
+      return { rows: [newSection], rowCount: 1 };
+    }
+
+    if (upperQ.includes("UPDATE SECTIONS")) {
+      if (!this.data.sections) this.data.sections = [];
+      const secId = Number(params[params.length - 1]);
+      const sec = this.data.sections.find((s) => Number(s.id) === secId);
+      if (sec) {
+        if (params[0] !== null && params[0] !== undefined) sec.title = String(params[0]).trim();
+        if (params[1] !== null && params[1] !== undefined) sec.order_num = Number(params[1]);
+        this.saveToDisk();
+      }
+      return { rows: sec ? [sec] : [], rowCount: sec ? 1 : 0 };
+    }
+
+    if (upperQ.includes("DELETE FROM SECTIONS")) {
+      if (!this.data.sections) this.data.sections = [];
+      const secId = Number(params[0]);
+      const idx = this.data.sections.findIndex((s) => Number(s.id) === secId);
+      let removed = null;
+      if (idx !== -1) {
+        removed = this.data.sections.splice(idx, 1)[0];
+        if (this.data.lectures) {
+          this.data.lectures = this.data.lectures.filter((l) => Number(l.section_id) !== secId);
+        }
+        this.saveToDisk();
+      }
+      return { rows: removed ? [removed] : [], rowCount: removed ? 1 : 0 };
+    }
+
+    // 2e. Next Lecture Order query: SELECT COALESCE(MAX(...) FROM lectures
+    if (upperQ.includes("SELECT COALESCE(MAX") && upperQ.includes("FROM LECTURES")) {
+      const courseId = Number(params[0]);
+      const secId = params[1] !== null && params[1] !== undefined ? Number(params[1]) : null;
+      const lecs = (this.data.lectures || []).filter(
+        (l) =>
+          Number(l.course_id) === courseId &&
+          (secId === null ? (l.section_id === null || l.section_id === undefined) : Number(l.section_id) === secId)
+      );
+      let maxOrder = 0;
+      lecs.forEach((l) => {
+        const o = Number(l.order_num || l.lecture_number || 0);
+        if (o > maxOrder) maxOrder = o;
+      });
+      return { rows: [{ next_order: maxOrder + 1 }], rowCount: 1 };
+    }
+
+    // 2f. Insert Lecture: INSERT INTO lectures
+    if (upperQ.includes("INSERT INTO LECTURES")) {
+      if (!this.data.lectures) this.data.lectures = [];
+      const nextId = this.data.lectures.length > 0 ? Math.max(...this.data.lectures.map((l) => Number(l.id) || 0)) + 1 : 1;
+      const courseId = Number(params[0]);
+      const sectionId = params[1] ? Number(params[1]) : null;
+      const title = params[2] || "Lecture";
+      const description = params[3] || "";
+      const videoUrl = params[4] || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+      const pdfUrl = params[5] || null;
+      const duration = params[6] || "25m";
+      const isFreePreview = Boolean(params[7]);
+      const orderNum = Number(params[8]) || 1;
+      const lectureNumber = Number(params[9]) || orderNum;
+
+      const newLec = {
+        id: nextId,
+        course_id: courseId,
+        section_id: sectionId,
+        title,
+        description,
+        video_url: videoUrl,
+        pdf_url: pdfUrl,
+        duration,
+        is_free_preview: isFreePreview,
+        order_num: orderNum,
+        lecture_number: lectureNumber,
+        created_at: new Date().toISOString(),
+      };
+      this.data.lectures.push(newLec);
+
+      const course = (this.data.courses || []).find((c) => Number(c.id) === courseId);
+      if (course) {
+        course.total_lectures = this.data.lectures.filter((l) => Number(l.course_id) === courseId).length;
+      }
+      this.saveToDisk();
+      return { rows: [newLec], rowCount: 1 };
+    }
+
+    // 2g. Delete Lecture: DELETE FROM lectures
+    if (upperQ.includes("DELETE FROM LECTURES")) {
+      if (!this.data.lectures) this.data.lectures = [];
+      const lecId = Number(params[0]);
+      const idx = this.data.lectures.findIndex((l) => Number(l.id) === lecId);
+      let removed = null;
+      if (idx !== -1) {
+        removed = this.data.lectures.splice(idx, 1)[0];
+        const course = (this.data.courses || []).find((c) => Number(c.id) === Number(removed.course_id));
+        if (course) {
+          course.total_lectures = this.data.lectures.filter((l) => Number(l.course_id) === Number(course.id)).length;
+        }
+        this.saveToDisk();
+      }
+      return { rows: removed ? [removed] : [], rowCount: removed ? 1 : 0 };
+    }
+
+    // 2h. Course Lectures (supports courseId numeric or slug, joins section title and order)
     if (upperQ.includes("FROM LECTURES") && !upperQ.includes("DELETE")) {
-      let filtered = this.data.lectures;
+      let filtered = [...(this.data.lectures || [])];
       if (params.length > 0 && params[0] !== undefined) {
         const courseIdStr = String(params[0]);
         const targetCourse = this.data.courses.find(
@@ -1835,23 +1963,44 @@ class FallbackStore {
       }
       const userId = params.length > 1 ? Number(params[1]) : 0;
       const progressList = this.data.video_progress || [];
-      let prevCompleted = true;
-      const rows = filtered.map((l, idx) => {
+      const sectionsList = this.data.sections || [];
+
+      // Enrich with section metadata
+      const enriched = filtered.map((l) => {
+        const sec = sectionsList.find((s) => Number(s.id) === Number(l.section_id));
         const vp = progressList.find(
           (p) => Number(p.lecture_id) === Number(l.id) && (userId === 0 || Number(p.user_id) === userId)
         );
-        const isCompleted = Boolean(vp?.completed);
+        return {
+          ...l,
+          section_title: sec ? sec.title : "Course Curriculum",
+          section_order: sec ? (Number(sec.order_num || sec.id) || 0) : 999,
+          order_num: Number(l.order_num || l.lecture_number || 1),
+          lecture_number: Number(l.lecture_number || l.order_num || 1),
+          is_completed: Boolean(vp?.completed),
+          watched_seconds: Number(vp?.watched_seconds) || 0,
+        };
+      });
+
+      // Sort by section_order ASC, order_num ASC, id ASC
+      enriched.sort((a, b) => {
+        if (a.section_order !== b.section_order) return a.section_order - b.section_order;
+        if (a.order_num !== b.order_num) return a.order_num - b.order_num;
+        return a.id - b.id;
+      });
+
+      let prevCompleted = true;
+      const rows = enriched.map((l, idx) => {
         const isLocked = idx === 0 ? false : !prevCompleted;
-        if (!isCompleted) {
+        if (!l.is_completed) {
           prevCompleted = false;
         }
         return {
           ...l,
-          is_completed: isCompleted,
           is_locked: isLocked,
-          watched_seconds: Number(vp?.watched_seconds) || 0,
         };
       });
+
       return { rows, rowCount: rows.length };
     }
 

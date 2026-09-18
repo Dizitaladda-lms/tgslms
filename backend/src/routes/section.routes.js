@@ -18,6 +18,12 @@ router.get("/:course_id", optionalAuth, getSections);
 
 // Create section (Admin / Teacher)
 router.post(
+  "/",
+  verifyToken,
+  checkRole("admin", "teacher"),
+  createSection
+);
+router.post(
   "/create",
   verifyToken,
   checkRole("admin", "teacher"),
