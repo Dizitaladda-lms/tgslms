@@ -90,6 +90,11 @@ export default function CoursesPage() {
       }
     } catch (err) {
       console.error("Studio content fetch error:", err);
+      showNotification(
+        "error",
+        err.response?.data?.message ||
+          "Video Studio content could not be loaded. Please check the API database connection."
+      );
     } finally {
       setStudioLoading(false);
     }

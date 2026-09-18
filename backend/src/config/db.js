@@ -57,6 +57,9 @@ if (connectionString) {
             ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar VARCHAR(500);
             ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
             ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active';
+            ALTER TABLE sections ADD COLUMN IF NOT EXISTS order_num INTEGER DEFAULT 1;
+            ALTER TABLE lectures ADD COLUMN IF NOT EXISTS order_num INTEGER DEFAULT 1;
+            ALTER TABLE lectures ADD COLUMN IF NOT EXISTS lecture_number INTEGER DEFAULT 1;
           `)
           .catch((err) => console.warn("Schema auto-patch notice:", err.message));
 

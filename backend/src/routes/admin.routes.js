@@ -26,6 +26,14 @@ router.get("/dashboard", (req, res) => {
 // ==========================
 router.post("/sync-database", async (req, res, next) => {
   try {
+    if (!pool.hasConfiguredDatabase || !pool.hasConfiguredDatabase()) {
+      return res.status(503).json({
+        success: false,
+        message:
+          "Database sync is unavailable because DATABASE_URL is not configured on this API deployment.",
+      });
+    }
+
     const { syncDatabase } = require("../db/syncAllToDb");
     const activePool = pool.getRealPool ? pool.getRealPool() : null;
     const stats = await syncDatabase(activePool);
