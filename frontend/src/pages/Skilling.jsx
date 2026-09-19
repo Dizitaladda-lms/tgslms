@@ -43,6 +43,7 @@ import {
   NIDADS_ADVANCED_DATA_ANALYTICS,
   NIDADS_DIPLOMA_DATA_ANALYTICS,
 } from "../data/nidadsDataAnalyticsData.js";
+import { getDomainContactInfo } from "../utils/courseNavigation";
 import {
   NIDADS_ADVANCED_DATA_SCIENCE,
   NIDADS_DIPLOMA_DATA_SCIENCE,
@@ -1449,23 +1450,22 @@ function DurationTrackCard3D({ course, isPopular, onSelect, index }) {
               "Master foundational concepts, core practical tools & build real working prototypes quickly."}
           </p>
 
-          {/* Elevated Price Container */}
+          {/* Program Mode & Admissions Highlights */}
           <div
-            className="mt-5 p-4 rounded-2xl bg-slate-50/90 border border-slate-100 shadow-inner"
+            className="mt-5 p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200 shadow-inner"
             style={{ transform: "translateZ(26px)" }}
           >
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-black text-[#0B1220]">
-                ₹{course.price.toLocaleString("en-IN")}
+            <div className="flex items-center justify-between text-xs font-bold text-[#0B1220]">
+              <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                ● Admissions Open
               </span>
-              {course.originalPrice && (
-                <span className="text-xs sm:text-sm font-semibold text-slate-400 line-through">
-                  ₹{course.originalPrice.toLocaleString("en-IN")}
-                </span>
-              )}
+              <span className="text-slate-500 font-medium">
+                Online & Classroom
+              </span>
             </div>
-            <div className="text-xs font-bold text-emerald-600 mt-1">
-              EMI from {course.emi}
+            <div className="text-[11px] font-semibold text-slate-600 mt-2 flex items-center justify-between">
+              <span>{course.modulesCount || "30+"} Syllabus Modules</span>
+              <span className="text-[#7C2D12]">100% Practical</span>
             </div>
           </div>
 
@@ -1641,6 +1641,9 @@ function Skilling() {
     phone: "",
     email: "",
   });
+
+  // Domain-specific counselor & WhatsApp contact details
+  const currentContact = getDomainContactInfo(selectedDomain, selectedCourse);
 
   // Step 1: Select Domain -> Directly go to Step 2 (Duration Program Cards)
   const handleDomainSelect = (domain, trackId = null) => {
@@ -2394,7 +2397,7 @@ function Skilling() {
                         }`}
                       >
                         <FaAward />
-                        <span>Fees & Certifications</span>
+                        <span>Admission & Batches</span>
                       </button>
 
                       {selectedCourse.details?.reviews?.length > 0 && (
@@ -2832,62 +2835,55 @@ function Skilling() {
                           </div>
                         </div>
 
-                        {/* Fee Table */}
+                        {/* Training Delivery Modes & Batch Options */}
                         <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8">
-                          <h5 className="text-xl font-black text-slate-900 mb-4">
-                            Transparent Fee Structure & EMI Options
+                          <h5 className="text-xl font-black text-slate-900 mb-2">
+                            Training Delivery Modes & Batch Options
                           </h5>
+                          <p className="text-xs sm:text-sm text-slate-500 mb-6">
+                            Choose between hands-on classroom training or live interactive online batches with dedicated mentor support.
+                          </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-white p-6 rounded-2xl border-2 border-[#7C2D12] shadow-sm">
-                              <span className="text-xs font-black uppercase tracking-wider text-[#7C2D12] bg-orange-100 px-3 py-1 rounded-full inline-block mb-3">
-                                Offline Classroom Training
-                              </span>
-                              <div className="flex items-baseline gap-2">
-                                <span className="text-3xl font-black text-[#0B1220]">
-                                  ₹{(selectedCourse.details.offlinePrice || selectedCourse.price).toLocaleString("en-IN")}
+                            <div className="bg-white p-6 rounded-2xl border-2 border-[#7C2D12] shadow-sm flex flex-col justify-between">
+                              <div>
+                                <span className="text-xs font-black uppercase tracking-wider text-[#7C2D12] bg-orange-100 px-3 py-1 rounded-full inline-block mb-3">
+                                  Offline Classroom Training
                                 </span>
-                                <span className="text-sm line-through text-slate-400">
-                                  ₹{selectedCourse.originalPrice.toLocaleString("en-IN")}
-                                </span>
-                                <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                  Save ₹{(selectedCourse.originalPrice - (selectedCourse.details.offlinePrice || selectedCourse.price)).toLocaleString("en-IN")}
-                                </span>
+                                <h6 className="text-lg font-black text-[#0B1220] mb-2">
+                                  In-Person Interactive Learning
+                                </h6>
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                  Includes classroom lab access, personal dedicated workstation, physical face-to-face mentor reviews, and in-person agency internship.
+                                </p>
+                                <ul className="mt-4 space-y-2 text-xs text-slate-700 font-semibold">
+                                  <li className="flex items-center gap-2">
+                                    <FaCheckCircle className="text-emerald-600 text-xs flex-shrink-0" />
+                                    <span>Daily Lab Practice & Real-time Doubt Clearing</span>
+                                  </li>
+                                  <li className="flex items-center gap-2">
+                                    <FaCheckCircle className="text-emerald-600 text-xs flex-shrink-0" />
+                                    <span>Offline Batch Schedule: Weekday & Weekend</span>
+                                  </li>
+                                </ul>
                               </div>
-                              <p className="text-xs text-slate-600 mt-2">
-                                Includes classroom lab access, personal workstation, physical mentor reviews, and in-person agency internship.
-                              </p>
-                              <span className="text-xs font-bold text-[#7C2D12] block mt-3">
-                                EMI: Starting at {selectedCourse.emi} (No-Cost EMI)
-                              </span>
-                              <button
-                                onClick={() => {
-                                  navigate("/checkout", {
-                                    state: {
-                                      course: {
-                                        id: selectedCourse.backendCourseId || selectedCourse.courseId || selectedCourse.id,
-                                        title: `${selectedCourse.title} (Offline Classroom)`,
-                                        price: selectedCourse.details.offlinePrice || selectedCourse.price,
-                                        originalPrice: selectedCourse.originalPrice,
-                                        original_price: selectedCourse.originalPrice,
-                                        duration: selectedCourse.duration,
-                                        level: `${selectedCourse.level} - Offline`,
-                                        image:
-                                          selectedCourse.thumbnail ||
-                                          "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
-                                        thumbnail:
-                                          selectedCourse.thumbnail ||
-                                          "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
-                                        category: selectedDomain?.title || "Digital Marketing",
-                                        description: selectedCourse.shortDesc || selectedCourse.subtitle,
-                                      },
-                                    },
-                                  });
-                                }}
-                                className="mt-4 w-full py-3 rounded-xl font-bold text-xs bg-[#7C2D12] hover:bg-[#60230e] text-white flex items-center justify-center gap-2 transition shadow-md hover:scale-[1.02] cursor-pointer"
-                              >
-                                <span>Enroll in Offline Batch</span>
-                                <FaArrowRight className="text-xs" />
-                              </button>
+                              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                                <a
+                                  href={`tel:+91${currentContact.phone}`}
+                                  className="flex-1 py-3 rounded-xl font-bold text-xs bg-[#7C2D12] hover:bg-[#60230e] text-white flex items-center justify-center gap-2 transition shadow-md hover:scale-[1.02] cursor-pointer"
+                                >
+                                  <FaPhoneAlt className="text-xs" />
+                                  <span>Talk to Counselor ({currentContact.formattedPhone})</span>
+                                </a>
+                                <a
+                                  href={`https://wa.me/${currentContact.whatsappNumber}?text=${encodeURIComponent(`Hi, I want to inquire about the ${selectedCourse.title} (Offline Classroom Batch)`)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="py-3 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 transition shadow-md hover:scale-[1.02]"
+                                >
+                                  <FaWhatsapp className="text-sm" />
+                                  <span>WhatsApp</span>
+                                </a>
+                              </div>
                             </div>
 
                             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
@@ -2895,53 +2891,41 @@ function Skilling() {
                                 <span className="text-xs font-black uppercase tracking-wider text-blue-700 bg-blue-100 px-3 py-1 rounded-full inline-block mb-3">
                                   Live Interactive Online
                                 </span>
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-3xl font-black text-[#0B1220]">
-                                    ₹{(selectedCourse.details.onlinePrice || selectedCourse.price).toLocaleString("en-IN")}
-                                  </span>
-                                  <span className="text-sm line-through text-slate-400">
-                                    ₹{selectedCourse.originalPrice.toLocaleString("en-IN")}
-                                  </span>
-                                  <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                    Save ₹{(selectedCourse.originalPrice - (selectedCourse.details.onlinePrice || selectedCourse.price)).toLocaleString("en-IN")}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-slate-600 mt-2">
-                                  Live 2-way audio/video sessions, cloud lab, recordings on LMS, and remote paid agency internship.
+                                <h6 className="text-lg font-black text-[#0B1220] mb-2">
+                                  Remote Live 2-Way Mentorship
+                                </h6>
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                  Live 2-way audio/video sessions, cloud practice environment, lecture recordings on LMS, and remote paid agency internship.
                                 </p>
-                                <span className="text-xs font-bold text-[#7C2D12] block mt-3">
-                                  EMI: Starting at {selectedCourse.emi} (No-Cost EMI)
-                                </span>
+                                <ul className="mt-4 space-y-2 text-xs text-slate-700 font-semibold">
+                                  <li className="flex items-center gap-2">
+                                    <FaCheckCircle className="text-emerald-600 text-xs flex-shrink-0" />
+                                    <span>HD Lecture Archives & Downloadable Resources</span>
+                                  </li>
+                                  <li className="flex items-center gap-2">
+                                    <FaCheckCircle className="text-emerald-600 text-xs flex-shrink-0" />
+                                    <span>Flexible Evening & Weekend Batches</span>
+                                  </li>
+                                </ul>
                               </div>
-                              <button
-                                onClick={() => {
-                                  navigate("/checkout", {
-                                    state: {
-                                      course: {
-                                        id: selectedCourse.backendCourseId || selectedCourse.courseId || selectedCourse.id,
-                                        title: `${selectedCourse.title} (Online Live)`,
-                                        price: selectedCourse.details.onlinePrice || selectedCourse.price,
-                                        originalPrice: selectedCourse.originalPrice,
-                                        original_price: selectedCourse.originalPrice,
-                                        duration: selectedCourse.duration,
-                                        level: `${selectedCourse.level} - Online`,
-                                        image:
-                                          selectedCourse.thumbnail ||
-                                          "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
-                                        thumbnail:
-                                          selectedCourse.thumbnail ||
-                                          "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
-                                        category: selectedDomain?.title || "Digital Marketing",
-                                        description: selectedCourse.shortDesc || selectedCourse.subtitle,
-                                      },
-                                    },
-                                  });
-                                }}
-                                className="mt-4 w-full py-3 rounded-xl font-bold text-xs bg-[#0B1220] hover:bg-slate-900 text-[#D4A017] flex items-center justify-center gap-2 transition shadow-md hover:scale-[1.02] cursor-pointer"
-                              >
-                                <span>Enroll in Online Batch</span>
-                                <FaArrowRight className="text-xs" />
-                              </button>
+                              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                                <a
+                                  href={`tel:+91${currentContact.phone}`}
+                                  className="flex-1 py-3 rounded-xl font-bold text-xs bg-[#0B1220] hover:bg-slate-900 text-[#D4A017] flex items-center justify-center gap-2 transition shadow-md hover:scale-[1.02] cursor-pointer"
+                                >
+                                  <FaPhoneAlt className="text-xs" />
+                                  <span>Talk to Counselor ({currentContact.formattedPhone})</span>
+                                </a>
+                                <a
+                                  href={`https://wa.me/${currentContact.whatsappNumber}?text=${encodeURIComponent(`Hi, I want to inquire about the ${selectedCourse.title} (Online Live Batch)`)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="py-3 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 transition shadow-md hover:scale-[1.02]"
+                                >
+                                  <FaWhatsapp className="text-sm" />
+                                  <span>WhatsApp</span>
+                                </a>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -3056,40 +3040,37 @@ function Skilling() {
                     )}
                   </div>
 
-                  {/* Pricing, Official Links & Action CTAs Strip */}
+                  {/* Admissions, Official Links & Action CTAs Strip */}
                   <div className="border-t-2 border-slate-200 pt-8 bg-slate-50 -mx-6 sm:-mx-10 -mb-6 sm:-mb-10 p-6 sm:p-10 rounded-b-3xl">
                     <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
                       <div>
-                        <div className="flex items-baseline gap-3">
-                          <span className="text-3xl sm:text-4xl font-black text-[#0B1220]">
-                            ₹{selectedCourse.price.toLocaleString("en-IN")}
-                          </span>
-                          <span className="text-base line-through text-slate-400">
-                            ₹{selectedCourse.originalPrice.toLocaleString("en-IN")}
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl sm:text-3xl font-black text-[#0B1220]">
+                            Admissions Open
                           </span>
                           <span className="text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
-                            Official Special Offer
+                            Official Program
                           </span>
                         </div>
                         <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-                          Flexible EMI: <strong className="text-[#7C2D12]">{selectedCourse.emi}</strong> • Online track at ₹{(selectedCourse.details.onlinePrice || selectedCourse.price).toLocaleString("en-IN")}
+                          Flexible Batches: Classroom & Live Online • 1-on-1 Senior Mentorship
                         </p>
                         <p className="text-[11px] text-slate-400 mt-0.5">
-                          *Includes GST, {selectedCourse.details?.liveProjects?.length || 0} Live Campaign Ad Budgets, Agency Internship, and Certifications.
+                          *Includes Live Campaign Ad Budgets, Agency Internship, and Industry-Recognized Certifications.
                         </p>
                       </div>
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                        <button
-                          onClick={() => setShowCounselorModal(true)}
-                          className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 font-bold px-4 py-3.5 rounded-2xl transition shadow-xs text-xs sm:text-sm"
+                        <a
+                          href={`tel:+91${currentContact.phone}`}
+                          className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 font-bold px-4 py-3.5 rounded-2xl transition shadow-xs text-xs sm:text-sm cursor-pointer"
                         >
-                          <FaPhoneAlt className="text-xs" /> Talk to Counselor
-                        </button>
+                          <FaPhoneAlt className="text-xs" /> Talk to Counselor ({currentContact.formattedPhone})
+                        </a>
 
                         <a
-                          href={selectedCourse.whatsappUrl}
+                          href={`https://wa.me/${currentContact.whatsappNumber}?text=${encodeURIComponent(`Hi, I want to inquire about the ${selectedCourse.title} course`)}`}
                           target="_blank"
                           rel="noreferrer"
                           className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-3.5 rounded-2xl transition shadow-md text-xs sm:text-sm"
@@ -3098,7 +3079,7 @@ function Skilling() {
                         </a>
 
                         <a
-                          href={selectedCourse.enrollUrl}
+                          href={currentContact.portalUrl}
                           target="_blank"
                           rel="noreferrer"
                           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#7C2D12] hover:bg-[#60230e] text-white font-black px-6 py-3.5 rounded-2xl transition shadow-xl text-sm hover:scale-105"
@@ -3106,40 +3087,6 @@ function Skilling() {
                           <span>Official Portal</span>
                           <FaExternalLinkAlt className="text-xs" />
                         </a>
-
-                        <button
-                          onClick={() => {
-                            navigate("/checkout", {
-                              state: {
-                                course: {
-                                  id: selectedCourse.id,
-                                  title: selectedCourse.title,
-                                  price: selectedCourse.price,
-                                  originalPrice: selectedCourse.originalPrice,
-                                  original_price: selectedCourse.originalPrice,
-                                  duration: selectedCourse.duration,
-                                  level: selectedCourse.level,
-                                  image:
-                                    selectedCourse.thumbnail ||
-                                    "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
-                                  thumbnail:
-                                    selectedCourse.thumbnail ||
-                                    "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
-                                  category: selectedDomain?.title || "Digital Marketing",
-                                  description:
-                                    selectedCourse.shortDesc ||
-                                    selectedCourse.subtitle ||
-                                    selectedCourse.description ||
-                                    selectedCourse.details?.overviewDescription,
-                                },
-                              },
-                            });
-                          }}
-                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#0B1220] hover:bg-slate-900 text-[#D4A017] font-black px-7 py-3.5 rounded-2xl transition shadow-xl text-sm hover:scale-105 cursor-pointer"
-                        >
-                          <span>Enroll via LMS</span>
-                          <FaArrowRight className="text-xs" />
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -3236,77 +3183,53 @@ function Skilling() {
                     </div>
                   </div>
 
-                  {/* Pricing, Inclusions and Action CTA */}
+                  {/* Program Highlights and Action CTA */}
                   <div className="border-t border-slate-200 pt-8 bg-slate-50 -mx-8 -mb-10 p-8 sm:p-10 rounded-b-3xl">
                     <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
                       <div>
-                        <div className="flex items-baseline gap-3">
-                          <span className="text-4xl sm:text-5xl font-black text-[#0B1220]">
-                            ₹{selectedCourse.price.toLocaleString("en-IN")}
-                          </span>
-                          <span className="text-lg line-through text-slate-400">
-                            ₹{selectedCourse.originalPrice.toLocaleString("en-IN")}
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl sm:text-3xl font-black text-[#0B1220]">
+                            Admissions Open • Fast-Track & Regular Batches
                           </span>
                           <span className="text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
-                            Save Special Offer
+                            Verified Certification
                           </span>
                         </div>
                         <p className="text-sm text-slate-600 mt-1 font-medium">
-                          Flexible EMI Options:{" "}
-                          <span className="font-bold text-[#7C2D12]">
-                            Starting at {selectedCourse.emi}
-                          </span>
+                          Mode: Classroom & Online Live • 100% Practical & Placement Support
                         </p>
                         <p className="text-xs text-slate-400 mt-1">
-                          *Inclusive of all GST, live training, projects review, and official certification.
+                          *Inclusive of all live training, hands-on projects, mentor review, and official certification.
                         </p>
                       </div>
 
                       {/* Action Buttons */}
                       <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-                        <button
-                          onClick={() => setShowCounselorModal(true)}
-                          className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 font-bold px-6 py-4 rounded-2xl transition shadow-sm"
+                        <a
+                          href={`tel:+91${currentContact.phone}`}
+                          className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 font-bold px-6 py-4 rounded-2xl transition shadow-sm cursor-pointer"
                         >
-                          <FaPhoneAlt className="text-xs" /> Talk to Counselor
-                        </button>
+                          <FaPhoneAlt className="text-xs" /> Talk to Counselor ({currentContact.formattedPhone})
+                        </a>
 
-                        {selectedCourse.whatsappUrl && (
-                          <a
-                            href={selectedCourse.whatsappUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-4 rounded-2xl transition shadow-md"
-                          >
-                            <FaWhatsapp className="text-base" /> WhatsApp
-                          </a>
-                        )}
-
-                        <button
-                          onClick={() => {
-                            navigate("/checkout", {
-                              state: {
-                                course: {
-                                  id: selectedCourse.backendCourseId || selectedCourse.courseId || selectedCourse.id,
-                                  title: selectedCourse.title,
-                                  price: selectedCourse.price,
-                                  original_price: selectedCourse.originalPrice,
-                                  duration: selectedCourse.duration,
-                                  level: selectedCourse.level,
-                                  thumbnail:
-                                    selectedCourse.thumbnail ||
-                                    (selectedDataTrack === "data-science"
-                                      ? "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=800&auto=format&fit=crop"
-                                      : "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop"),
-                                  category: activeSpecialization ? activeSpecialization.shortTitle : (selectedDomain?.title || "Digital Marketing"),
-                                },
-                              },
-                            });
-                          }}
-                          className="inline-flex items-center justify-center gap-2 bg-[#7C2D12] hover:bg-[#60230e] text-white font-bold px-8 py-4 rounded-2xl transition shadow-xl text-lg hover:scale-105 cursor-pointer"
+                        <a
+                          href={`https://wa.me/${currentContact.whatsappNumber}?text=${encodeURIComponent(`Hi, I want to inquire about the ${selectedCourse.title} course`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-4 rounded-2xl transition shadow-md"
                         >
-                          Enroll Now <FaArrowRight />
-                        </button>
+                          <FaWhatsapp className="text-base" /> WhatsApp
+                        </a>
+
+                        <a
+                          href={currentContact.portalUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center gap-2 bg-[#7C2D12] hover:bg-[#60230e] text-white font-bold px-8 py-4 rounded-2xl transition shadow-xl text-base hover:scale-105"
+                        >
+                          <span>Official Portal</span>
+                          <FaExternalLinkAlt className="text-xs" />
+                        </a>
                       </div>
                     </div>
                   </div>

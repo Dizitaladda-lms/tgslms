@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../lib/api";
-import { FaClock, FaCheckCircle } from "react-icons/fa";
-import { getCourseDescriptionUrl } from "../../utils/courseNavigation";
+import { FaClock, FaCheckCircle, FaPhoneAlt, FaWhatsapp, FaExternalLinkAlt } from "react-icons/fa";
+import { getCourseDescriptionUrl, getDomainContactInfo } from "../../utils/courseNavigation";
 
 const CourseDetails = () => {
   const navigate = useNavigate();
@@ -52,6 +52,8 @@ const CourseDetails = () => {
     );
 
   }
+
+  const contactInfo = getDomainContactInfo(course?.category, course);
 
   return (
 
@@ -168,82 +170,48 @@ const CourseDetails = () => {
           />
 
           <div className="p-8">
-
-            <div className="flex items-center gap-4">
-
-              <h2 className="text-5xl font-bold text-red-600">
-
-                ₹{course.price}
-
-              </h2>
-
-              <span className="line-through text-2xl text-gray-400">
-
-                ₹{course.originalPrice}
-
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-black text-[#0B1220]">
+                Admissions Open
               </span>
-
-            </div>
-
-            <div className="mt-2">
-
-              <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-semibold">
-
-                {Math.round(
-                  ((course.originalPrice - course.price) /
-                    course.originalPrice) *
-                    100
-                )}
-                % OFF
-
+              <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                Official Certification
               </span>
-
             </div>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Mode: Live Online & Classroom • 1-on-1 Senior Mentorship
+            </p>
 
-            <button
-  onClick={() =>
-    navigate("/checkout", {
-      state: {
-        course,
-      },
-    })
-  }
-  className="
-    w-full
-    bg-[#0B1220]
-    text-white
-    py-4
-    rounded-xl
-    text-xl
-    font-bold
-    mt-8
-    hover:bg-[#D4A017]
-    hover:text-black
-    transition
-  "
->
-  Enroll Now
-</button>
+            {/* Inquiries & Official Portal CTAs */}
+            <div className="space-y-3 mt-6">
+              <a
+                href={`tel:+91${contactInfo.phone}`}
+                className="w-full bg-[#0B1220] hover:bg-slate-900 text-[#D4A017] py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 transition shadow-md cursor-pointer"
+              >
+                <FaPhoneAlt className="text-sm" />
+                <span>Talk to Counselor ({contactInfo.formattedPhone})</span>
+              </a>
 
-            <button
-              className="
-              w-full
-              border-2
-              border-[#0B1220]
-              py-4
-              rounded-xl
-              text-lg
-              font-semibold
-              mt-4
-              hover:bg-[#0B1220]
-              hover:text-white
-              transition
-              "
-            >
+              <a
+                href={`https://wa.me/${contactInfo.whatsappNumber}?text=${encodeURIComponent("Hi, I want to inquire about the " + (course.title || "course"))}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 transition shadow-md"
+              >
+                <FaWhatsapp className="text-lg" />
+                <span>Inquire on WhatsApp</span>
+              </a>
 
-              ❤️ Add To Wishlist
-
-            </button>
+              <a
+                href={contactInfo.portalUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full bg-[#7C2D12] hover:bg-[#60230e] text-white py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 transition shadow-md"
+              >
+                <span>Official Portal</span>
+                <FaExternalLinkAlt className="text-xs" />
+              </a>
+            </div>
 
             <div className="mt-8 space-y-4 text-slate-700">
 
@@ -773,26 +741,29 @@ const CourseDetails = () => {
 
         <div>
 
-          <div className="bg-white rounded-3xl p-10 shadow-md sticky top-10">
-
-            <h2 className="text-5xl font-bold text-red-500">
-
-              ₹{course.price}
-
+          <div className="bg-white rounded-3xl p-8 shadow-md sticky top-10 text-center">
+            <span className="text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full inline-block mb-3">
+              Official Admission
+            </span>
+            <h2 className="text-3xl font-black text-[#0B1220]">
+              Admissions Open
             </h2> 
-
-            <Link
-
-              to="/"
-
-              className="block text-center mt-10 text-blue-600 font-semibold"
-
+            <p className="text-xs text-slate-500 mt-2">
+              Speak with a counselor to reserve your seat in the next batch.
+            </p>
+            <a
+              href={`tel:+91${contactInfo.phone}`}
+              className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-[#0B1220] hover:bg-slate-900 text-[#D4A017] font-bold py-3.5 px-6 rounded-xl text-sm transition cursor-pointer"
             >
-
-              ← Back To Courses
-
+              <FaPhoneAlt className="text-xs" />
+              <span>Call Counselor ({contactInfo.formattedPhone})</span>
+            </a>
+            <Link
+              to="/skilling"
+              className="block text-center mt-6 text-[#7C2D12] font-semibold text-sm hover:underline"
+            >
+              ← Explore All Programs
             </Link>
-
           </div>
 
         </div>

@@ -35,8 +35,8 @@ router.get("/", verifyToken, checkRole("admin", "teacher"), async (req, res, nex
 });
 
 // ==========================================
-// ADD STUDENT (Admin Only)
-// Creates both user record & student profile
+// ADD STUDENT & ENROLL IN COURSE (Admin Only)
+// Creates user record, student profile & enrollment access
 // ==========================================
 router.post("/", verifyToken, checkRole("admin"), async (req, res, next) => {
   const client = await pool.connect();
@@ -49,6 +49,8 @@ router.post("/", verifyToken, checkRole("admin"), async (req, res, next) => {
       phone,
       dob,
       course,
+      course_id,
+      batch,
       teacher,
       teacher_id,
       status,
@@ -61,60 +63,150 @@ router.post("/", verifyToken, checkRole("admin"), async (req, res, next) => {
       });
     }
 
-    // Check if email already exists
-    const existingUser = await client.query(
-      "SELECT id FROM users WHERE email = $1",
-      [email]
-    );
-
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "A user with this email already exists",
-      });
-    }
-
+    const cleanEmail = email.toLowerCase().trim();
     const hashedPassword = await bcrypt.hash(password, 10);
-    const studentCode = student_id || `STU-${Date.now().toString().slice(-4)}`;
+    const studentCode = student_id || `DIZ-STU-${Date.now().toString().slice(-4)}`;
 
     await client.query("BEGIN");
 
-    // 1. Create in users table so student can log in
-    const userRes = await client.query(
-      `INSERT INTO users (name, full_name, email, password, role, phone, dob, status)
-       VALUES ($1, $2, $3, $4, 'student', $5, $6, $7)
-       RETURNING id`,
-      [name, name, email, hashedPassword, phone, dob || null, status || "Active"]
+    // 1. Check if user already exists or create new user
+    let newUserId;
+    const existingUser = await client.query(
+      "SELECT id FROM users WHERE email = $1",
+      [cleanEmail]
     );
-    const newUserId = userRes.rows[0].id;
 
-    // 2. Create in students table for extended profile & management
-    const studentRes = await client.query(
-      `INSERT INTO students
-       (user_id, student_id, password, name, email, phone, dob, course, teacher, teacher_id, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING *`,
-      [
-        newUserId,
-        studentCode,
-        hashedPassword,
-        name,
-        email,
-        phone,
-        dob || null,
-        course,
-        teacher,
-        teacher_id || null,
-        status || "Active",
-      ]
+    if (existingUser.rows.length > 0) {
+      newUserId = existingUser.rows[0].id;
+      // Update password and status for existing user
+      await client.query(
+        "UPDATE users SET password = $1, status = $2, phone = COALESCE($3, phone) WHERE id = $4",
+        [hashedPassword, status || "Active", phone || null, newUserId]
+      );
+    } else {
+      const userRes = await client.query(
+        `INSERT INTO users (name, full_name, email, password, role, phone, dob, status, is_verified)
+         VALUES ($1, $2, $3, $4, 'student', $5, $6, $7, true)
+         RETURNING id`,
+        [name, name, cleanEmail, hashedPassword, phone || null, dob || null, status || "Active"]
+      );
+      newUserId = userRes.rows[0].id;
+    }
+
+    // 2. Resolve course from courses table
+    let resolvedCourseId = null;
+    let resolvedCourseCode = null;
+    let resolvedCourseTitle = course || "";
+
+    if (course_id || course) {
+      const courseRes = await client.query(
+        "SELECT id, course_id, title FROM courses WHERE id::text = $1 OR course_id = $1 OR LOWER(title) = LOWER($2) LIMIT 1",
+        [String(course_id || ""), String(course || "")]
+      );
+      if (courseRes.rows.length > 0) {
+        resolvedCourseId = courseRes.rows[0].id;
+        resolvedCourseCode = courseRes.rows[0].course_id;
+        resolvedCourseTitle = courseRes.rows[0].title;
+      }
+    }
+
+    // 3. Create or update in students table
+    const existingStudent = await client.query(
+      "SELECT id FROM students WHERE user_id = $1",
+      [newUserId]
     );
+
+    let studentRecordId;
+    if (existingStudent.rows.length > 0) {
+      studentRecordId = existingStudent.rows[0].id;
+      await client.query(
+        `UPDATE students
+         SET course_id = $1, course_code = $2, course = $3, phone = COALESCE($4, phone), teacher = COALESCE($5, teacher), teacher_id = COALESCE($6, teacher_id), status = $7
+         WHERE id = $8`,
+        [
+          resolvedCourseId,
+          resolvedCourseCode,
+          resolvedCourseTitle,
+          phone || null,
+          teacher || null,
+          teacher_id || null,
+          status || "Active",
+          studentRecordId,
+        ]
+      );
+    } else {
+      const studentRes = await client.query(
+        `INSERT INTO students
+         (user_id, student_id, password, name, email, phone, dob, course, course_id, course_code, teacher, teacher_id, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         RETURNING *`,
+        [
+          newUserId,
+          studentCode,
+          hashedPassword,
+          name,
+          cleanEmail,
+          phone || null,
+          dob || null,
+          resolvedCourseTitle,
+          resolvedCourseId,
+          resolvedCourseCode,
+          teacher || null,
+          teacher_id || null,
+          status || "Active",
+        ]
+      );
+      studentRecordId = studentRes.rows[0].id;
+    }
+
+    // 4. Enroll in enrollments table so the student has immediate access
+    if (resolvedCourseId) {
+      const existingEnroll = await client.query(
+        "SELECT id FROM enrollments WHERE user_id = $1 AND course_id = $2",
+        [newUserId, resolvedCourseId]
+      );
+
+      if (existingEnroll.rows.length === 0) {
+        await client.query(
+          `INSERT INTO enrollments (user_id, student_id, course_id, status)
+           VALUES ($1, $2, $3, $4)`,
+          [newUserId, studentRecordId, resolvedCourseId, status || "Active"]
+        );
+      } else {
+        await client.query(
+          `UPDATE enrollments SET status = $1 WHERE id = $2`,
+          [status || "Active", existingEnroll.rows[0].id]
+        );
+      }
+    }
+
+    // 5. Activity log
+    try {
+      await client.query(
+        `INSERT INTO activities (user_id, title, description, type)
+         VALUES ($1, 'Course Enrolled', $2, 'Enrollment')`,
+        [newUserId, `Student enrolled in ${resolvedCourseTitle || "course"}`]
+      );
+    } catch (_) {}
 
     await client.query("COMMIT");
 
-    const responseStudent = { ...studentRes.rows[0] };
-    delete responseStudent.password;
-
-    res.status(201).json(responseStudent);
+    res.status(201).json({
+      success: true,
+      message: "Student enrolled successfully",
+      student: {
+        id: studentRecordId,
+        user_id: newUserId,
+        student_id: studentCode,
+        name,
+        email: cleanEmail,
+        phone,
+        course: resolvedCourseTitle,
+        course_id: resolvedCourseId,
+        course_code: resolvedCourseCode,
+        status: status || "Active",
+      },
+    });
   } catch (error) {
     await client.query("ROLLBACK");
     next(error);

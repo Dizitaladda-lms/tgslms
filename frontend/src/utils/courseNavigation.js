@@ -125,3 +125,93 @@ export function getCourseDescriptionUrl(course) {
 
   return `/skilling?course=${idStr}`;
 }
+
+/**
+ * Official Counselor & WhatsApp Contact Information by Domain
+ */
+export function getDomainContactInfo(domainOrCourse, optionalCourse) {
+  const combined = [
+    typeof domainOrCourse === "string" ? domainOrCourse : "",
+    domainOrCourse?.id || "",
+    domainOrCourse?.category || "",
+    domainOrCourse?.title || "",
+    domainOrCourse?.domain || "",
+    optionalCourse?.id || "",
+    optionalCourse?.title || "",
+    optionalCourse?.category || "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  // 1. Data Science & Data Analytics (NIDADS) -> 92054 36796
+  if (
+    combined.includes("data-science") ||
+    combined.includes("data-analytics") ||
+    combined.includes("nidads") ||
+    combined.includes("da-") ||
+    combined.includes("ds-") ||
+    combined.includes("analytics") ||
+    combined.includes("data science")
+  ) {
+    return {
+      phone: "9205436796",
+      formattedPhone: "+91 92054 36796",
+      whatsappNumber: "919205436796",
+      brand: "NIDADS",
+      counselorLabel: "NIDADS Counselor",
+      portalUrl: "https://www.nidads.com/",
+    };
+  }
+
+  // 2. AI & Prompt Engineering -> 7428 114 918
+  if (
+    combined.includes("ai-prompt") ||
+    combined.includes("prompt-engineering") ||
+    combined.includes("prompt") ||
+    combined.includes("generative ai") ||
+    combined.includes("gen ai") ||
+    combined.includes("ai-3m") ||
+    combined.includes("ai-6m") ||
+    combined.includes("ai-12m") ||
+    combined.includes("autonomous ai") ||
+    combined.includes("langchain")
+  ) {
+    return {
+      phone: "7428114918",
+      formattedPhone: "+91 74281 14918",
+      whatsappNumber: "917428114918",
+      brand: "NIGAPE AI",
+      counselorLabel: "AI Counselor",
+      portalUrl: "https://www.nigape.com/",
+    };
+  }
+
+  // 3. Cyber Security -> 8810606010
+  if (
+    combined.includes("cyber") ||
+    combined.includes("hacking") ||
+    combined.includes("cs-") ||
+    combined.includes("forensic") ||
+    combined.includes("bugbounty") ||
+    combined.includes("soc")
+  ) {
+    return {
+      phone: "8810606010",
+      formattedPhone: "+91 88106 06010",
+      whatsappNumber: "918810606010",
+      brand: "Dizital Adda Cyber Security",
+      counselorLabel: "Cyber Security Counselor",
+      portalUrl: "https://dizitaladda.com/",
+    };
+  }
+
+  // 4. Digital Marketing (Default) -> 8810606010
+  return {
+    phone: "8810606010",
+    formattedPhone: "+91 88106 06010",
+    whatsappNumber: "918810606010",
+    brand: "Dizital Adda Digital Marketing",
+    counselorLabel: "Digital Marketing Counselor",
+    portalUrl: "https://dizitaladda.com/",
+  };
+}

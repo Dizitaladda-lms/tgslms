@@ -63,6 +63,9 @@ if (connectionString) {
             ALTER TABLE sections ADD COLUMN IF NOT EXISTS order_num INTEGER DEFAULT 1;
             ALTER TABLE lectures ADD COLUMN IF NOT EXISTS order_num INTEGER DEFAULT 1;
             ALTER TABLE lectures ADD COLUMN IF NOT EXISTS lecture_number INTEGER DEFAULT 1;
+            ALTER TABLE students ADD COLUMN IF NOT EXISTS course_id INTEGER;
+            ALTER TABLE students ADD COLUMN IF NOT EXISTS course_code VARCHAR(255);
+            ALTER TABLE students ADD COLUMN IF NOT EXISTS batch VARCHAR(255);
           `)
           .catch((err) => console.warn("Schema auto-patch notice:", err.message));
 
