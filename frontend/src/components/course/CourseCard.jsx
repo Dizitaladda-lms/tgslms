@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { getCourseDescriptionUrl } from "../../utils/courseNavigation";
 
 // Helper to extract 2-letter uppercase initials
 const getInitials = (name) => {
@@ -445,10 +446,17 @@ export default function CourseCard({
     if (e && e.stopPropagation) e.stopPropagation();
     if (propOnExplore) {
       propOnExplore();
-    } else if (courseId) {
-      navigate(`/course/${courseId}`);
     } else {
-      navigate("/courses");
+      const targetUrl = getCourseDescriptionUrl(
+        course || {
+          id: courseId,
+          course_id: courseId,
+          title,
+          category: field,
+          duration,
+        }
+      );
+      navigate(targetUrl);
     }
   };
 

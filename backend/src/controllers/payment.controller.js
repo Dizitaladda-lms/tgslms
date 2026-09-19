@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
+const emailService = require("../services/email.service");
 
 const getJwtSecret = () => process.env.JWT_SECRET || "dizital_adda_secret_jwt_key_2026";
 
@@ -56,6 +57,22 @@ const createOrder = async (req, res, next) => {
 
     const targetPrice = dbPrice;
     const amountInPaise = Math.round(targetPrice * 100);
+
+    // STRICT VERIFICATION GATE: Course checkout requires verified email address
+    if (studentDetails?.email) {
+      const checkEmail = studentDetails.email.trim().toLowerCase();
+      const verifiedCheck = await pool.query(
+        "SELECT id, is_verified FROM users WHERE LOWER(email) = $1",
+        [checkEmail]
+      );
+      if (verifiedCheck.rows.length === 0 || !verifiedCheck.rows[0].is_verified) {
+        return res.status(403).json({
+          success: false,
+          verificationRequired: true,
+          message: "Please verify your email address before proceeding with course enrollment.",
+        });
+      }
+    }
 
     // If guest user provided studentDetails, find or create account
     if (!userId && studentDetails?.email) {
@@ -229,6 +246,22 @@ const verifyPayment = async (req, res, next) => {
       });
     }
     const course = courseRes.rows[0];
+
+    // STRICT VERIFICATION GATE: Cannot complete enrollment without verified email
+    const candidateEmail = studentDetails?.email ? studentDetails.email.trim().toLowerCase() : null;
+    if (candidateEmail) {
+      const emailCheck = await pool.query(
+        "SELECT id, is_verified FROM users WHERE LOWER(email) = $1",
+        [candidateEmail]
+      );
+      if (emailCheck.rows.length === 0 || !emailCheck.rows[0].is_verified) {
+        return res.status(403).json({
+          success: false,
+          verificationRequired: true,
+          message: "Please verify your email address before completing your admission.",
+        });
+      }
+    }
 
     // 2. Resolve or Provision User
     const generatedTempPassword = "DA@" + Math.floor(100000 + Math.random() * 900000);
@@ -448,6 +481,28 @@ const verifyPayment = async (req, res, next) => {
       getJwtSecret(),
       { expiresIn: "7d" }
     );
+
+    // 9. Send Admission Credentials & Official Invoice Email to student inbox
+    emailService.sendCoursePurchaseInvoiceEmail({
+      to: finalUser.email,
+      name: finalUser.name,
+      studentId: studentCode || `DA-${finalUser.id}`,
+      tempPassword: generatedTempPassword,
+      course: {
+        id: course.id,
+        course_id: course.course_id,
+        title: course.title,
+        duration: course.duration,
+        price: course.price,
+      },
+      payment: {
+        paymentId: razorpay_payment_id,
+        amount: course.price,
+      },
+      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+    }).catch((emailErr) => {
+      console.warn("Post-purchase invoice email dispatch notice:", emailErr.message);
+    });
 
     res.status(200).json({
       success: true,

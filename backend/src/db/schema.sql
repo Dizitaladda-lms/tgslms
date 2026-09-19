@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS users (
     avatar VARCHAR(500),
     google_id VARCHAR(255),
     status VARCHAR(50) DEFAULT 'Active',
+    is_verified BOOLEAN DEFAULT false,
+    verification_token VARCHAR(255),
+    verification_token_expires TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

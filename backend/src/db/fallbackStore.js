@@ -343,6 +343,7 @@ const INITIAL_USERS = [
     phone: "+919876543210",
     specialization: "LMS Administration",
     status: "Active",
+    is_verified: true,
     created_at: new Date().toISOString(),
   },
   {
@@ -355,6 +356,7 @@ const INITIAL_USERS = [
     phone: "+918810606010",
     specialization: "Digital Marketing & Search AI",
     status: "Active",
+    is_verified: true,
     created_at: new Date().toISOString(),
   },
 ];
@@ -1223,6 +1225,9 @@ class FallbackStore {
         phone,
         dob,
         status: "Active",
+        is_verified: Boolean(record.is_verified || false),
+        verification_token: record.verification_token || null,
+        verification_token_expires: record.verification_token_expires || null,
         avatar: "https://ui-avatars.com/api/?name=" + encodeURIComponent(record.name || params[0] || "Student") + "&background=0B1220&color=D4A017&bold=true",
         created_at: new Date().toISOString(),
       };
@@ -1233,7 +1238,13 @@ class FallbackStore {
 
     if (upperQ.includes("UPDATE USERS")) {
       let targetId = params[params.length - 1];
-      const user = this.data.users.find((u) => u.id === Number(targetId));
+      let user = this.data.users.find((u) => u.id === Number(targetId) || u.email.toLowerCase() === String(targetId).toLowerCase());
+      if (!user && upperQ.includes("VERIFICATION_TOKEN =")) {
+        const tokenParam = params.find((p) => typeof p === "string" && p.length > 20);
+        if (tokenParam) {
+          user = this.data.users.find((u) => u.verification_token === tokenParam);
+        }
+      }
       if (user) {
         if (upperQ.includes("PASSWORD = $1")) {
           user.password = params[0];
@@ -1246,6 +1257,15 @@ class FallbackStore {
         if (upperQ.includes("DOB")) {
           const dobVal = params.find((p) => typeof p === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p));
           if (dobVal) user.dob = dobVal;
+        }
+        if (upperQ.includes("IS_VERIFIED = TRUE") || upperQ.includes("IS_VERIFIED = $")) {
+          user.is_verified = true;
+          user.verification_token = null;
+          user.verification_token_expires = null;
+        }
+        if (upperQ.includes("VERIFICATION_TOKEN = $")) {
+          user.verification_token = params[0];
+          user.verification_token_expires = params[1];
         }
         user.updated_at = new Date().toISOString();
         this.saveToDisk();

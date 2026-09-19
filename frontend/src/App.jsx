@@ -41,6 +41,7 @@ import CourseListing from "./pages/CourseListing";
 import Checkout from "./pages/Checkout";
 import AdminCertificates from "./pages/admin/AdminCertificates";
 import VerifyCertificate from "./pages/VerifyCertificate";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
       <Route path="/placement" element={<Placement />} />
       <Route path="/verify-certificate" element={<VerifyCertificate />} />
       <Route path="/verify-certificate/:code" element={<VerifyCertificate />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* ================= STUDENT / ENROLLED ROUTES ================= */}
       <Route path="/checkout" element={<Checkout />} />

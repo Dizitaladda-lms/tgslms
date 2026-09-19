@@ -1528,12 +1528,68 @@ function Skilling() {
   const [selectedDataTrack, setSelectedDataTrack] = useState("data-analytics");
   const [searchParams] = useSearchParams();
 
-  // Support direct deep-linking from Landing Page Skilling card
+  // Support direct deep-linking to exact course description from popular course cards
   useEffect(() => {
     const domainId = searchParams.get("domain");
     const durationId = searchParams.get("duration");
     const trackId = searchParams.get("track");
+    const courseParam = searchParams.get("course");
 
+    // 1. If course parameter is provided, find exact course across all domains
+    if (courseParam) {
+      const targetKey = String(courseParam).toLowerCase().trim();
+      for (const dom of DOMAINS) {
+        // Search regular coursesByDuration
+        if (dom.coursesByDuration) {
+          for (const [durId, list] of Object.entries(dom.coursesByDuration)) {
+            const found = (list || []).find(
+              (c) =>
+                String(c.id).toLowerCase() === targetKey ||
+                String(c.course_id).toLowerCase() === targetKey ||
+                c.title?.toLowerCase().includes(targetKey)
+            );
+            if (found) {
+              setSelectedDomain(dom);
+              setSelectedCourse(found);
+              const dur =
+                DURATION_OPTIONS.find((d) => d.id === found.durationId || d.id === durId) ||
+                DURATION_OPTIONS[0];
+              setSelectedDuration(dur);
+              setStep(3);
+              setTimeout(() => window.scrollTo({ top: 350, behavior: "smooth" }), 150);
+              return;
+            }
+          }
+        }
+        // Search specializationsByDuration
+        if (dom.specializationsByDuration) {
+          for (const [specTrack, durMap] of Object.entries(dom.specializationsByDuration)) {
+            for (const [durId, list] of Object.entries(durMap || {})) {
+              const found = (list || []).find(
+                (c) =>
+                  String(c.id).toLowerCase() === targetKey ||
+                  String(c.course_id).toLowerCase() === targetKey ||
+                  c.title?.toLowerCase().includes(targetKey)
+              );
+              if (found) {
+                setSelectedDomain(dom);
+                setSelectedDataTrack(specTrack);
+                setSelectedCourse(found);
+                const dur =
+                  DURATION_OPTIONS.find((d) => d.id === found.durationId || d.id === durId) ||
+                  DURATION_OPTIONS[0];
+                setSelectedDuration(dur);
+                setStep(3);
+                setTimeout(() => window.scrollTo({ top: 350, behavior: "smooth" }), 150);
+                return;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Otherwise match by domain and duration
     if (domainId) {
       const dom = DOMAINS.find((d) => d.id === domainId);
       if (dom) {

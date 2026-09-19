@@ -21,6 +21,8 @@ import {
   Mail,
   UserCheck,
   Calendar,
+  RefreshCw,
+  Clock,
 } from "lucide-react";
 import api from "../lib/api";
 
@@ -58,6 +60,83 @@ const Checkout = () => {
   const [credentials, setCredentials] = useState(null);
   const [copiedField, setCopiedField] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  // Email Verification States
+  const [isEmailVerified, setIsEmailVerified] = useState(Boolean(storedUser?.is_verified));
+  const [isSendingVerification, setIsSendingVerification] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationMsg, setVerificationMsg] = useState("");
+  const [previewLink, setPreviewLink] = useState("");
+
+  // Check verification status whenever email changes
+  useEffect(() => {
+    if (formData.email && formData.email.includes("@") && formData.email.includes(".")) {
+      api
+        .post("/api/auth/check-verification", { email: formData.email.trim().toLowerCase() })
+        .then((res) => {
+          if (res.data?.verified) {
+            setIsEmailVerified(true);
+          } else {
+            setIsEmailVerified(false);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setIsEmailVerified(false);
+    }
+  }, [formData.email]);
+
+  // Live polling while student verifies email in their inbox
+  useEffect(() => {
+    let intervalId;
+    if (verificationSent && !isEmailVerified && formData.email) {
+      intervalId = setInterval(() => {
+        api
+          .post("/api/auth/check-verification", { email: formData.email.trim().toLowerCase() })
+          .then((res) => {
+            if (res.data?.verified) {
+              setIsEmailVerified(true);
+              setVerificationSent(false);
+              setVerificationMsg("Email verified successfully! 🎉 You can now proceed to payment.");
+              clearInterval(intervalId);
+            }
+          })
+          .catch(() => {});
+      }, 3500);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [verificationSent, isEmailVerified, formData.email]);
+
+  const handleSendVerification = async () => {
+    if (!formData.email || !formData.email.includes("@")) {
+      setErrorMsg("Please enter a valid email address first.");
+      return;
+    }
+    try {
+      setIsSendingVerification(true);
+      setErrorMsg("");
+      const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(" ");
+      const res = await api.post("/api/auth/send-verification-email", {
+        email: formData.email.trim().toLowerCase(),
+        name: fullName || "Student",
+      });
+      if (res.data?.alreadyVerified) {
+        setIsEmailVerified(true);
+        setVerificationMsg("This email is already verified! ✅");
+      } else {
+        setVerificationSent(true);
+        setVerificationMsg(res.data?.message || "Verification link sent! Please check your email.");
+        if (res.data?.previewUrl) {
+          setPreviewLink(res.data.previewUrl);
+        }
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || "Failed to send verification email. Please try again.");
+    } finally {
+      setIsSendingVerification(false);
+    }
+  };
 
 
 
@@ -173,6 +252,10 @@ const Checkout = () => {
     }
     if (!formData.agreeTerms) {
       setErrorMsg("Please accept the Terms & Conditions to proceed with enrollment.");
+      return;
+    }
+    if (!isEmailVerified) {
+      setErrorMsg("⚠️ Email Verification Required: Please verify your email address by clicking 'Verify Email' above before proceeding to payment.");
       return;
     }
 
@@ -345,6 +428,19 @@ const Checkout = () => {
                   </h4>
                   <p className="text-amber-800 text-sm mt-1 leading-relaxed">
                     Our cloud system is currently preparing your dedicated lecture player, initializing your assignment dashboard, and assigning your senior mentor. You can log into your student portal immediately using the temporary credentials below.
+                  </p>
+                </div>
+              </div>
+
+              {/* Credentials & Invoice Emailed Notification */}
+              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-5 flex items-start gap-4">
+                <Mail className="text-emerald-700 mt-1 shrink-0" size={24} />
+                <div>
+                  <h4 className="text-emerald-900 font-bold text-base flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-emerald-600" /> Credentials & Official Invoice Sent to Your Email!
+                  </h4>
+                  <p className="text-emerald-800 text-sm mt-1 leading-relaxed">
+                    A permanent confirmation email containing your temporary password, login portal link, student roll ID, and official tax invoice has been sent to <strong>{credentials.username}</strong>.
                   </p>
                 </div>
               </div>
@@ -626,10 +722,22 @@ const Checkout = () => {
 
                 {/* Email Address */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                    Email Address (Student Portal Username) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Email Address (Student Portal Username) <span className="text-red-500">*</span>
+                    </label>
+                    {isEmailVerified ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
+                        <CheckCircle2 size={13} className="text-emerald-600" /> Verified Email
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300">
+                        <AlertCircle size={13} className="text-amber-600" /> Verification Required
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="relative flex items-center">
                     <input
                       type="email"
                       name="email"
@@ -637,13 +745,82 @@ const Checkout = () => {
                       placeholder="e.g. rahul.sharma@example.com"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full border border-slate-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#7C2D12] transition pl-11"
+                      className="w-full border border-slate-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#7C2D12] transition pl-11 pr-36"
                     />
-                    <Mail className="absolute left-4 top-3.5 text-slate-400" size={18} />
+                    <Mail className="absolute left-4 text-slate-400" size={18} />
+
+                    {/* Verification Trigger Button */}
+                    <div className="absolute right-2">
+                      {isEmailVerified ? (
+                        <div className="flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                          <Check size={14} /> Ready
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleSendVerification}
+                          disabled={isSendingVerification || !formData.email || !formData.email.includes("@")}
+                          className="bg-[#0B1220] hover:bg-[#7C2D12] disabled:opacity-40 text-[#D4A017] hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer"
+                        >
+                          {isSendingVerification ? (
+                            <>
+                              <RefreshCw size={12} className="animate-spin" /> Sending...
+                            </>
+                          ) : verificationSent ? (
+                            "Resend Link ✉️"
+                          ) : (
+                            "Verify Email ✉️"
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-[11px] text-slate-500 mt-1 block">
-                    Your auto-generated temporary password and credentials will be sent to this email.
-                  </span>
+
+                  {/* Verification Status Alert Box */}
+                  {!isEmailVerified && verificationSent && (
+                    <div className="mt-2.5 bg-amber-50 border border-amber-300 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-amber-900 animate-fadeIn">
+                      <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-amber-600 shrink-0 animate-spin" />
+                        <span>
+                          Verification link sent to <strong>{formData.email}</strong>. Please click the button in your email to verify.
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {previewLink && (
+                          <a
+                            href={previewLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold px-2 py-1 rounded text-[11px] underline"
+                          >
+                            Verify Link
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            api.post("/api/auth/check-verification", { email: formData.email.trim().toLowerCase() })
+                              .then((r) => {
+                                if (r.data?.verified) setIsEmailVerified(true);
+                              });
+                          }}
+                          className="bg-[#0B1220] text-white px-2.5 py-1 rounded font-bold hover:bg-[#7C2D12] transition"
+                        >
+                          I've Verified ✓
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isEmailVerified ? (
+                    <span className="text-[11px] text-emerald-700 font-semibold mt-1.5 flex items-center gap-1">
+                      <Check size={12} /> Email verified! Temporary login password and tax invoice will be emailed here.
+                    </span>
+                  ) : !verificationSent ? (
+                    <span className="text-[11px] text-slate-500 mt-1 block">
+                      Click <strong>"Verify Email ✉️"</strong> to verify before purchasing. Your account will not be created without verification.
+                    </span>
+                  ) : null}
                 </div>
 
                 {/* Mobile Number */}
@@ -859,14 +1036,23 @@ const Checkout = () => {
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className={`w-full mt-6 bg-[#7C2D12] hover:bg-[#60230e] text-white py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 ${
-                    isProcessing ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:scale-[1.02]"
+                  className={`w-full mt-6 text-white py-4 px-6 rounded-2xl font-bold text-base sm:text-lg transition-all duration-300 shadow-xl flex items-center justify-center gap-2 ${
+                    isProcessing
+                      ? "bg-slate-400 opacity-60 cursor-not-allowed"
+                      : !isEmailVerified
+                      ? "bg-[#0B1220] hover:bg-[#7C2D12] cursor-pointer hover:shadow-2xl hover:scale-[1.01]"
+                      : "bg-[#7C2D12] hover:bg-[#60230e] hover:shadow-2xl cursor-pointer hover:scale-[1.02]"
                   }`}
                 >
                   {isProcessing ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       <span>Connecting Gateway...</span>
+                    </>
+                  ) : !isEmailVerified ? (
+                    <>
+                      <Lock size={18} className="text-[#D4A017]" />
+                      <span>Verify Email to Unlock Payment</span>
                     </>
                   ) : (
                     <>

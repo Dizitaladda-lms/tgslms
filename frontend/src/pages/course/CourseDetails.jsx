@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../lib/api";
 import { FaClock, FaCheckCircle } from "react-icons/fa";
+import { getCourseDescriptionUrl } from "../../utils/courseNavigation";
 
 const CourseDetails = () => {
   const navigate = useNavigate();
@@ -18,8 +19,23 @@ const CourseDetails = () => {
   }, [id]);
 
   useEffect(() => {
+    // If id maps to a specialized skilling page, redirect immediately
+    const directUrl = getCourseDescriptionUrl({ id, course_id: id });
+    if (directUrl && directUrl !== "/skilling" && !directUrl.startsWith(`/course/`)) {
+      navigate(directUrl, { replace: true });
+      return;
+    }
     fetchCourse();
-  }, [fetchCourse]);
+  }, [id, fetchCourse, navigate]);
+
+  useEffect(() => {
+    if (course) {
+      const targetUrl = getCourseDescriptionUrl(course);
+      if (targetUrl && targetUrl !== "/skilling" && !targetUrl.startsWith(`/course/`)) {
+        navigate(targetUrl, { replace: true });
+      }
+    }
+  }, [course, navigate]);
 
   // LOADING
 

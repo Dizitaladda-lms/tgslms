@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const pool = require("../config/db");
+const emailService = require("../services/email.service");
 
 const getJwtSecret = () => {
   return process.env.JWT_SECRET || "default_jwt_secret_dizital_adda_lms";
@@ -198,8 +200,202 @@ const getMe = async (req, res, next) => {
   }
 };
 
+// ==========================================
+// SEND EMAIL VERIFICATION LINK
+// ==========================================
+const sendVerificationEmail = async (req, res, next) => {
+  try {
+    const { email, name } = req.body;
+
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid email address is required",
+      });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const studentName = name?.trim() || "Student";
+
+    // 24-hour verification token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // Check if user exists in DB
+    const existing = await pool.query(
+      "SELECT id, name, is_verified FROM users WHERE LOWER(email) = $1",
+      [cleanEmail]
+    );
+
+    if (existing.rows.length > 0) {
+      // If user is already verified
+      if (existing.rows[0].is_verified) {
+        return res.status(200).json({
+          success: true,
+          alreadyVerified: true,
+          message: "This email address is already verified! ✅",
+        });
+      }
+
+      await pool.query(
+        "UPDATE users SET verification_token = $1, verification_token_expires = $2 WHERE id = $3",
+        [token, expires, existing.rows[0].id]
+      );
+    } else {
+      // Create pending student user so their verification token is stored
+      const tempPass = await bcrypt.hash("DA@" + Math.floor(100000 + Math.random() * 900000), 10);
+      try {
+        await pool.query(
+          `INSERT INTO users (name, full_name, email, password, role, is_verified, verification_token, verification_token_expires, status)
+           VALUES ($1, $1, $2, $3, 'student', false, $4, $5, 'Pending')`,
+          [studentName, cleanEmail, tempPass, token, expires]
+        );
+      } catch (insertErr) {
+        // Fallback if is_verified column not yet created
+        await pool.query(
+          `INSERT INTO users (name, full_name, email, password, role, status)
+           VALUES ($1, $1, $2, $3, 'student', 'Pending')`,
+          [studentName, cleanEmail, tempPass]
+        ).catch(() => {});
+      }
+    }
+
+    // Dispatch email
+    const mailRes = await emailService.sendVerificationEmail({
+      to: cleanEmail,
+      name: studentName,
+      token,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Verification link sent to ${cleanEmail}. Please check your inbox and click the verify button.`,
+      previewUrl: mailRes.previewUrl,
+    });
+  } catch (error) {
+    console.error("Send verification email error:", error);
+    next(error);
+  }
+};
+
+// ==========================================
+// VERIFY EMAIL (Handles browser click or API)
+// ==========================================
+const verifyEmail = async (req, res, next) => {
+  try {
+    const token = req.query.token || req.body?.token;
+    const isBrowserGet = req.method === "GET";
+    const frontendUrl = (
+      process.env.FRONTEND_URL ||
+      process.env.CLIENT_URL ||
+      (process.env.NODE_ENV === "production" ? "https://tsg-ecru.vercel.app" : "http://localhost:5173")
+    ).replace(/\/+$/, "");
+
+    if (!token) {
+      if (isBrowserGet) {
+        return res.redirect(`${frontendUrl}/verify-email?status=missing_token`);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Verification token is required",
+      });
+    }
+
+    const queryRes = await pool.query(
+      "SELECT id, name, email, is_verified, verification_token_expires FROM users WHERE verification_token = $1",
+      [String(token).trim()]
+    );
+
+    if (queryRes.rows.length === 0) {
+      if (isBrowserGet) {
+        return res.redirect(`${frontendUrl}/verify-email?status=invalid`);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification link. Please request a new one.",
+      });
+    }
+
+    const user = queryRes.rows[0];
+
+    // Check expiry
+    if (user.verification_token_expires && new Date() > new Date(user.verification_token_expires)) {
+      if (isBrowserGet) {
+        return res.redirect(`${frontendUrl}/verify-email?status=expired&email=${encodeURIComponent(user.email)}`);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "This verification link has expired. Please request a new one.",
+      });
+    }
+
+    // Mark verified
+    await pool.query(
+      "UPDATE users SET is_verified = true, verification_token = NULL, verification_token_expires = NULL WHERE id = $1",
+      [user.id]
+    );
+
+    if (isBrowserGet) {
+      return res.redirect(`${frontendUrl}/verify-email?status=success&email=${encodeURIComponent(user.email)}`);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully! 🎉",
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("Verify email error:", error);
+    next(error);
+  }
+};
+
+// ==========================================
+// CHECK EMAIL VERIFICATION STATUS
+// Fast endpoint for checkout polling
+// ==========================================
+const checkVerification = async (req, res, next) => {
+  try {
+    const email = req.body?.email || req.query?.email;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email parameter is required",
+      });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const result = await pool.query(
+      "SELECT id, email, is_verified FROM users WHERE LOWER(email) = $1",
+      [cleanEmail]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(200).json({
+        success: true,
+        exists: false,
+        verified: false,
+      });
+    }
+
+    const user = result.rows[0];
+    return res.status(200).json({
+      success: true,
+      exists: true,
+      verified: Boolean(user.is_verified),
+    });
+  } catch (error) {
+    console.error("Check verification error:", error);
+    next(error);
+  }
+};
+
 module.exports = {
   loginUser,
   registerUser,
   getMe,
+  sendVerificationEmail,
+  verifyEmail,
+  checkVerification,
 };

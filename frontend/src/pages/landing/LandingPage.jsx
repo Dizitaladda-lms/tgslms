@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Features from "../../components/landing/Features";
 import logo from "../../assets/logo.png";
+import { getCourseDescriptionUrl } from "../../utils/courseNavigation";
 
 import {
   FaClock,
@@ -1432,7 +1433,7 @@ px-4
                   </div>
 
                   <Link
-                    to={`/course/${course.id}`}
+                    to={getCourseDescriptionUrl(course)}
                     className="
                       bg-[#0B1220]
                       text-white
