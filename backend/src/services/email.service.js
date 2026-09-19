@@ -1,4 +1,9 @@
-const nodemailer = require("nodemailer");
+let nodemailer = null;
+try {
+  nodemailer = require("nodemailer");
+} catch (e) {
+  console.warn("[Email Service] nodemailer package not loaded. Operating in resilient fallback mode.");
+}
 
 /**
  * Dizital Adda LMS Email Service
@@ -23,6 +28,7 @@ const getBackendUrl = () => {
 
 // Create Nodemailer Transporter
 const createTransporter = () => {
+  if (!nodemailer) return null;
   const host = process.env.SMTP_HOST;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
