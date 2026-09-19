@@ -1756,50 +1756,47 @@ function Skilling() {
       </div>
 
       {/* ==========================================
-          HERO SECTION (DIZITAL ADDA PORTAL STYLE)
+          HERO SECTION (CLEAN & SIMPLE PORTAL STYLE)
       ========================================== */}
-      <section className="bg-[#0B1220] text-white border-b-4 border-[#D4A017] relative overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-orange-600/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#D4A017]/15 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto px-6 py-16 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-400/30 text-orange-300 px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide uppercase mb-6">
-            <FaRocket className="text-orange-400" />
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-12 sm:py-16 text-center">
+          <div className="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-700 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase mb-5">
+            <FaRocket className="text-[#7C2D12]" />
             <span>National Future Skills & Career Ecosystem</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
             Future Skills Portal
           </h1>
 
-          <p className="text-orange-200 mt-4 text-xl sm:text-2xl font-medium max-w-3xl mx-auto">
-            India's AI-Powered Future Technology & Job Placement Ecosystem
+          <p className="text-slate-600 mt-3 text-lg sm:text-xl font-medium max-w-2xl mx-auto">
+            India's Technology & Job Placement Ecosystem
           </p>
 
-          <div className="w-24 h-1 bg-[#D4A017] mx-auto mt-6 rounded-full"></div>
+          <div className="w-16 h-1 bg-[#7C2D12] mx-auto mt-4 rounded-full"></div>
 
-          <p className="text-slate-300 mt-6 max-w-3xl mx-auto text-base sm:text-lg leading-relaxed">
+          <p className="text-slate-500 mt-4 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
             Select your technology domain, explore specialized duration programs (3, 4, 6, or 12 Months),
             and launch your career with verified certifications and 100% placement support.
           </p>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-12 pt-8 border-t border-slate-800">
-            <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-              <p className="text-3xl font-black text-[#D4A017]">4</p>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1">Core Tech Domains</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-10 pt-6 border-t border-slate-100">
+            <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200 hover:bg-slate-50 transition">
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900">4</p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Core Tech Domains</p>
             </div>
-            <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-              <p className="text-3xl font-black text-[#D4A017]">3, 4, 6, 12 M</p>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1">Flexible Durations</p>
+            <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200 hover:bg-slate-50 transition">
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900">3, 4, 6, 12 M</p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Flexible Durations</p>
             </div>
-            <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-              <p className="text-3xl font-black text-[#D4A017]">60+ AI Tools</p>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1">AI Integrated Learning</p>
+            <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200 hover:bg-slate-50 transition">
+              <p className="text-2xl sm:text-3xl font-bold text-[#7C2D12]">60+ Tools</p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Industry Tools & Skills</p>
             </div>
-            <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-              <p className="text-3xl font-black text-[#D4A017]">94%</p>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1">Placement Rate</p>
+            <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200 hover:bg-slate-50 transition">
+              <p className="text-2xl sm:text-3xl font-bold text-emerald-700">94%</p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Placement Rate</p>
             </div>
           </div>
         </div>
