@@ -294,8 +294,9 @@ const sendVerificationEmail = async (req, res, next) => {
       }
     }
 
-    // Extract client origin from request body or headers
+    // Extract client origin and return URL from request body or headers
     const clientOrigin = req.body?.clientUrl || req.headers?.origin || req.headers?.referer;
+    const returnUrl = req.body?.returnUrl;
 
     // Dispatch email
     const mailRes = await emailService.sendVerificationEmail({
@@ -303,6 +304,7 @@ const sendVerificationEmail = async (req, res, next) => {
       name: studentName,
       token,
       clientOrigin,
+      returnUrl,
     });
 
     res.status(200).json({
@@ -334,9 +336,34 @@ const verifyEmail = async (req, res, next) => {
       (process.env.NODE_ENV === "production" ? "https://tgs-lms-lac.vercel.app" : "http://localhost:5173")
     ).replace(/\/+$/, "");
 
+    const returnUrlParam = req.query?.returnUrl;
+    const getSuccessRedirect = (targetEmail) => {
+      if (returnUrlParam) {
+        try {
+          const parsed = new URL(returnUrlParam);
+          parsed.searchParams.set("verified", "true");
+          parsed.searchParams.set("email", targetEmail);
+          return parsed.toString();
+        } catch {}
+      }
+      return `${frontendUrl}/checkout?verified=true&email=${encodeURIComponent(targetEmail)}`;
+    };
+
+    const getErrorRedirect = (status, email = "") => {
+      if (returnUrlParam) {
+        try {
+          const parsed = new URL(returnUrlParam);
+          parsed.searchParams.set("status", status);
+          if (email) parsed.searchParams.set("email", email);
+          return parsed.toString();
+        } catch {}
+      }
+      return `${frontendUrl}/checkout?status=${status}&email=${encodeURIComponent(email)}`;
+    };
+
     if (!token) {
       if (isBrowserGet) {
-        return res.redirect(`${frontendUrl}/verify-email?status=missing_token`);
+        return res.redirect(getErrorRedirect("missing_token"));
       }
       return res.status(400).json({
         success: false,
@@ -358,7 +385,7 @@ const verifyEmail = async (req, res, next) => {
 
     if (queryRes.rows.length === 0) {
       if (isBrowserGet) {
-        return res.redirect(`${frontendUrl}/verify-email?status=invalid`);
+        return res.redirect(getErrorRedirect("invalid"));
       }
       return res.status(400).json({
         success: false,
@@ -371,7 +398,7 @@ const verifyEmail = async (req, res, next) => {
     // Check expiry
     if (user.verification_token_expires && new Date() > new Date(user.verification_token_expires)) {
       if (isBrowserGet) {
-        return res.redirect(`${frontendUrl}/verify-email?status=expired&email=${encodeURIComponent(user.email)}`);
+        return res.redirect(getErrorRedirect("expired", user.email));
       }
       return res.status(400).json({
         success: false,
@@ -394,7 +421,7 @@ const verifyEmail = async (req, res, next) => {
     }
 
     if (isBrowserGet) {
-      return res.redirect(`${frontendUrl}/verify-email?status=success&email=${encodeURIComponent(user.email)}`);
+      return res.redirect(getSuccessRedirect(user.email));
     }
 
     return res.status(200).json({

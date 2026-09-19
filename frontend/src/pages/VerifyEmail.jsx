@@ -30,6 +30,10 @@ export default function VerifyEmail() {
     if (statusParam === "success") {
       setIsSuccess(true);
       setIsLoading(false);
+      const targetEmail = emailParam || "";
+      setTimeout(() => {
+        navigate(`/checkout?verified=true${targetEmail ? `&email=${encodeURIComponent(targetEmail)}` : ""}`);
+      }, 1000);
       return;
     }
 
@@ -41,7 +45,11 @@ export default function VerifyEmail() {
         .then((res) => {
           if (res.data?.success) {
             setIsSuccess(true);
-            if (res.data.email) setVerifiedEmail(res.data.email);
+            const targetEmail = res.data.email || emailParam || "";
+            if (targetEmail) setVerifiedEmail(targetEmail);
+            setTimeout(() => {
+              navigate(`/checkout?verified=true${targetEmail ? `&email=${encodeURIComponent(targetEmail)}` : ""}`);
+            }, 1000);
           }
         })
         .catch((err) => {
@@ -55,7 +63,7 @@ export default function VerifyEmail() {
           setIsLoading(false);
         });
     }
-  }, [tokenParam, statusParam]);
+  }, [tokenParam, statusParam, emailParam, navigate]);
 
   const handleResend = async (e) => {
     e.preventDefault();

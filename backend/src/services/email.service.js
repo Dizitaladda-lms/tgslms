@@ -80,14 +80,16 @@ const createTransporter = () => {
 /**
  * 1. SEND EMAIL VERIFICATION LINK
  */
-const sendVerificationEmail = async ({ to, name, token, clientOrigin }) => {
+const sendVerificationEmail = async ({ to, name, token, clientOrigin, returnUrl }) => {
   const recipientEmail = String(to).trim().toLowerCase();
   const studentName = name || "Student";
   const frontendUrl = getFrontendUrl(clientOrigin);
   const backendUrl = getBackendUrl(clientOrigin);
 
-  const verificationUrl = `${frontendUrl}/verify-email?token=${token}&email=${encodeURIComponent(recipientEmail)}`;
-  const directApiUrl = `${backendUrl}/api/auth/verify-email?token=${token}`;
+  const targetFormUrl = returnUrl || `${frontendUrl}/checkout`;
+  // Hits backend to authenticate token and redirects directly to website admission form!
+  const verificationUrl = `${backendUrl}/api/auth/verify-email?token=${token}&returnUrl=${encodeURIComponent(targetFormUrl)}`;
+  const directApiUrl = verificationUrl;
 
   const mailFrom = process.env.EMAIL_FROM || '"Dizital Adda LMS" <info@dizitaladda.com>';
   const subject = "Verify Your Email Address - Dizital Adda LMS";
@@ -142,7 +144,7 @@ const sendVerificationEmail = async ({ to, name, token, clientOrigin }) => {
 
         <div class="btn-container">
           <a href="${verificationUrl}" target="_blank" class="verify-btn">
-            ✅ Verify Email Address
+            ✅ Verify Email & Open Admission Form
           </a>
         </div>
 

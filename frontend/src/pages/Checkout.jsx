@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams, Link } from "react-router-dom";
 import {
   ShieldCheck,
   Star,
@@ -29,6 +29,7 @@ import api from "../lib/api";
 const Checkout = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const [searchParams] = useSearchParams();
 
   const [course, setCourse] = useState(state?.course || null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,10 +44,13 @@ const Checkout = () => {
     }
   })();
 
+  const urlEmail = searchParams.get("email") || "";
+  const isUrlVerified = searchParams.get("verified") === "true";
+
   const [formData, setFormData] = useState({
     firstName: storedUser?.name ? storedUser.name.split(" ")[0] : "",
     lastName: storedUser?.name ? storedUser.name.split(" ").slice(1).join(" ") : "",
-    email: storedUser?.email || "",
+    email: urlEmail || storedUser?.email || "",
     phone: storedUser?.phone || "",
     dob: storedUser?.dob || "",
     state: "",
@@ -61,7 +65,9 @@ const Checkout = () => {
   const [copiedField, setCopiedField] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   // Email Verification States
-  const [isEmailVerified, setIsEmailVerified] = useState(Boolean(storedUser?.is_verified));
+  const [isEmailVerified, setIsEmailVerified] = useState(
+    isUrlVerified || Boolean(storedUser?.is_verified)
+  );
   const [isSendingVerification, setIsSendingVerification] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
   const [verificationMsg, setVerificationMsg] = useState("");
@@ -84,6 +90,19 @@ const Checkout = () => {
       setIsEmailVerified(false);
     }
   }, [formData.email]);
+
+  // Handle verified status and email passed directly from email verification redirect
+  useEffect(() => {
+    const verifiedParam = searchParams.get("verified");
+    const emailParam = searchParams.get("email");
+    if (verifiedParam === "true") {
+      setIsEmailVerified(true);
+      setVerificationSent(false);
+      if (emailParam) {
+        setFormData((prev) => ({ ...prev, email: emailParam.trim().toLowerCase() }));
+      }
+    }
+  }, [searchParams]);
 
   // Live polling while student verifies email in their inbox
   useEffect(() => {
@@ -117,10 +136,25 @@ const Checkout = () => {
       setIsSendingVerification(true);
       setErrorMsg("");
       const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(" ");
+
+      // Prepare returnUrl pointing back to this checkout form so email button directly opens this form!
+      let returnUrl = null;
+      if (typeof window !== "undefined") {
+        try {
+          const u = new URL(window.location.href);
+          if (course?.id) u.searchParams.set("courseId", course.id);
+          u.searchParams.set("email", formData.email.trim().toLowerCase());
+          returnUrl = u.toString();
+        } catch {
+          returnUrl = window.location.href;
+        }
+      }
+
       const res = await api.post("/api/auth/send-verification-email", {
         email: formData.email.trim().toLowerCase(),
         name: fullName || "Student",
         clientUrl: typeof window !== "undefined" ? window.location.origin : null,
+        returnUrl,
       });
       if (res.data?.alreadyVerified) {
         setIsEmailVerified(true);
@@ -139,17 +173,19 @@ const Checkout = () => {
     }
   };
 
-
-
-  // Fallback course fetch if user navigated to /checkout directly
+  // Fallback course fetch if user navigated to /checkout directly or via email redirect
   useEffect(() => {
     if (!course) {
+      const targetCourseId = searchParams.get("courseId");
       api
         .get("/api/courses")
         .then((res) => {
           const list = res.data?.courses || [];
           if (list.length > 0) {
-            const defaultC = list.find((c) => c.course_id === "dm-advanced") || list[0];
+            const defaultC =
+              (targetCourseId && list.find((c) => String(c.id) === String(targetCourseId) || c.course_id === targetCourseId)) ||
+              list.find((c) => c.course_id === "dm-advanced") ||
+              list[0];
             setCourse({
               id: defaultC.course_id || defaultC.id,
               title: defaultC.title,
@@ -166,7 +202,7 @@ const Checkout = () => {
         })
         .catch((err) => console.warn("Failed to load fallback course:", err));
     }
-  }, [course]);
+  }, [course, searchParams]);
 
   // Live Database Price Verification: Guarantees authentic price from DB & prevents DevTools tampering
   useEffect(() => {
