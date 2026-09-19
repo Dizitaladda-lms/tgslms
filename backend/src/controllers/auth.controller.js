@@ -333,7 +333,7 @@ const verifyEmail = async (req, res, next) => {
       process.env.FRONTEND_URL ||
       process.env.CLIENT_URL ||
       dynamicHostUrl ||
-      (process.env.NODE_ENV === "production" ? "https://tgs-lms-lac.vercel.app" : "http://localhost:5173")
+      "http://localhost:5173"
     ).replace(/\/+$/, "");
 
     const returnUrlParam = req.query?.returnUrl;

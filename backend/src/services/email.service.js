@@ -11,16 +11,16 @@ try {
  */
 
 // Determine base URLs for verification and portal links
-// Guarantees that links in emails sent to real inboxes (opened on mobile phones, etc.)
-// always resolve to the live website and never link to an unreachable localhost!
+// Uses the client's current origin (e.g. localhost:5173, custom domain, etc.)
+// so verification and redirects ALWAYS return to the user's exact website!
 const getFrontendUrl = (clientOrigin = null) => {
-  if (clientOrigin && typeof clientOrigin === "string" && !clientOrigin.includes("localhost") && !clientOrigin.includes("127.0.0.1")) {
+  if (clientOrigin && typeof clientOrigin === "string") {
     return clientOrigin.replace(/\/+$/, "");
   }
-  if (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes("localhost")) {
+  if (process.env.FRONTEND_URL) {
     return process.env.FRONTEND_URL.replace(/\/+$/, "");
   }
-  if (process.env.CLIENT_URL && !process.env.CLIENT_URL.includes("localhost")) {
+  if (process.env.CLIENT_URL) {
     return process.env.CLIENT_URL.replace(/\/+$/, "");
   }
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
@@ -29,16 +29,18 @@ const getFrontendUrl = (clientOrigin = null) => {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`.replace(/\/+$/, "");
   }
-  // Safe default: Production deployment URL
-  return "https://tgs-lms-lac.vercel.app";
+  return "http://localhost:5173";
 };
 
 const getBackendUrl = (clientOrigin = null) => {
-  if (clientOrigin && typeof clientOrigin === "string" && !clientOrigin.includes("localhost") && !clientOrigin.includes("127.0.0.1")) {
-    return clientOrigin.replace(/\/+$/, "");
-  }
-  if (process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost")) {
+  if (process.env.BACKEND_URL) {
     return process.env.BACKEND_URL.replace(/\/+$/, "");
+  }
+  if (clientOrigin && typeof clientOrigin === "string") {
+    if (clientOrigin.includes("localhost") || clientOrigin.includes("127.0.0.1")) {
+      return "http://localhost:5000";
+    }
+    return clientOrigin.replace(/\/+$/, "");
   }
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`.replace(/\/+$/, "");
@@ -46,7 +48,7 @@ const getBackendUrl = (clientOrigin = null) => {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`.replace(/\/+$/, "");
   }
-  return "https://tgs-lms-lac.vercel.app";
+  return "http://localhost:5000";
 };
 
 // Create Nodemailer Transporter
