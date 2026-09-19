@@ -120,6 +120,7 @@ const Checkout = () => {
       const res = await api.post("/api/auth/send-verification-email", {
         email: formData.email.trim().toLowerCase(),
         name: fullName || "Student",
+        clientUrl: typeof window !== "undefined" ? window.location.origin : null,
       });
       if (res.data?.alreadyVerified) {
         setIsEmailVerified(true);
@@ -332,6 +333,7 @@ const Checkout = () => {
                 state: formData.state.trim(),
                 city: formData.city.trim(),
               },
+              clientUrl: typeof window !== "undefined" ? window.location.origin : null,
             });
 
             if (verifyRes.data.success) {

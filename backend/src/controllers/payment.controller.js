@@ -483,6 +483,7 @@ const verifyPayment = async (req, res, next) => {
     );
 
     // 9. Send Admission Credentials & Official Invoice Email to student inbox
+    const clientOrigin = req.body?.clientUrl || req.headers?.origin || req.headers?.referer;
     emailService.sendCoursePurchaseInvoiceEmail({
       to: finalUser.email,
       name: finalUser.name,
@@ -500,6 +501,7 @@ const verifyPayment = async (req, res, next) => {
         amount: course.price,
       },
       invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      clientOrigin,
     }).catch((emailErr) => {
       console.warn("Post-purchase invoice email dispatch notice:", emailErr.message);
     });

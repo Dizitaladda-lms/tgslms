@@ -294,11 +294,15 @@ const sendVerificationEmail = async (req, res, next) => {
       }
     }
 
+    // Extract client origin from request body or headers
+    const clientOrigin = req.body?.clientUrl || req.headers?.origin || req.headers?.referer;
+
     // Dispatch email
     const mailRes = await emailService.sendVerificationEmail({
       to: cleanEmail,
       name: studentName,
       token,
+      clientOrigin,
     });
 
     res.status(200).json({

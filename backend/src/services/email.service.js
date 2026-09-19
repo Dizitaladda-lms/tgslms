@@ -11,23 +11,42 @@ try {
  */
 
 // Determine base URLs for verification and portal links
-const getFrontendUrl = () => {
-  return (
-    process.env.FRONTEND_URL ||
-    process.env.CLIENT_URL ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    (process.env.NODE_ENV === "production" ? "https://tgs-lms-lac.vercel.app" : "http://localhost:5173")
-  ).replace(/\/+$/, "");
+// Guarantees that links in emails sent to real inboxes (opened on mobile phones, etc.)
+// always resolve to the live website and never link to an unreachable localhost!
+const getFrontendUrl = (clientOrigin = null) => {
+  if (clientOrigin && typeof clientOrigin === "string" && !clientOrigin.includes("localhost") && !clientOrigin.includes("127.0.0.1")) {
+    return clientOrigin.replace(/\/+$/, "");
+  }
+  if (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes("localhost")) {
+    return process.env.FRONTEND_URL.replace(/\/+$/, "");
+  }
+  if (process.env.CLIENT_URL && !process.env.CLIENT_URL.includes("localhost")) {
+    return process.env.CLIENT_URL.replace(/\/+$/, "");
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`.replace(/\/+$/, "");
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`.replace(/\/+$/, "");
+  }
+  // Safe default: Production deployment URL
+  return "https://tgs-lms-lac.vercel.app";
 };
 
-const getBackendUrl = () => {
-  return (
-    process.env.BACKEND_URL ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    (process.env.NODE_ENV === "production" ? "https://tgs-lms-lac.vercel.app" : "http://localhost:5000")
-  ).replace(/\/+$/, "");
+const getBackendUrl = (clientOrigin = null) => {
+  if (clientOrigin && typeof clientOrigin === "string" && !clientOrigin.includes("localhost") && !clientOrigin.includes("127.0.0.1")) {
+    return clientOrigin.replace(/\/+$/, "");
+  }
+  if (process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost")) {
+    return process.env.BACKEND_URL.replace(/\/+$/, "");
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`.replace(/\/+$/, "");
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`.replace(/\/+$/, "");
+  }
+  return "https://tgs-lms-lac.vercel.app";
 };
 
 // Create Nodemailer Transporter
@@ -61,11 +80,11 @@ const createTransporter = () => {
 /**
  * 1. SEND EMAIL VERIFICATION LINK
  */
-const sendVerificationEmail = async ({ to, name, token }) => {
+const sendVerificationEmail = async ({ to, name, token, clientOrigin }) => {
   const recipientEmail = String(to).trim().toLowerCase();
   const studentName = name || "Student";
-  const frontendUrl = getFrontendUrl();
-  const backendUrl = getBackendUrl();
+  const frontendUrl = getFrontendUrl(clientOrigin);
+  const backendUrl = getBackendUrl(clientOrigin);
 
   const verificationUrl = `${frontendUrl}/verify-email?token=${token}&email=${encodeURIComponent(recipientEmail)}`;
   const directApiUrl = `${backendUrl}/api/auth/verify-email?token=${token}`;
@@ -206,10 +225,11 @@ const sendCoursePurchaseInvoiceEmail = async ({
   course,
   payment,
   invoiceNumber,
+  clientOrigin,
 }) => {
   const recipientEmail = String(to).trim().toLowerCase();
   const studentName = name || "Student";
-  const frontendUrl = getFrontendUrl();
+  const frontendUrl = getFrontendUrl(clientOrigin);
   const loginUrl = `${frontendUrl}/login`;
 
   const courseTitle = course?.title || "Specialized Certification Program";
