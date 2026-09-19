@@ -1756,11 +1756,11 @@ function Skilling() {
       </div>
 
       {/* ==========================================
-          HERO SECTION (SOLID BLUE, NO GRADIENT, NO SHINE)
+          HERO SECTION (EXACT SOLID DARK BLUE #0B1220, NO GRADIENT, NO SHINE)
       ========================================== */}
-      <section className="bg-[#0F2744] text-white border-b border-blue-900">
+      <section className="bg-[#0B1220] text-white border-b-4 border-[#D4A017]">
         <div className="max-w-6xl mx-auto px-6 py-12 sm:py-16 text-center">
-          <div className="inline-flex items-center bg-[#18365D] border border-blue-800/60 text-blue-200 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide uppercase mb-5">
+          <div className="inline-flex items-center bg-[#16243D] border border-slate-700 text-slate-200 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide uppercase mb-5">
             <span>National Future Skills & Career Ecosystem</span>
           </div>
 
@@ -1768,34 +1768,34 @@ function Skilling() {
             Future Skills Portal
           </h1>
 
-          <p className="text-blue-100 mt-3 text-lg sm:text-xl font-medium max-w-2xl mx-auto">
+          <p className="text-[#D4A017] mt-3 text-lg sm:text-xl font-bold max-w-2xl mx-auto">
             India's Technology & Job Placement Ecosystem
           </p>
 
-          <div className="w-16 h-1 bg-blue-400 mx-auto mt-4 rounded-full"></div>
+          <div className="w-24 h-1 bg-[#D4A017] mx-auto mt-4 rounded-full"></div>
 
-          <p className="text-slate-200 mt-4 max-w-2xl mx-auto text-sm sm:text-base font-normal leading-relaxed">
+          <p className="text-slate-300 mt-4 max-w-2xl mx-auto text-sm sm:text-base font-normal leading-relaxed">
             Select your technology domain, explore specialized duration programs (3, 4, 6, or 12 Months),
             and launch your career with verified certifications and 100% placement support.
           </p>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-10 pt-6 border-t border-blue-900/60">
-            <div className="p-4 bg-[#18365D] border border-blue-800/50 rounded-xl text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-10 pt-6 border-t border-slate-800">
+            <div className="p-4 bg-[#16243D] border border-slate-700/60 rounded-xl text-center">
               <p className="text-2xl sm:text-3xl font-bold text-white">4</p>
-              <p className="text-xs sm:text-sm font-medium text-blue-200 mt-1">Core Tech Domains</p>
+              <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">Core Tech Domains</p>
             </div>
-            <div className="p-4 bg-[#18365D] border border-blue-800/50 rounded-xl text-center">
+            <div className="p-4 bg-[#16243D] border border-slate-700/60 rounded-xl text-center">
               <p className="text-2xl sm:text-3xl font-bold text-white">3, 4, 6 or 12 Months</p>
-              <p className="text-xs sm:text-sm font-medium text-blue-200 mt-1">Flexible Program Durations</p>
+              <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">Flexible Program Durations</p>
             </div>
-            <div className="p-4 bg-[#18365D] border border-blue-800/50 rounded-xl text-center">
+            <div className="p-4 bg-[#16243D] border border-slate-700/60 rounded-xl text-center">
               <p className="text-2xl sm:text-3xl font-bold text-white">60+ Tools</p>
-              <p className="text-xs sm:text-sm font-medium text-blue-200 mt-1">Industry Tools & Skills</p>
+              <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">Industry Tools & Skills</p>
             </div>
-            <div className="p-4 bg-[#18365D] border border-blue-800/50 rounded-xl text-center">
+            <div className="p-4 bg-[#16243D] border border-slate-700/60 rounded-xl text-center">
               <p className="text-2xl sm:text-3xl font-bold text-white">94%</p>
-              <p className="text-xs sm:text-sm font-medium text-blue-200 mt-1">Placement Rate</p>
+              <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">Placement Rate</p>
             </div>
           </div>
         </div>
