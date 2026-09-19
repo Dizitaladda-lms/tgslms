@@ -54,15 +54,21 @@ const getBackendUrl = (clientOrigin = null) => {
 // Create Nodemailer Transporter
 const createTransporter = () => {
   if (!nodemailer) return null;
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const port = Number(process.env.SMTP_PORT) || 587;
+  const host = process.env.SMTP_HOST || process.env.EMAIL_HOST || process.env.MAIL_HOST;
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER || process.env.GMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.SMTP_PASSWORD || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD || process.env.MAIL_PASS || process.env.GMAIL_PASS;
+  const port = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT) || 587;
   const secure = process.env.SMTP_SECURE === "true" || port === 465;
 
-  if (host && user && pass) {
+  if (user && pass) {
+    if (!host && (user.includes("@gmail.com") || process.env.SMTP_SERVICE === "gmail")) {
+      return nodemailer.createTransport({
+        service: "gmail",
+        auth: { user, pass },
+      });
+    }
     return nodemailer.createTransport({
-      host,
+      host: host || "smtp.gmail.com",
       port,
       secure,
       auth: {
@@ -90,10 +96,12 @@ const sendVerificationEmail = async ({ to, name, token, clientOrigin, returnUrl 
 
   const targetFormUrl = returnUrl || `${frontendUrl}/checkout`;
   // Hits backend to authenticate token and redirects directly to website admission form!
-  const verificationUrl = `${backendUrl}/api/auth/verify-email?token=${token}&returnUrl=${encodeURIComponent(targetFormUrl)}`;
+  // Includes email as resilient backup token if email security scanners pre-fetch the link!
+  const verificationUrl = `${backendUrl}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(recipientEmail)}&returnUrl=${encodeURIComponent(targetFormUrl)}`;
   const directApiUrl = verificationUrl;
 
-  const mailFrom = process.env.EMAIL_FROM || '"Dizital Adda LMS" <info@dizitaladda.com>';
+  const smtpAuthUser = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER || process.env.GMAIL_USER;
+  const mailFrom = process.env.EMAIL_FROM || (smtpAuthUser ? `"Dizital Adda LMS" <${smtpAuthUser}>` : '"Dizital Adda LMS" <info@dizitaladda.com>');
   const subject = "Verify Your Email Address - Dizital Adda LMS";
 
   const htmlContent = `
@@ -248,7 +256,8 @@ const sendCoursePurchaseInvoiceEmail = async ({
     year: "numeric",
   });
 
-  const mailFrom = process.env.EMAIL_FROM || '"Dizital Adda LMS" <info@dizitaladda.com>';
+  const smtpAuthUser = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER || process.env.GMAIL_USER;
+  const mailFrom = process.env.EMAIL_FROM || (smtpAuthUser ? `"Dizital Adda LMS" <${smtpAuthUser}>` : '"Dizital Adda LMS" <info@dizitaladda.com>');
   const subject = `Admission Confirmed & Official Invoice: ${courseTitle} - Dizital Adda`;
 
   const htmlContent = `

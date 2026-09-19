@@ -80,9 +80,17 @@ const Checkout = () => {
   const [copiedField, setCopiedField] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   // Email Verification States
-  const [isEmailVerified, setIsEmailVerified] = useState(
-    isUrlVerified || Boolean(storedUser?.is_verified)
-  );
+  const [isEmailVerified, setIsEmailVerified] = useState(() => {
+    if (isUrlVerified) return true;
+    try {
+      const stored = sessionStorage.getItem("verified_email");
+      const currentEmail = (urlEmail || storedDraft?.email || storedUser?.email || "").trim().toLowerCase();
+      if (stored && currentEmail && stored === currentEmail) {
+        return true;
+      }
+    } catch {}
+    return Boolean(storedUser?.is_verified);
+  });
   const [isSendingVerification, setIsSendingVerification] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
   const [verificationMsg, setVerificationMsg] = useState("");
@@ -90,21 +98,43 @@ const Checkout = () => {
 
   // Check verification status whenever email changes
   useEffect(() => {
-    if (formData.email && formData.email.includes("@") && formData.email.includes(".")) {
+    const cleanEmail = formData.email?.trim().toLowerCase();
+    const urlVerified = searchParams.get("verified") === "true";
+    let storedVerifiedEmail = "";
+    try {
+      storedVerifiedEmail = sessionStorage.getItem("verified_email") || "";
+    } catch {}
+
+    // If verified by return URL or already verified in session for this email, preserve it!
+    if (urlVerified || (cleanEmail && storedVerifiedEmail === cleanEmail)) {
+      setIsEmailVerified(true);
+      return;
+    }
+
+    if (cleanEmail && cleanEmail.includes("@") && cleanEmail.includes(".")) {
       api
-        .post("/api/auth/check-verification", { email: formData.email.trim().toLowerCase() })
+        .post("/api/auth/check-verification", { email: cleanEmail })
         .then((res) => {
           if (res.data?.verified) {
             setIsEmailVerified(true);
+            try {
+              sessionStorage.setItem("verified_email", cleanEmail);
+            } catch {}
           } else {
-            setIsEmailVerified(false);
+            // Only reset to false if not verified by URL or session
+            const curUrlVerified = searchParams.get("verified") === "true";
+            let curStored = "";
+            try { curStored = sessionStorage.getItem("verified_email") || ""; } catch {}
+            if (!curUrlVerified && curStored !== cleanEmail) {
+              setIsEmailVerified(false);
+            }
           }
         })
         .catch(() => {});
     } else {
       setIsEmailVerified(false);
     }
-  }, [formData.email]);
+  }, [formData.email, searchParams]);
 
   // Handle verified status and all form fields passed directly from email verification redirect
   useEffect(() => {
@@ -120,6 +150,13 @@ const Checkout = () => {
     if (verifiedParam === "true") {
       setIsEmailVerified(true);
       setVerificationSent(false);
+      setVerificationMsg("✅ Email verified successfully! You can now complete your admission.");
+      const emailToSave = (emailParam || formData.email || "").trim().toLowerCase();
+      if (emailToSave) {
+        try {
+          sessionStorage.setItem("verified_email", emailToSave);
+        } catch {}
+      }
     }
 
     setFormData((prev) => {
@@ -444,6 +481,7 @@ const Checkout = () => {
               try {
                 localStorage.removeItem("checkout_draft");
                 sessionStorage.removeItem("checkout_draft");
+                sessionStorage.removeItem("verified_email");
               } catch {}
               window.scrollTo({ top: 100, behavior: "smooth" });
             }

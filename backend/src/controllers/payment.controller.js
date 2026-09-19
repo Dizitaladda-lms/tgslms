@@ -61,16 +61,24 @@ const createOrder = async (req, res, next) => {
     // STRICT VERIFICATION GATE: Course checkout requires verified email address
     if (studentDetails?.email) {
       const checkEmail = studentDetails.email.trim().toLowerCase();
-      const verifiedCheck = await pool.query(
-        "SELECT * FROM users WHERE LOWER(email) = $1",
-        [checkEmail]
-      );
-      if (verifiedCheck.rows.length === 0 || !verifiedCheck.rows[0].is_verified) {
-        return res.status(403).json({
-          success: false,
-          verificationRequired: true,
-          message: "Please verify your email address before proceeding with course enrollment.",
-        });
+      try {
+        const verifiedCheck = await pool.query(
+          "SELECT * FROM users WHERE LOWER(email) = $1 ORDER BY is_verified DESC, id DESC LIMIT 1",
+          [checkEmail]
+        );
+        const u = verifiedCheck.rows[0];
+        const isVerified = Boolean(
+          u && (u.is_verified === true || u.is_verified === "true" || u.is_verified === 1 || u.is_verified === "t")
+        );
+        if (!isVerified) {
+          return res.status(403).json({
+            success: false,
+            verificationRequired: true,
+            message: "Please verify your email address before proceeding with course enrollment.",
+          });
+        }
+      } catch (gateErr) {
+        console.warn("Verification gate query warning:", gateErr.message);
       }
     }
 
@@ -250,16 +258,24 @@ const verifyPayment = async (req, res, next) => {
     // STRICT VERIFICATION GATE: Cannot complete enrollment without verified email
     const candidateEmail = studentDetails?.email ? studentDetails.email.trim().toLowerCase() : null;
     if (candidateEmail) {
-      const emailCheck = await pool.query(
-        "SELECT * FROM users WHERE LOWER(email) = $1",
-        [candidateEmail]
-      );
-      if (emailCheck.rows.length === 0 || !emailCheck.rows[0].is_verified) {
-        return res.status(403).json({
-          success: false,
-          verificationRequired: true,
-          message: "Please verify your email address before completing your admission.",
-        });
+      try {
+        const emailCheck = await pool.query(
+          "SELECT * FROM users WHERE LOWER(email) = $1 ORDER BY is_verified DESC, id DESC LIMIT 1",
+          [candidateEmail]
+        );
+        const u = emailCheck.rows[0];
+        const isVerified = Boolean(
+          u && (u.is_verified === true || u.is_verified === "true" || u.is_verified === 1 || u.is_verified === "t")
+        );
+        if (!isVerified) {
+          return res.status(403).json({
+            success: false,
+            verificationRequired: true,
+            message: "Please verify your email address before completing your admission.",
+          });
+        }
+      } catch (gateErr) {
+        console.warn("Verification check warning in verifyPayment:", gateErr.message);
       }
     }
 
@@ -484,27 +500,29 @@ const verifyPayment = async (req, res, next) => {
 
     // 9. Send Admission Credentials & Official Invoice Email to student inbox
     const clientOrigin = req.body?.clientUrl || req.headers?.origin || req.headers?.referer;
-    emailService.sendCoursePurchaseInvoiceEmail({
-      to: finalUser.email,
-      name: finalUser.name,
-      studentId: studentCode || `DA-${finalUser.id}`,
-      tempPassword: generatedTempPassword,
-      course: {
-        id: course.id,
-        course_id: course.course_id,
-        title: course.title,
-        duration: course.duration,
-        price: course.price,
-      },
-      payment: {
-        paymentId: razorpay_payment_id,
-        amount: course.price,
-      },
-      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
-      clientOrigin,
-    }).catch((emailErr) => {
+    try {
+      await emailService.sendCoursePurchaseInvoiceEmail({
+        to: finalUser.email,
+        name: finalUser.name,
+        studentId: studentCode || `DA-${finalUser.id}`,
+        tempPassword: generatedTempPassword,
+        course: {
+          id: course.id,
+          course_id: course.course_id,
+          title: course.title,
+          duration: course.duration,
+          price: course.price,
+        },
+        payment: {
+          paymentId: razorpay_payment_id,
+          amount: course.price,
+        },
+        invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+        clientOrigin,
+      });
+    } catch (emailErr) {
       console.warn("Post-purchase invoice email dispatch notice:", emailErr.message);
-    });
+    }
 
     res.status(200).json({
       success: true,

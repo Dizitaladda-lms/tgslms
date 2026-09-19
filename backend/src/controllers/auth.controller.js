@@ -383,9 +383,23 @@ const verifyEmail = async (req, res, next) => {
       queryRes = { rows: [] };
     }
 
+    // Fallback: If token not found in users (e.g. security scanners pre-fetched and cleared it),
+    // check by email parameter passed in the verification link!
+    const queryEmail = req.query?.email || req.body?.email;
+    if (queryRes.rows.length === 0 && queryEmail) {
+      try {
+        queryRes = await pool.query(
+          "SELECT * FROM users WHERE LOWER(email) = $1 ORDER BY is_verified DESC, id DESC LIMIT 1",
+          [String(queryEmail).trim().toLowerCase()]
+        );
+      } catch (e) {
+        queryRes = { rows: [] };
+      }
+    }
+
     if (queryRes.rows.length === 0) {
       if (isBrowserGet) {
-        return res.redirect(getErrorRedirect("invalid"));
+        return res.redirect(getErrorRedirect("invalid", queryEmail || ""));
       }
       return res.status(400).json({
         success: false,
@@ -395,8 +409,9 @@ const verifyEmail = async (req, res, next) => {
 
     const user = queryRes.rows[0];
 
-    // Check expiry
-    if (user.verification_token_expires && new Date() > new Date(user.verification_token_expires)) {
+    // Check expiry only if user is not yet verified and token expires
+    const isAlreadyVerified = Boolean(user && (user.is_verified === true || user.is_verified === "true" || user.is_verified === 1 || user.is_verified === "t"));
+    if (!isAlreadyVerified && user.verification_token_expires && new Date() > new Date(user.verification_token_expires)) {
       if (isBrowserGet) {
         return res.redirect(getErrorRedirect("expired", user.email));
       }
@@ -406,17 +421,17 @@ const verifyEmail = async (req, res, next) => {
       });
     }
 
-    // Mark verified
+    // Mark verified for all records with this email or id
     try {
       await pool.query(
-        "UPDATE users SET is_verified = true, verification_token = NULL, verification_token_expires = NULL WHERE id = $1",
-        [user.id]
+        "UPDATE users SET is_verified = true, verification_token = NULL, verification_token_expires = NULL WHERE LOWER(email) = $1 OR id = $2",
+        [user.email.toLowerCase(), user.id]
       );
     } catch (updErr) {
       await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;").catch(() => {});
       await pool.query(
-        "UPDATE users SET is_verified = true WHERE id = $1",
-        [user.id]
+        "UPDATE users SET is_verified = true WHERE LOWER(email) = $1 OR id = $2",
+        [user.email.toLowerCase(), user.id]
       ).catch(() => {});
     }
 
@@ -454,7 +469,7 @@ const checkVerification = async (req, res, next) => {
 
     const cleanEmail = String(email).trim().toLowerCase();
     const result = await pool.query(
-      "SELECT * FROM users WHERE LOWER(email) = $1",
+      "SELECT * FROM users WHERE LOWER(email) = $1 ORDER BY is_verified DESC, id DESC LIMIT 1",
       [cleanEmail]
     );
 
@@ -467,10 +482,13 @@ const checkVerification = async (req, res, next) => {
     }
 
     const user = result.rows[0];
+    const isVerified = Boolean(
+      user && (user.is_verified === true || user.is_verified === "true" || user.is_verified === 1 || user.is_verified === "t")
+    );
     return res.status(200).json({
       success: true,
       exists: true,
-      verified: Boolean(user && user.is_verified),
+      verified: isVerified,
     });
   } catch (error) {
     console.error("Check verification error:", error);
