@@ -44,18 +44,33 @@ const Checkout = () => {
     }
   })();
 
+  const storedDraft = (() => {
+    try {
+      const draft = sessionStorage.getItem("checkout_draft") || localStorage.getItem("checkout_draft");
+      return draft ? JSON.parse(draft) : {};
+    } catch {
+      return {};
+    }
+  })();
+
   const urlEmail = searchParams.get("email") || "";
+  const urlFirstName = searchParams.get("firstName") || "";
+  const urlLastName = searchParams.get("lastName") || "";
+  const urlPhone = searchParams.get("phone") || "";
+  const urlDob = searchParams.get("dob") || "";
+  const urlState = searchParams.get("state") || "";
+  const urlCity = searchParams.get("city") || "";
   const isUrlVerified = searchParams.get("verified") === "true";
 
   const [formData, setFormData] = useState({
-    firstName: storedUser?.name ? storedUser.name.split(" ")[0] : "",
-    lastName: storedUser?.name ? storedUser.name.split(" ").slice(1).join(" ") : "",
-    email: urlEmail || storedUser?.email || "",
-    phone: storedUser?.phone || "",
-    dob: storedUser?.dob || "",
-    state: "",
-    city: "",
-    address: "",
+    firstName: urlFirstName || storedDraft?.firstName || (storedUser?.name ? storedUser.name.split(" ")[0] : ""),
+    lastName: urlLastName || storedDraft?.lastName || (storedUser?.name ? storedUser.name.split(" ").slice(1).join(" ") : ""),
+    email: urlEmail || storedDraft?.email || storedUser?.email || "",
+    phone: urlPhone || storedDraft?.phone || storedUser?.phone || "",
+    dob: urlDob || storedDraft?.dob || storedUser?.dob || "",
+    state: urlState || storedDraft?.state || "",
+    city: urlCity || storedDraft?.city || "",
+    address: storedDraft?.address || "",
     agreeTerms: true,
   });
 
@@ -91,17 +106,39 @@ const Checkout = () => {
     }
   }, [formData.email]);
 
-  // Handle verified status and email passed directly from email verification redirect
+  // Handle verified status and all form fields passed directly from email verification redirect
   useEffect(() => {
     const verifiedParam = searchParams.get("verified");
     const emailParam = searchParams.get("email");
+    const fnParam = searchParams.get("firstName");
+    const lnParam = searchParams.get("lastName");
+    const phoneParam = searchParams.get("phone");
+    const dobParam = searchParams.get("dob");
+    const stateParam = searchParams.get("state");
+    const cityParam = searchParams.get("city");
+
     if (verifiedParam === "true") {
       setIsEmailVerified(true);
       setVerificationSent(false);
-      if (emailParam) {
-        setFormData((prev) => ({ ...prev, email: emailParam.trim().toLowerCase() }));
-      }
     }
+
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        ...(emailParam ? { email: emailParam.trim().toLowerCase() } : {}),
+        ...(fnParam ? { firstName: fnParam.trim() } : {}),
+        ...(lnParam ? { lastName: lnParam.trim() } : {}),
+        ...(phoneParam ? { phone: phoneParam.trim() } : {}),
+        ...(dobParam ? { dob: dobParam.trim() } : {}),
+        ...(stateParam ? { state: stateParam.trim() } : {}),
+        ...(cityParam ? { city: cityParam.trim() } : {}),
+      };
+      try {
+        localStorage.setItem("checkout_draft", JSON.stringify(updated));
+        sessionStorage.setItem("checkout_draft", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
   }, [searchParams]);
 
   // Live polling while student verifies email in their inbox
@@ -137,18 +174,31 @@ const Checkout = () => {
       setErrorMsg("");
       const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(" ");
 
-      // Prepare returnUrl pointing back to this checkout form so email button directly opens this form!
+      // Prepare returnUrl pointing back to this checkout form so email button directly opens this form
+      // with ALL student details auto-filled!
       let returnUrl = null;
       if (typeof window !== "undefined") {
         try {
           const u = new URL(window.location.href);
           if (course?.id) u.searchParams.set("courseId", course.id);
-          u.searchParams.set("email", formData.email.trim().toLowerCase());
+          if (formData.email) u.searchParams.set("email", formData.email.trim().toLowerCase());
+          if (formData.firstName) u.searchParams.set("firstName", formData.firstName.trim());
+          if (formData.lastName) u.searchParams.set("lastName", formData.lastName.trim());
+          if (formData.phone) u.searchParams.set("phone", formData.phone.trim());
+          if (formData.dob) u.searchParams.set("dob", formData.dob.trim());
+          if (formData.state) u.searchParams.set("state", formData.state.trim());
+          if (formData.city) u.searchParams.set("city", formData.city.trim());
           returnUrl = u.toString();
         } catch {
           returnUrl = window.location.href;
         }
       }
+
+      // Persist to session and local storage
+      try {
+        localStorage.setItem("checkout_draft", JSON.stringify(formData));
+        sessionStorage.setItem("checkout_draft", JSON.stringify(formData));
+      } catch {}
 
       const res = await api.post("/api/auth/send-verification-email", {
         email: formData.email.trim().toLowerCase(),
@@ -229,10 +279,15 @@ const Checkout = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const updatedVal = type === "checkbox" ? checked : value;
+    setFormData((prev) => {
+      const next = { ...prev, [name]: updatedVal };
+      try {
+        localStorage.setItem("checkout_draft", JSON.stringify(next));
+        sessionStorage.setItem("checkout_draft", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
     if (errorMsg) setErrorMsg("");
   };
 
@@ -386,6 +441,10 @@ const Checkout = () => {
 
               setCredentials(verifyRes.data.credentials);
               setPaymentSuccess(true);
+              try {
+                localStorage.removeItem("checkout_draft");
+                sessionStorage.removeItem("checkout_draft");
+              } catch {}
               window.scrollTo({ top: 100, behavior: "smooth" });
             }
           } catch (err) {
