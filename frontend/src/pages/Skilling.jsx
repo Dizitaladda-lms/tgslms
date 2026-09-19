@@ -1780,22 +1780,22 @@ function Skilling() {
           </p>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-10 pt-6 border-t border-slate-800">
-            <div className="p-4 bg-[#16243D] border border-slate-700/60 rounded-xl text-center">
-              <p className="text-2xl sm:text-3xl font-bold text-white">4</p>
-              <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">Core Tech Domains</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 max-w-4xl mx-auto mt-8 pt-6 border-t border-slate-800">
+            <div className="p-3.5 bg-[#16243D] border border-slate-700/60 rounded-xl text-center flex flex-col justify-center min-h-[85px]">
+              <p className="text-lg sm:text-xl font-bold text-white">4</p>
+              <p className="text-xs text-slate-300 mt-1 font-normal">Core Tech Domains</p>
             </div>
-            <div className="p-4 bg-[#16243D] border border-slate-700/60 rounded-xl text-center">
-              <p className="text-2xl sm:text-3xl font-bold text-white">3, 4, 6 or 12 Months</p>
-              <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">Flexible Program Durations</p>
+            <div className="p-3.5 bg-[#16243D] border border-slate-700/60 rounded-xl text-center flex flex-col justify-center min-h-[85px]">
+              <p className="text-base sm:text-lg font-bold text-white leading-tight">3, 4, 6 or 12 Months</p>
+              <p className="text-xs text-slate-300 mt-1 font-normal">Flexible Durations</p>
             </div>
-            <div className="p-4 bg-[#16243D] border border-slate-700/60 rounded-xl text-center">
-              <p className="text-2xl sm:text-3xl font-bold text-white">60+ Tools</p>
-              <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">Industry Tools & Skills</p>
+            <div className="p-3.5 bg-[#16243D] border border-slate-700/60 rounded-xl text-center flex flex-col justify-center min-h-[85px]">
+              <p className="text-lg sm:text-xl font-bold text-white">60+ Tools</p>
+              <p className="text-xs text-slate-300 mt-1 font-normal">Industry Tools & Skills</p>
             </div>
-            <div className="p-4 bg-[#16243D] border border-slate-700/60 rounded-xl text-center">
-              <p className="text-2xl sm:text-3xl font-bold text-white">94%</p>
-              <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">Placement Rate</p>
+            <div className="p-3.5 bg-[#16243D] border border-slate-700/60 rounded-xl text-center flex flex-col justify-center min-h-[85px]">
+              <p className="text-lg sm:text-xl font-bold text-white">94%</p>
+              <p className="text-xs text-slate-300 mt-1 font-normal">Placement Rate</p>
             </div>
           </div>
         </div>
