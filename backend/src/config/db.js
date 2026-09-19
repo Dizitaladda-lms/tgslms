@@ -57,6 +57,9 @@ if (connectionString) {
             ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar VARCHAR(500);
             ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
             ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active';
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;
             ALTER TABLE sections ADD COLUMN IF NOT EXISTS order_num INTEGER DEFAULT 1;
             ALTER TABLE lectures ADD COLUMN IF NOT EXISTS order_num INTEGER DEFAULT 1;
             ALTER TABLE lectures ADD COLUMN IF NOT EXISTS lecture_number INTEGER DEFAULT 1;
@@ -121,7 +124,27 @@ const pool = {
 
   async query(text, params = []) {
     if (connectionString && realPool) {
-      return await realPool.query(text, params);
+      try {
+        return await realPool.query(text, params);
+      } catch (err) {
+        if (
+          err.message &&
+          (err.message.includes('column "is_verified" does not exist') ||
+            err.message.includes('column "verification_token" does not exist') ||
+            err.message.includes('column "verification_token_expires" does not exist'))
+        ) {
+          console.log("⚡ Auto-patching missing verification columns on PostgreSQL...");
+          await realPool
+            .query(`
+              ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
+              ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
+              ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;
+            `)
+            .catch(() => {});
+          return await realPool.query(text, params);
+        }
+        throw err;
+      }
     }
     // A serverless filesystem is ephemeral. Never pretend that data has been
     // saved to a database when a production DATABASE_URL is absent.
@@ -138,7 +161,30 @@ const pool = {
 
   async connect() {
     if (connectionString && realPool) {
-      return await realPool.connect();
+      const client = await realPool.connect();
+      const origQuery = client.query.bind(client);
+      client.query = async (...args) => {
+        try {
+          return await origQuery(...args);
+        } catch (err) {
+          if (
+            err.message &&
+            (err.message.includes('column "is_verified" does not exist') ||
+              err.message.includes('column "verification_token" does not exist') ||
+              err.message.includes('column "verification_token_expires" does not exist'))
+          ) {
+            console.log("⚡ Auto-patching missing verification columns via client connection...");
+            await origQuery(`
+              ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
+              ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
+              ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;
+            `).catch(() => {});
+            return await origQuery(...args);
+          }
+          throw err;
+        }
+      };
+      return client;
     }
 
     if (isProduction) {

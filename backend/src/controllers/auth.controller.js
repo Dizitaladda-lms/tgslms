@@ -8,6 +8,21 @@ const getJwtSecret = () => {
   return process.env.JWT_SECRET || "default_jwt_secret_dizital_adda_lms";
 };
 
+let isAuthSchemaEvolutionChecked = false;
+const ensureVerificationSchema = async () => {
+  if (isAuthSchemaEvolutionChecked) return;
+  try {
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;
+    `);
+    isAuthSchemaEvolutionChecked = true;
+  } catch (err) {
+    // handled gracefully
+  }
+};
+
 // ==========================================
 // LOGIN
 // ==========================================
@@ -221,6 +236,8 @@ const sendVerificationEmail = async (req, res, next) => {
     const token = crypto.randomBytes(32).toString("hex");
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+    await ensureVerificationSchema();
+
     // Check if user exists in DB
     const existing = await pool.query(
       "SELECT id, name, is_verified FROM users WHERE LOWER(email) = $1",
@@ -301,6 +318,8 @@ const verifyEmail = async (req, res, next) => {
       });
     }
 
+    await ensureVerificationSchema();
+
     const queryRes = await pool.query(
       "SELECT id, name, email, is_verified, verification_token_expires FROM users WHERE verification_token = $1",
       [String(token).trim()]
@@ -364,6 +383,8 @@ const checkVerification = async (req, res, next) => {
         message: "Email parameter is required",
       });
     }
+
+    await ensureVerificationSchema();
 
     const cleanEmail = String(email).trim().toLowerCase();
     const result = await pool.query(
