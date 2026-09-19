@@ -15,14 +15,18 @@ const getFrontendUrl = () => {
   return (
     process.env.FRONTEND_URL ||
     process.env.CLIENT_URL ||
-    (process.env.NODE_ENV === "production" ? "https://tsg-ecru.vercel.app" : "http://localhost:5173")
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    (process.env.NODE_ENV === "production" ? "https://tgs-lms-lac.vercel.app" : "http://localhost:5173")
   ).replace(/\/+$/, "");
 };
 
 const getBackendUrl = () => {
   return (
     process.env.BACKEND_URL ||
-    (process.env.NODE_ENV === "production" ? "https://tsg-qlb1.onrender.com" : "http://localhost:5000")
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    (process.env.NODE_ENV === "production" ? "https://tgs-lms-lac.vercel.app" : "http://localhost:5000")
   ).replace(/\/+$/, "");
 };
 

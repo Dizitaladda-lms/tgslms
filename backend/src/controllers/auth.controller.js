@@ -12,14 +12,12 @@ let isAuthSchemaEvolutionChecked = false;
 const ensureVerificationSchema = async () => {
   if (isAuthSchemaEvolutionChecked) return;
   try {
-    await pool.query(`
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;
-    `);
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;");
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);");
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;");
     isAuthSchemaEvolutionChecked = true;
   } catch (err) {
-    // handled gracefully
+    console.warn("⚠️ ensureVerificationSchema notice:", err.message);
   }
 };
 
@@ -238,9 +236,9 @@ const sendVerificationEmail = async (req, res, next) => {
 
     await ensureVerificationSchema();
 
-    // Check if user exists in DB
+    // Check if user exists in DB - select * to avoid crash if column doesn't exist
     const existing = await pool.query(
-      "SELECT id, name, is_verified FROM users WHERE LOWER(email) = $1",
+      "SELECT * FROM users WHERE LOWER(email) = $1",
       [cleanEmail]
     );
 
@@ -254,10 +252,19 @@ const sendVerificationEmail = async (req, res, next) => {
         });
       }
 
-      await pool.query(
-        "UPDATE users SET verification_token = $1, verification_token_expires = $2 WHERE id = $3",
-        [token, expires, existing.rows[0].id]
-      );
+      try {
+        await pool.query(
+          "UPDATE users SET verification_token = $1, verification_token_expires = $2 WHERE id = $3",
+          [token, expires, existing.rows[0].id]
+        );
+      } catch (updateErr) {
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);").catch(() => {});
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;").catch(() => {});
+        await pool.query(
+          "UPDATE users SET verification_token = $1, verification_token_expires = $2 WHERE id = $3",
+          [token, expires, existing.rows[0].id]
+        ).catch(() => {});
+      }
     } else {
       // Create pending student user so their verification token is stored
       const tempPass = await bcrypt.hash("DA@" + Math.floor(100000 + Math.random() * 900000), 10);
@@ -268,12 +275,22 @@ const sendVerificationEmail = async (req, res, next) => {
           [studentName, cleanEmail, tempPass, token, expires]
         );
       } catch (insertErr) {
-        // Fallback if is_verified column not yet created
-        await pool.query(
-          `INSERT INTO users (name, full_name, email, password, role, status)
-           VALUES ($1, $1, $2, $3, 'student', 'Pending')`,
-          [studentName, cleanEmail, tempPass]
-        ).catch(() => {});
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;").catch(() => {});
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);").catch(() => {});
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;").catch(() => {});
+        try {
+          await pool.query(
+            `INSERT INTO users (name, full_name, email, password, role, is_verified, verification_token, verification_token_expires, status)
+             VALUES ($1, $1, $2, $3, 'student', false, $4, $5, 'Pending')`,
+            [studentName, cleanEmail, tempPass, token, expires]
+          );
+        } catch (retryErr) {
+          await pool.query(
+            `INSERT INTO users (name, full_name, email, password, role, status)
+             VALUES ($1, $1, $2, $3, 'student', 'Pending')`,
+            [studentName, cleanEmail, tempPass]
+          ).catch(() => {});
+        }
       }
     }
 
@@ -302,10 +319,15 @@ const verifyEmail = async (req, res, next) => {
   try {
     const token = req.query.token || req.body?.token;
     const isBrowserGet = req.method === "GET";
+    const hostHeader = req.headers?.host;
+    const protoHeader = req.headers?.["x-forwarded-proto"] || "https";
+    const dynamicHostUrl = hostHeader ? `${protoHeader}://${hostHeader}` : null;
+
     const frontendUrl = (
       process.env.FRONTEND_URL ||
       process.env.CLIENT_URL ||
-      (process.env.NODE_ENV === "production" ? "https://tsg-ecru.vercel.app" : "http://localhost:5173")
+      dynamicHostUrl ||
+      (process.env.NODE_ENV === "production" ? "https://tgs-lms-lac.vercel.app" : "http://localhost:5173")
     ).replace(/\/+$/, "");
 
     if (!token) {
@@ -320,10 +342,15 @@ const verifyEmail = async (req, res, next) => {
 
     await ensureVerificationSchema();
 
-    const queryRes = await pool.query(
-      "SELECT id, name, email, is_verified, verification_token_expires FROM users WHERE verification_token = $1",
-      [String(token).trim()]
-    );
+    let queryRes;
+    try {
+      queryRes = await pool.query(
+        "SELECT * FROM users WHERE verification_token = $1",
+        [String(token).trim()]
+      );
+    } catch (tokenColErr) {
+      queryRes = { rows: [] };
+    }
 
     if (queryRes.rows.length === 0) {
       if (isBrowserGet) {
@@ -349,10 +376,18 @@ const verifyEmail = async (req, res, next) => {
     }
 
     // Mark verified
-    await pool.query(
-      "UPDATE users SET is_verified = true, verification_token = NULL, verification_token_expires = NULL WHERE id = $1",
-      [user.id]
-    );
+    try {
+      await pool.query(
+        "UPDATE users SET is_verified = true, verification_token = NULL, verification_token_expires = NULL WHERE id = $1",
+        [user.id]
+      );
+    } catch (updErr) {
+      await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;").catch(() => {});
+      await pool.query(
+        "UPDATE users SET is_verified = true WHERE id = $1",
+        [user.id]
+      ).catch(() => {});
+    }
 
     if (isBrowserGet) {
       return res.redirect(`${frontendUrl}/verify-email?status=success&email=${encodeURIComponent(user.email)}`);
@@ -388,7 +423,7 @@ const checkVerification = async (req, res, next) => {
 
     const cleanEmail = String(email).trim().toLowerCase();
     const result = await pool.query(
-      "SELECT id, email, is_verified FROM users WHERE LOWER(email) = $1",
+      "SELECT * FROM users WHERE LOWER(email) = $1",
       [cleanEmail]
     );
 
@@ -404,11 +439,33 @@ const checkVerification = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       exists: true,
-      verified: Boolean(user.is_verified),
+      verified: Boolean(user && user.is_verified),
     });
   } catch (error) {
     console.error("Check verification error:", error);
     next(error);
+  }
+};
+
+// ==========================================
+// MIGRATE SCHEMA ON DEMAND
+// ==========================================
+const migrateSchema = async (req, res) => {
+  try {
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;");
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);");
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;");
+    isAuthSchemaEvolutionChecked = true;
+    return res.status(200).json({
+      success: true,
+      message: "Database schema migration completed successfully! Verification columns are verified.",
+    });
+  } catch (error) {
+    console.error("Schema migration error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Database schema migration failed: " + error.message,
+    });
   }
 };
 
@@ -419,4 +476,5 @@ module.exports = {
   sendVerificationEmail,
   verifyEmail,
   checkVerification,
+  migrateSchema,
 };

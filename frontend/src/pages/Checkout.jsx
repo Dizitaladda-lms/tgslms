@@ -777,48 +777,30 @@ const Checkout = () => {
                   </div>
 
                   {/* Verification Status Alert Box */}
+                  {/* Verification Status Alert Box (Clean notice, auto-checked) */}
                   {!isEmailVerified && verificationSent && (
-                    <div className="mt-2.5 bg-amber-50 border border-amber-300 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-amber-900 animate-fadeIn">
-                      <div className="flex items-center gap-2">
-                        <Clock size={16} className="text-amber-600 shrink-0 animate-spin" />
-                        <span>
-                          Verification link sent to <strong>{formData.email}</strong>. Please click the button in your email to verify.
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {previewLink && (
-                          <a
-                            href={previewLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold px-2 py-1 rounded text-[11px] underline"
-                          >
-                            Verify Link
-                          </a>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            api.post("/api/auth/check-verification", { email: formData.email.trim().toLowerCase() })
-                              .then((r) => {
-                                if (r.data?.verified) setIsEmailVerified(true);
-                              });
-                          }}
-                          className="bg-[#0B1220] text-white px-2.5 py-1 rounded font-bold hover:bg-[#7C2D12] transition"
-                        >
-                          I've Verified ✓
-                        </button>
-                      </div>
+                    <div className="mt-2.5 bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-center gap-2.5 text-xs text-amber-900 animate-fadeIn">
+                      <Clock size={16} className="text-amber-600 shrink-0 animate-spin" />
+                      <span>
+                        Verification link sent to <strong>{formData.email}</strong>. Please check your inbox and click the verification button in your email. We will automatically detect when you verify.
+                      </span>
                     </div>
                   )}
 
+                  {/* Email Verified Banner */}
                   {isEmailVerified ? (
-                    <span className="text-[11px] text-emerald-700 font-semibold mt-1.5 flex items-center gap-1">
-                      <Check size={12} /> Email verified! Temporary login password and tax invoice will be emailed here.
-                    </span>
+                    <div className="mt-2.5 bg-emerald-50 border border-emerald-300 rounded-xl p-3 flex items-center gap-2.5 text-xs text-emerald-900 animate-fadeIn">
+                      <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                      <div>
+                        <span className="font-bold text-emerald-800">Email Verified Successfully! ✅</span>
+                        <span className="block text-[11px] text-emerald-700">
+                          Your account has been authenticated. Temporary login password & tax invoice will be emailed to you upon payment.
+                        </span>
+                      </div>
+                    </div>
                   ) : !verificationSent ? (
                     <span className="text-[11px] text-slate-500 mt-1 block">
-                      Click <strong>"Verify Email ✉️"</strong> to verify before purchasing. Your account will not be created without verification.
+                      Click <strong>"Verify Email ✉️"</strong> to receive a verification link before purchasing. Your account will not be created without verification.
                     </span>
                   ) : null}
                 </div>

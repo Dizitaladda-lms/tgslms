@@ -62,7 +62,7 @@ const createOrder = async (req, res, next) => {
     if (studentDetails?.email) {
       const checkEmail = studentDetails.email.trim().toLowerCase();
       const verifiedCheck = await pool.query(
-        "SELECT id, is_verified FROM users WHERE LOWER(email) = $1",
+        "SELECT * FROM users WHERE LOWER(email) = $1",
         [checkEmail]
       );
       if (verifiedCheck.rows.length === 0 || !verifiedCheck.rows[0].is_verified) {
@@ -251,7 +251,7 @@ const verifyPayment = async (req, res, next) => {
     const candidateEmail = studentDetails?.email ? studentDetails.email.trim().toLowerCase() : null;
     if (candidateEmail) {
       const emailCheck = await pool.query(
-        "SELECT id, is_verified FROM users WHERE LOWER(email) = $1",
+        "SELECT * FROM users WHERE LOWER(email) = $1",
         [candidateEmail]
       );
       if (emailCheck.rows.length === 0 || !emailCheck.rows[0].is_verified) {

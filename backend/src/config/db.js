@@ -134,13 +134,13 @@ const pool = {
             err.message.includes('column "verification_token_expires" does not exist'))
         ) {
           console.log("⚡ Auto-patching missing verification columns on PostgreSQL...");
-          await realPool
-            .query(`
-              ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;
-              ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
-              ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;
-            `)
-            .catch(() => {});
+          try {
+            await realPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;");
+            await realPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);");
+            await realPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE;");
+          } catch (patchErr) {
+            console.warn("⚠️ Auto-patch verification columns notice:", patchErr.message);
+          }
           return await realPool.query(text, params);
         }
         throw err;

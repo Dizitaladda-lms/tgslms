@@ -7,6 +7,7 @@ const {
   sendVerificationEmail,
   verifyEmail,
   checkVerification,
+  migrateSchema,
 } = require("../controllers/auth.controller");
 const { verifyToken } = require("../middleware/auth.middleware");
 
@@ -19,6 +20,8 @@ router.post("/send-verification-email", sendVerificationEmail);
 router.get("/verify-email", verifyEmail);
 router.post("/verify-email", verifyEmail);
 router.post("/check-verification", checkVerification);
+router.get("/migrate-schema", migrateSchema);
+router.post("/migrate-schema", migrateSchema);
 
 // Protected Auth Endpoints
 router.get("/me", verifyToken, getMe);
