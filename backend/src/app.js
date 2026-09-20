@@ -61,6 +61,12 @@ const defaultAllowedOrigins = [
   "http://localhost:5174",
   "https://tsg-ecru.vercel.app",
   "https://tsg-qlb1.onrender.com",
+  "https://www.nidads.com",
+  "https://nidads.com",
+  "https://www.nigape.com",
+  "https://nigape.com",
+  "https://dizitaladda.com",
+  "https://www.dizitaladda.com",
 ];
 
 const envAllowed = process.env.CORS_ORIGIN
@@ -72,8 +78,8 @@ const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllow
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow non-browser requests (Postman, curl, server-to-server) or matching allowed origins
-      if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app") || origin.endsWith(".onrender.com")) {
+      // Allow non-browser requests (mobile apps, server-to-server) or explicitly allowed origins
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`Origin ${origin} not allowed by CORS`));

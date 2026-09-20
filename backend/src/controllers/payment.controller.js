@@ -4,8 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 const emailService = require("../services/email.service");
-
-const getJwtSecret = () => process.env.JWT_SECRET || "dizital_adda_secret_jwt_key_2026";
+const { getJwtSecret } = require("../config/jwt");
 
 // Initialize Razorpay instance with environment fallback
 const getRazorpayInstance = () => {
@@ -221,22 +220,51 @@ const verifyPayment = async (req, res, next) => {
       });
     }
 
-    // Signature verification (only if signature provided and not a mock test)
-    if (razorpay_signature && !String(razorpay_order_id).startsWith("order_test_")) {
-      const secret = process.env.RAZORPAY_SECRET || "mAMXyMCSTkWmTfT8UaQgHxpK";
-      const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    // Security: Strict signature verification
+    const isProduction = process.env.NODE_ENV === "production";
+    const razorpaySecret = process.env.RAZORPAY_SECRET;
 
+    // In production or when Razorpay secret is configured, require valid signature and prohibit test orders
+    if (isProduction || razorpaySecret) {
+      if (!razorpay_signature) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment signature is required for verification.",
+        });
+      }
+
+      if (String(razorpay_order_id).startsWith("order_test_") && isProduction) {
+        return res.status(400).json({
+          success: false,
+          message: "Mock or test orders are strictly prohibited in production.",
+        });
+      }
+
+      const activeSecret = razorpaySecret || "mAMXyMCSTkWmTfT8UaQgHxpK";
+      const body = `${razorpay_order_id}|${razorpay_payment_id}`;
       const expectedSignature = crypto
-        .createHmac("sha256", secret)
+        .createHmac("sha256", activeSecret)
         .update(body)
         .digest("hex");
 
-      const isAuthentic = expectedSignature === razorpay_signature;
-
-      if (!isAuthentic) {
+      if (expectedSignature !== razorpay_signature) {
         return res.status(400).json({
           success: false,
           message: "Payment signature verification failed. Potential fraud attempt.",
+        });
+      }
+    } else if (razorpay_signature && !String(razorpay_order_id).startsWith("order_test_")) {
+      // Local development fallback
+      const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+      const expectedSignature = crypto
+        .createHmac("sha256", "mAMXyMCSTkWmTfT8UaQgHxpK")
+        .update(body)
+        .digest("hex");
+
+      if (expectedSignature !== razorpay_signature) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment signature verification failed.",
         });
       }
     }

@@ -1,8 +1,5 @@
 const jwt = require("jsonwebtoken");
-
-const getJwtSecret = () => {
-  return process.env.JWT_SECRET || "default_jwt_secret_dizital_adda_lms";
-};
+const { getJwtSecret } = require("../config/jwt");
 
 exports.verifyToken = (req, res, next) => {
   try {

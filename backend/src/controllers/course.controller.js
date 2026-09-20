@@ -1,11 +1,20 @@
 const pool = require("../config/db");
+const cacheService = require("../services/cache.service");
 
 // ==========================================
-// 1. GET ALL COURSES (Public)
+// 1. GET ALL COURSES (Public with Redis/Memory Caching)
 // ==========================================
 const getCourses = async (req, res, next) => {
   try {
     const { category, search } = req.query;
+    const cacheKey = `courses:list:${category || "all"}:${search || ""}`;
+
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      res.setHeader("X-Cache", "HIT");
+      res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+      return res.status(200).json(cached);
+    }
 
     let query = `
       SELECT
@@ -31,13 +40,18 @@ const getCourses = async (req, res, next) => {
 
     const result = await pool.query(query, params);
 
-    // Edge Caching: 10k users arriving in 1 sec will be served from CDN Edge cache without touching DB
-    res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
-
-    res.status(200).json({
+    const payload = {
       success: true,
       courses: result.rows,
-    });
+    };
+
+    // Cache in Redis/Memory for 3 minutes (180s)
+    await cacheService.set(cacheKey, payload, 180);
+
+    res.setHeader("X-Cache", "MISS");
+    res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+
+    res.status(200).json(payload);
   } catch (error) {
     next(error);
   }
@@ -49,6 +63,14 @@ const getCourses = async (req, res, next) => {
 const getSingleCourse = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const cacheKey = `course:single:${id}`;
+
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      res.setHeader("X-Cache", "HIT");
+      res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+      return res.status(200).json(cached);
+    }
 
     const courseResult = await pool.query(
       `SELECT * FROM courses WHERE id::text = $1 OR course_id = $1`,
@@ -85,17 +107,22 @@ const getSingleCourse = async (req, res, next) => {
       lectures: lecturesResult.rows.filter((lec) => lec.section_id === sec.id),
     }));
 
-    // Edge Caching: High concurrency course page views served from CDN edge
-    res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
-
-    res.status(200).json({
+    const payload = {
       success: true,
       course: {
         ...course,
         sections: sectionsWithLectures,
         lectures: lecturesResult.rows,
       },
-    });
+    };
+
+    // Cache for 5 minutes (300s)
+    await cacheService.set(cacheKey, payload, 300);
+
+    res.setHeader("X-Cache", "MISS");
+    res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
+
+    res.status(200).json(payload);
   } catch (error) {
     next(error);
   }
@@ -146,6 +173,10 @@ const addCourse = async (req, res, next) => {
         thumbnail || "",
       ]
     );
+
+    // Invalidate course caches on new course creation
+    await cacheService.delPattern("courses:*");
+    await cacheService.delPattern("course:*");
 
     res.status(201).json({
       success: true,

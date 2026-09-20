@@ -3,10 +3,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const pool = require("../config/db");
 const emailService = require("../services/email.service");
-
-const getJwtSecret = () => {
-  return process.env.JWT_SECRET || "default_jwt_secret_dizital_adda_lms";
-};
+const { getJwtSecret } = require("../config/jwt");
 
 let isAuthSchemaEvolutionChecked = false;
 const ensureVerificationSchema = async () => {

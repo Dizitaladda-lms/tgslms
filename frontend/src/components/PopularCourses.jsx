@@ -63,10 +63,6 @@ export default function PopularCourses() {
                 {course.instructor}
               </p>
 
-              <p className="text-3xl font-bold text-blue-900 mt-5">
-                {course.price}
-              </p>
-
               <button className="mt-6 w-full bg-blue-900 text-white py-3 rounded-xl hover:bg-blue-700 transition">
                 Enroll Now
               </button>

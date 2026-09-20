@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const cloudinary = require("../config/cloudinary");
+const cacheService = require("../services/cache.service");
 
 // Helper to upload buffer to Cloudinary with fallback
 const uploadToCloudinary = (fileBuffer, resourceType = "auto", folder = "lms_lectures") => {
@@ -116,6 +117,11 @@ const uploadLecture = async (req, res, next) => {
       ]
     );
 
+    // Invalidate caches on lecture upload
+    await cacheService.delPattern("lectures:*");
+    await cacheService.delPattern("course:*");
+    await cacheService.delPattern("courses:*");
+
     res.status(201).json({
       success: true,
       message: `Lecture ${finalOrder} uploaded and created successfully 🚀`,
@@ -128,7 +134,7 @@ const uploadLecture = async (req, res, next) => {
 
 // ==========================================
 // 2. GET LECTURES
-// Supports filtering by courseId and joining progress
+// Supports filtering by courseId and joining progress with strict Data Leakage Protection
 // ==========================================
 const getLectures = async (req, res, next) => {
   try {
@@ -138,6 +144,7 @@ const getLectures = async (req, res, next) => {
       req.query.courseId ||
       req.query.course_id;
     const userId = req.user?.id;
+    const userRole = req.user?.role;
 
     let query;
     let params = [];
@@ -171,10 +178,32 @@ const getLectures = async (req, res, next) => {
 
     const result = await pool.query(query, params);
 
-    // Calculate sequential lock state for students
+    // Check authorization: Admin, Teacher, or Enrolled Student
+    let isAuthorized = false;
+    if (userRole === "admin" || userRole === "teacher") {
+      isAuthorized = true;
+    } else if (userId && courseId) {
+      // Check enrollment in database
+      const enrollCheck = await pool.query(
+        `SELECT 1 FROM enrollments e
+         JOIN courses c ON e.course_id = c.id
+         WHERE e.user_id = $1 AND (c.id::text = $2 OR c.course_id = $2)
+         UNION
+         SELECT 1 FROM students s
+         JOIN courses c ON (s.course_id = c.id OR s.course = c.title OR s.course_code = c.course_id)
+         WHERE s.user_id = $1 AND (c.id::text = $2 OR c.course_id = $2)
+         LIMIT 1`,
+        [userId, String(courseId)]
+      );
+      if (enrollCheck.rows.length > 0) {
+        isAuthorized = true;
+      }
+    }
+
+    // Calculate sequential lock state for students and sanitize media URLs
     let rows = result.rows;
     if (courseId) {
-      if (req.user?.role !== "admin" && req.user?.role !== "teacher") {
+      if (userRole !== "admin" && userRole !== "teacher") {
         let prevCompleted = true;
         rows = rows.map((lec, idx) => {
           const isCompleted = Boolean(lec.is_completed);
@@ -182,17 +211,38 @@ const getLectures = async (req, res, next) => {
           if (!isCompleted) {
             prevCompleted = false;
           }
+
+          // SECURITY: Data Leakage Protection
+          // 1. If not enrolled, user can only access lectures marked as is_free_preview = true
+          // 2. If enrolled, user can only access unlocked lectures (or free preview)
+          const canAccessMedia = (isAuthorized && !isLocked) || Boolean(lec.is_free_preview);
+
           return {
             ...lec,
+            video_url: canAccessMedia ? lec.video_url : null,
+            pdf_url: canAccessMedia ? lec.pdf_url : null,
             is_completed: isCompleted,
             is_locked: isLocked,
+            has_access: canAccessMedia,
           };
         });
       } else {
+        // Admin or Teacher has full access to all lectures
         rows = rows.map((lec) => ({
           ...lec,
           is_completed: Boolean(lec.is_completed),
           is_locked: false,
+          has_access: true,
+        }));
+      }
+    } else {
+      // Generic lectures listing without specific courseId
+      if (userRole !== "admin" && userRole !== "teacher") {
+        rows = rows.map((lec) => ({
+          ...lec,
+          video_url: lec.is_free_preview ? lec.video_url : null,
+          pdf_url: lec.is_free_preview ? lec.pdf_url : null,
+          has_access: Boolean(lec.is_free_preview),
         }));
       }
     }
@@ -225,6 +275,11 @@ const deleteLecture = async (req, res, next) => {
         message: "Lecture not found",
       });
     }
+
+    // Invalidate caches on lecture deletion
+    await cacheService.delPattern("lectures:*");
+    await cacheService.delPattern("course:*");
+    await cacheService.delPattern("courses:*");
 
     res.json({
       success: true,

@@ -645,15 +645,12 @@ export default function CourseCard({
           <hr className="cc-hr" />
 
           <div className="cc-foot">
-            <div>
-              <div className="cc-old">{oldPrice}</div>
-              <div className="cc-now">
-                {price}
-                <span className="cc-save">{savePct}</span>
-              </div>
-            </div>
-            <button className="cc-cta" onClick={handleExplore}>
-              Explore
+            <button
+              className="cc-cta"
+              style={{ width: "100%", justifyContent: "center" }}
+              onClick={handleExplore}
+            >
+              Explore Program
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>

@@ -1419,22 +1419,12 @@ px-4
                   </div>
                 </div>
 
-                {/* PRICE + BUTTON */}
-                <div className="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center">
-                  <div>
-                    <div className="text-2xl font-extrabold text-green-700">
-                      ₹{typeof course.price === "number" ? course.price.toLocaleString("en-IN") : course.price}
-                    </div>
-                    {course.original_price && (
-                      <div className="text-xs text-gray-400 line-through">
-                        ₹{typeof course.original_price === "number" ? course.original_price.toLocaleString("en-IN") : course.original_price}
-                      </div>
-                    )}
-                  </div>
-
+                {/* ACTION BUTTON */}
+                <div className="mt-6 pt-4 border-t border-slate-100">
                   <Link
                     to={getCourseDescriptionUrl(course)}
                     className="
+                      w-full
                       bg-[#0B1220]
                       text-white
                       px-5
@@ -1448,11 +1438,12 @@ px-4
                       duration-200
                       flex
                       items-center
+                      justify-center
                       gap-2
                       shadow-sm
                     "
                   >
-                    <span>Explore</span>
+                    <span>Explore Program</span>
                     <FaArrowRight className="text-xs group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>

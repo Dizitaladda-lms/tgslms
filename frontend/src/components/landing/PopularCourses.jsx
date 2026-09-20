@@ -243,9 +243,6 @@ function PopularCourses() {
               instructorInitials={course.instructorInitials}
               instructorName={course.instructorName}
               instructorBlurb={course.instructorBlurb}
-              oldPrice={course.oldPrice}
-              price={course.price}
-              savePct={course.savePct}
             />
           ))}
         </div>
