@@ -14,7 +14,7 @@ import {
   FaSave,
   FaArrowLeft,
 } from "react-icons/fa";
-import DashboardSidebar from "../../components/dashboard/DashboardSidebar";
+import AdminLayout from "../../components/admin/AdminLayout";
 import api from "../../lib/api";
 
 const CATEGORIES = [
@@ -223,12 +223,8 @@ export default function AdminBlogs() {
   });
 
   return (
-    <div className="flex bg-slate-100 min-h-screen">
-      {/* SIDEBAR */}
-      <DashboardSidebar />
-
-      {/* MAIN CONTENT AREA */}
-      <div className="ml-72 flex-1 p-8 sm:p-12">
+    <AdminLayout title="Blog & Article Manager" subtitle="Create, edit and publish blog articles for the public site">
+      <div className="flex-1">
         {/* TOAST NOTIFICATION */}
         {notification && (
           <div className="fixed top-6 right-6 z-50 bg-emerald-700 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm flex items-center gap-2 animate-bounce">
@@ -701,6 +697,6 @@ export default function AdminBlogs() {
           </div>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }

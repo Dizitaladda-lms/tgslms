@@ -14,6 +14,7 @@ import {
   FaShieldAlt,
   FaDatabase,
   FaAward,
+  FaNewspaper,
 } from "react-icons/fa";
 import logo from "../../assets/logo.png";
 import api from "../../lib/api";
@@ -72,6 +73,11 @@ export default function AdminLayout({ children, title, subtitle, onSyncComplete 
       name: "Certificates",
       path: "/admin/certificates",
       icon: <FaAward className="inline mr-2" />,
+    },
+    {
+      name: "Blogs",
+      path: "/admin/blogs",
+      icon: <FaNewspaper className="inline mr-2" />,
     },
     {
       name: "Payments",
@@ -165,8 +171,8 @@ export default function AdminLayout({ children, title, subtitle, onSyncComplete 
       {/* ============================================================ */}
       <nav className="bg-[#0B1220] sticky top-0 z-40 border-b border-orange-400/20 shadow-md">
         <div className="max-w-7xl mx-auto">
-          {/* DESKTOP 6-COLUMN GRID */}
-          <div className="hidden md:grid grid-cols-6 text-center">
+          {/* DESKTOP 7-COLUMN GRID */}
+          <div className="hidden md:grid grid-cols-7 text-center">
             {navTabs.map((tab) => {
               const isActive =
                 tab.path === "/admin"
