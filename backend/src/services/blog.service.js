@@ -144,7 +144,7 @@ const generateSchemaJsonLd = (blog) => {
 
 class BlogService {
   constructor() {
-    this.memoryBlogs = [...SEED_BLOGS];
+    this.memoryBlogs = [];
     this.initStore();
   }
 
@@ -157,16 +157,15 @@ class BlogService {
       if (fs.existsSync(STORE_FILE)) {
         const fileContent = fs.readFileSync(STORE_FILE, "utf8");
         const store = JSON.parse(fileContent);
-        if (!store.blogs || !Array.isArray(store.blogs) || store.blogs.length === 0) {
-          store.blogs = [...SEED_BLOGS];
+        if (!store.blogs || !Array.isArray(store.blogs)) {
+          store.blogs = [];
           fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2), "utf8");
-          console.log("📝 Seeded flagship blogs into local store file ✅");
         }
         this.memoryBlogs = store.blogs;
       } else {
-        const store = { blogs: [...SEED_BLOGS] };
+        const store = { blogs: [] };
         fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2), "utf8");
-        this.memoryBlogs = store.blogs;
+        this.memoryBlogs = [];
       }
     } catch (err) {
       console.warn("⚠️ Blog store init note:", err.message);

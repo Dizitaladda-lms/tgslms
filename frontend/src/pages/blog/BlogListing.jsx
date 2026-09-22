@@ -159,21 +159,28 @@ export default function BlogListing() {
             <p className="text-slate-500 font-medium">Loading authoritative articles...</p>
           </div>
         ) : blogs.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-            <h3 className="text-2xl font-bold text-slate-800">No Articles Found</h3>
-            <p className="text-slate-500 mt-2 text-sm">
-              We couldn't find any articles matching your search. Try adjusting keywords or category filters.
+          <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 shadow-sm max-w-2xl mx-auto">
+            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 border border-amber-200">
+              <FaBookOpen />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900">Articles Coming Soon</h3>
+            <p className="text-slate-500 mt-2 text-sm leading-relaxed">
+              New industry guides, career roadmaps, and tech playbooks are being prepared. Stay tuned or check back shortly!
             </p>
-            <button
-              onClick={() => {
-                setSelectedCategory("All");
-                setSearchQuery("");
-                fetchBlogs();
-              }}
-              className="mt-6 inline-flex items-center gap-2 bg-[#0B1220] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-[#7C2D12] transition"
-            >
-              View All Articles
-            </button>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/admin/blogs"
+                className="inline-flex items-center gap-2 bg-[#0B1220] hover:bg-[#7C2D12] text-white px-5 py-2.5 rounded-xl font-bold text-xs transition shadow-sm"
+              >
+                + Write First Article (Admin)
+              </Link>
+              <Link
+                to="/courses"
+                className="inline-flex items-center gap-2 border border-slate-300 text-slate-700 hover:bg-slate-50 px-5 py-2.5 rounded-xl font-bold text-xs transition"
+              >
+                Explore Courses
+              </Link>
+            </div>
           </div>
         ) : (
           <>

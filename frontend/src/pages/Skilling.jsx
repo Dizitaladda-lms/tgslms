@@ -60,6 +60,7 @@ import {
   ADVANCED_AI_AGENTS_DETAILS,
   MASTER_AI_ENGINEERING_DETAILS,
 } from "../data/aiPromptEngineeringData.js";
+import TrackComparisonSection from "../components/TrackComparisonSection.jsx";
 
 // ==========================================
 // DURATION DEFINITIONS
@@ -2156,7 +2157,15 @@ function Skilling() {
               </div>
             </div>
 
-            <div className="flex justify-center mt-10">
+            {/* Side-by-Side Comprehensive Track Comparison Matrix */}
+            <TrackComparisonSection
+              courses={domainCourses}
+              selectedDomain={selectedDomain}
+              onSelectCourse={handleCourseSelect}
+              activeSpecialization={activeSpecialization}
+            />
+
+            <div className="flex justify-center mt-12">
               <button
                 onClick={() => setStep(1)}
                 className="inline-flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-6 py-3 rounded-xl transition"
