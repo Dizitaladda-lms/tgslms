@@ -13,6 +13,10 @@ import {
   FaExternalLinkAlt,
   FaSave,
   FaArrowLeft,
+  FaMagic,
+  FaCopy,
+  FaCheckCircle,
+  FaCode,
 } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
 import api from "../../lib/api";
@@ -51,6 +55,7 @@ export default function AdminBlogs() {
     summary: "",
     content: "",
     tags: "",
+    schema_markup: "",
     is_published: true,
     faqs: [
       { question: "", answer: "" }
@@ -59,6 +64,15 @@ export default function AdminBlogs() {
 
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState("");
+
+  // ── AI Blog Generator State ──────────────────────────────
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [aiTopic, setAiTopic]         = useState("");
+  const [aiPromptVisible, setAiPromptVisible] = useState(false);
+  const [aiResponseText, setAiResponseText]   = useState("");
+  const [aiParseError, setAiParseError]       = useState("");
+  const [promptCopied, setPromptCopied]       = useState(false);
+
 
   useEffect(() => {
     fetchAdminBlogs();
@@ -82,6 +96,140 @@ export default function AdminBlogs() {
     setNotification(msg);
     setTimeout(() => setNotification(""), 3500);
   };
+
+  // ── AI Prompt Builder ────────────────────────────────────
+  const buildAiPrompt = () => {
+    const topic = aiTopic.trim() || "How to Build a Successful Career in AI & Digital Marketing in 2026";
+    return `You are the Lead SEO Content Specialist for "Dizital Adda" (https://dizitaladda.com), a premier digital skills and career transformation institute in India specializing in AI & Prompt Engineering, Digital Marketing, Data Analytics, Cyber Security, and Full Stack Development.
+
+TASK:
+Write a high-ranking, 100% human-tone, comprehensive SEO blog article formatted EXACTLY to fit our internal "SEO Admin Portal" form fields.
+
+--------------------------------------------------
+OUTPUT FORMAT (Provide all 9 fields strictly in this structure):
+--------------------------------------------------
+
+### 1. ARTICLE TITLE:
+[Catchy, keyword-focused, under 65 characters, without quotes]
+
+### 2. URL SLUG:
+[Clean, lower-case, hyphenated slug, e.g., how-to-learn-digital-marketing-roadmap]
+
+### 3. CATEGORY:
+[Choose one: AI & Prompt Engineering | Digital Marketing | Data Analytics & Science | Cyber Security | Career & Placement Guides | Full Stack Web Development | Competitive & Academic Prep]
+
+### 4. META TITLE:
+[Max 60 characters, includes target keyword + " | Dizital Adda"]
+
+### 5. META DESCRIPTION:
+[140-155 characters engaging summary with a clear call-to-action]
+
+### 6. FOCUS KEYWORDS:
+[8 to 12 comma-separated high-intent search keywords]
+
+### 7. PUBLISHER:
+Dizital Adda
+
+### 8. ARTICLE BODY (Rich HTML for Quill Editor - 1200 to 1600 words):
+- Use <h2> for all primary section headers and <h3> for sub-points. (DO NOT use <h1> inside the body).
+- Tone: Empathetic, professional, practical industry-first voice suited for Indian learners, freshers & working professionals.
+- Must include:
+  a) Hook / Relatable Problem Statement (e.g., skill obsolescence, career stagnancy, high-paying tech demand).
+  b) Science/Industry-backed explanation of core tools, technologies & career frameworks.
+  c) Clear Step-by-Step roadmap/process with bullet points or numbered steps.
+  d) Comparative HTML Table (Clean <table> with <thead> and <tbody> comparing tools, salaries, or pathways).
+  e) Natural Program Recommendations: Seamlessly mention Dizital Adda programs (Gen AI & Prompt Engineering, Digital Marketing Mastery, Data Analytics & Science, Cyber Security, Full Stack Development).
+  f) FAQs Section: 4 to 5 common reader questions with clear, actionable answers.
+
+### 9. JSON-LD SCHEMA (Ready to paste into Schema box):
+[Generate valid JSON-LD code containing an "@context": "https://schema.org" object or array with "FAQPage" schema corresponding to the FAQs in the article, and an "Article" or "HowTo" schema].
+
+--------------------------------------------------
+TOPIC / FOCUS KEYWORD:
+${topic}
+--------------------------------------------------`;
+  };
+
+  const handleCopyPrompt = () => {
+    navigator.clipboard.writeText(buildAiPrompt()).then(() => {
+      setPromptCopied(true);
+      setTimeout(() => setPromptCopied(false), 3000);
+    });
+  };
+
+  // ── AI Response Parser ───────────────────────────────────
+  const parseAiResponse = () => {
+    setAiParseError("");
+    const text = aiResponseText.trim();
+    if (!text) { setAiParseError("Please paste the AI-generated response first."); return; }
+
+    const extract = (label, nextLabel) => {
+      const re = new RegExp(`###\\s*${label}[^\\n]*\\n([\\s\\S]*?)(?=###\\s*${nextLabel}|$)`, "i");
+      const m = text.match(re);
+      return m ? m[1].trim() : "";
+    };
+
+    const title       = extract("1\\. ARTICLE TITLE:", "2\\.");
+    const slug        = extract("2\\. URL SLUG:", "3\\.");
+    const category    = extract("3\\. CATEGORY:", "4\\.");
+    const metaTitle   = extract("4\\. META TITLE:", "5\\.");
+    const metaDesc    = extract("5\\. META DESCRIPTION:", "6\\.");
+    const keywords    = extract("6\\. FOCUS KEYWORDS:", "7\\.");
+    const publisher   = extract("7\\. PUBLISHER:", "8\\.");
+    const content     = extract("8\\. ARTICLE BODY[^:]*:", "9\\.");
+    let schemaRaw     = extract("9\\. JSON-LD SCHEMA[^:]*:", "$");
+
+    if (!title || !content) {
+      setAiParseError("Could not parse response. Make sure you copied the full AI output including all ### sections.");
+      return;
+    }
+
+    // Clean up JSON-LD schema (remove markdown code fences if present)
+    schemaRaw = schemaRaw.replace(/^```(json)?/i, "").replace(/```$/i, "").trim();
+
+    // Parse category — match to known categories
+    const matchedCat = CATEGORIES.find(c =>
+      category.toLowerCase().includes(c.toLowerCase().slice(0, 8))
+    ) || CATEGORIES[0];
+
+    // Extract FAQs from content HTML if possible
+    const faqs = [];
+    const faqMatches = content.matchAll(/<h3>(?:Q:?\s*)?(.*?)<\/h3>\s*<p>(.*?)<\/p>/gi);
+    for (const match of faqMatches) {
+      if (match[1] && match[2]) {
+        faqs.push({
+          question: match[1].replace(/<[^>]+>/g, "").trim(),
+          answer: match[2].replace(/<[^>]+>/g, "").trim()
+        });
+      }
+    }
+
+    // Extract summary hook from first paragraph of content
+    const firstP = content.match(/<p>(.*?)<\/p>/i);
+    const summary = firstP ? firstP[1].replace(/<[^>]+>/g, "").trim().slice(0, 220) : metaDesc;
+
+    setFormData(prev => ({
+      ...prev,
+      title: title.replace(/^["']|["']$/g, ""),
+      slug: slug.replace(/^\//, "").trim(),
+      category: matchedCat,
+      meta_title: metaTitle.slice(0, 60),
+      meta_description: metaDesc.slice(0, 160),
+      keywords: keywords,
+      publisher: publisher || "Dizital Adda",
+      summary: summary,
+      content: content,
+      schema_markup: schemaRaw,
+      tags: keywords.split(",").slice(0, 5).join(", "),
+      faqs: faqs.length > 0 ? faqs : prev.faqs,
+    }));
+
+    setAiPanelOpen(false);
+    setAiResponseText("");
+    showToast("✅ All 9 fields imported successfully! Review and publish.");
+  };
+
+
 
   // Auto-generate slug from title
   const handleTitleChange = (val) => {
@@ -115,6 +263,7 @@ export default function AdminBlogs() {
       summary: "",
       content: `<h2>Section 1: The Core Industry Challenge</h2>\n<p>Explain the critical industry context, tools, or pain points here...</p>\n\n<h2>Section 2: Step-by-Step Strategic Roadmap</h2>\n<p>Detail the methodology, active frameworks, and practical milestones...</p>\n\n<h2>Section 3: Practical Industry Comparison</h2>\n<p>Include comparison insights or career deliverables...</p>`,
       tags: "AI, Career, Roadmap",
+      schema_markup: "",
       is_published: true,
       faqs: [
         { question: "What is the expected career growth in this field?", answer: "Professionals in this track consistently see strong compensation jumps of 40% to 100% within 12 to 18 months." }
@@ -139,6 +288,7 @@ export default function AdminBlogs() {
       featured_image: blog.featured_image || "",
       summary: blog.summary || "",
       content: blog.content || "",
+      schema_markup: typeof blog.schema_markup === "object" ? JSON.stringify(blog.schema_markup, null, 2) : (blog.schema_markup || ""),
       tags: Array.isArray(blog.tags) ? blog.tags.join(", ") : (blog.tags || ""),
       is_published: blog.is_published !== undefined ? blog.is_published : true,
       faqs: Array.isArray(blog.faqs) && blog.faqs.length > 0 ? blog.faqs : [{ question: "", answer: "" }],
@@ -257,6 +407,18 @@ export default function AdminBlogs() {
               <FaExternalLinkAlt />
               <span>View Public Blog</span>
             </Link>
+
+            <button
+              onClick={() => {
+                setAiPanelOpen(true);
+                setAiPromptVisible(false);
+                setAiParseError("");
+              }}
+              className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-md cursor-pointer"
+            >
+              <FaMagic className="text-amber-200" />
+              <span>AI SEO Writer</span>
+            </button>
 
             <button
               onClick={handleOpenCreate}
@@ -411,12 +573,26 @@ export default function AdminBlogs() {
                       Strict formatting: H2/H3 for Auto-TOC, Meta Title under 60 chars, and high-intent keywords.
                     </p>
                   </div>
-                  <button
-                    onClick={() => setIsFormOpen(false)}
-                    className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition"
-                  >
-                    <FaTimes className="text-lg" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiPanelOpen(true);
+                        setAiPromptVisible(false);
+                        setAiParseError("");
+                      }}
+                      className="bg-amber-100 border border-amber-300 hover:bg-amber-200 text-amber-900 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                    >
+                      <FaMagic className="text-amber-700" />
+                      <span>Auto-fill with AI</span>
+                    </button>
+                    <button
+                      onClick={() => setIsFormOpen(false)}
+                      className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition cursor-pointer"
+                    >
+                      <FaTimes className="text-lg" />
+                    </button>
+                  </div>
                 </div>
 
                 <form id="blog-form" onSubmit={handleSubmit} className="space-y-6">
@@ -657,6 +833,27 @@ export default function AdminBlogs() {
                     </div>
                   </div>
 
+                  {/* Field 9: JSON-LD Schema (Optional Override) */}
+                  <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <FaCode className="text-amber-600" />
+                        <span>Field #9: Custom JSON-LD Schema Markup (Optional)</span>
+                      </label>
+                      <span className="text-[10px] text-slate-400">FAQPage / Article / HowTo Schema</span>
+                    </div>
+                    <textarea
+                      rows={4}
+                      value={formData.schema_markup || ""}
+                      onChange={(e) => setFormData({ ...formData, schema_markup: e.target.value })}
+                      placeholder='{\n  "@context": "https://schema.org",\n  "@type": "FAQPage",\n  ...\n}'
+                      className="w-full px-3.5 py-2 text-xs font-mono bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B1220]"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-1 block">
+                      Leave empty to auto-generate valid Google-compliant BlogPosting + FAQPage + BreadcrumbList JSON-LD on save.
+                    </span>
+                  </div>
+
                   {/* Publish Status Toggle */}
                   <div className="flex items-center gap-3 pt-2">
                     <input
@@ -691,6 +888,133 @@ export default function AdminBlogs() {
                 >
                   <FaSave />
                   <span>{saving ? "Saving..." : editingBlogId ? "Update Article" : "Publish Article"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* AI BLOG GENERATOR MODAL */}
+        {/* ========================================================= */}
+        {aiPanelOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
+              {/* Header */}
+              <div className="bg-[#0B1220] p-6 text-white flex items-center justify-between border-b-2 border-amber-500">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300">
+                    <FaMagic className="text-lg" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg text-white">AI SEO Content Generator</h3>
+                    <p className="text-xs text-amber-200">1-Click Prompt Builder & Auto-Fill All 9 Fields</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setAiPanelOpen(false)}
+                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition"
+                >
+                  <FaTimes className="text-lg" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-800 text-xs">
+                {/* STEP 1: Enter Topic */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[#0B1220] text-amber-400 font-bold flex items-center justify-center text-[10px]">
+                      1
+                    </span>
+                    <span className="font-bold text-slate-800 text-xs">Enter Your Topic / Target Keyword:</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={aiTopic}
+                    onChange={(e) => setAiTopic(e.target.value)}
+                    placeholder="e.g. How to Become a Full Stack AI Developer in 6 Months (or 'Saffron Benefits for Glowing Skin')"
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0B1220]"
+                  />
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleCopyPrompt}
+                      className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition cursor-pointer shadow-sm"
+                    >
+                      {promptCopied ? <FaCheckCircle className="text-emerald-300" /> : <FaCopy />}
+                      <span>{promptCopied ? "Prompt Copied to Clipboard!" : "Copy SEO Prompt for ChatGPT / Claude"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAiPromptVisible(!aiPromptVisible)}
+                      className="text-slate-600 hover:text-slate-900 px-3 py-2 font-semibold underline"
+                    >
+                      {aiPromptVisible ? "Hide Prompt" : "Preview Prompt"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Optional Prompt Preview */}
+                {aiPromptVisible && (
+                  <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl font-mono text-[11px] leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap border border-slate-700">
+                    {buildAiPrompt()}
+                  </div>
+                )}
+
+                {/* STEP 2: Paste AI Response */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[#0B1220] text-amber-400 font-bold flex items-center justify-center text-[10px]">
+                      2
+                    </span>
+                    <span className="font-bold text-slate-800 text-xs">
+                      Paste the Complete Output from ChatGPT / Claude / Gemini:
+                    </span>
+                  </div>
+                  <textarea
+                    rows={8}
+                    value={aiResponseText}
+                    onChange={(e) => {
+                      setAiResponseText(e.target.value);
+                      setAiParseError("");
+                    }}
+                    placeholder={`Paste the AI reply here starting with:
+### 1. ARTICLE TITLE:
+...
+### 2. URL SLUG:
+...
+### 8. ARTICLE BODY:
+...
+### 9. JSON-LD SCHEMA:
+...`}
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0B1220]"
+                  />
+                  {aiParseError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold">
+                      {aiParseError}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setAiPanelOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-white transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={parseAiResponse}
+                  disabled={!aiResponseText.trim()}
+                  className="bg-[#0B1220] hover:bg-[#7C2D12] text-white px-6 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <FaMagic className="text-amber-400" />
+                  <span>Parse & Auto-Fill All Form Fields</span>
                 </button>
               </div>
             </div>

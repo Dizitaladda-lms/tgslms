@@ -528,8 +528,16 @@ class BlogService {
       updated_at: new Date().toISOString(),
     };
 
-    // Schema markup generated automatically
-    newBlog.schema_markup = generateSchemaJsonLd(newBlog).combined;
+    // Schema markup: use custom provided schema if present, else auto-generate Google-compliant schema
+    if (data.schema_markup) {
+      try {
+        newBlog.schema_markup = typeof data.schema_markup === "string" ? JSON.parse(data.schema_markup) : data.schema_markup;
+      } catch {
+        newBlog.schema_markup = generateSchemaJsonLd(newBlog).combined;
+      }
+    } else {
+      newBlog.schema_markup = generateSchemaJsonLd(newBlog).combined;
+    }
 
     // PostgreSQL
     if (pool.isPostgres && pool.isPostgres()) {
@@ -648,7 +656,15 @@ class BlogService {
       slug: data.slug ? slugify(data.slug) : current.slug,
       updated_at: new Date().toISOString(),
     };
-    updated.schema_markup = generateSchemaJsonLd(updated).combined;
+    if (data.schema_markup) {
+      try {
+        updated.schema_markup = typeof data.schema_markup === "string" ? JSON.parse(data.schema_markup) : data.schema_markup;
+      } catch {
+        updated.schema_markup = generateSchemaJsonLd(updated).combined;
+      }
+    } else {
+      updated.schema_markup = generateSchemaJsonLd(updated).combined;
+    }
 
     this.memoryBlogs[index] = updated;
     this.saveMemoryToDisk();
