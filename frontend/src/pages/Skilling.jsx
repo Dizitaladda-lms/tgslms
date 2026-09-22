@@ -61,6 +61,7 @@ import {
   MASTER_AI_ENGINEERING_DETAILS,
 } from "../data/aiPromptEngineeringData.js";
 import TrackComparisonSection from "../components/TrackComparisonSection.jsx";
+import StudentTestimonialSlider from "../components/StudentTestimonialSlider.jsx";
 
 // ==========================================
 // DURATION DEFINITIONS
@@ -2031,15 +2032,8 @@ function Skilling() {
               ))}
             </div>
 
-            {/* Step 1 Quick Track Breakdown (Flagship Program Tracks) */}
-            <TrackComparisonSection
-              onSelectCourse={(course) => {
-                const dom =
-                  DOMAINS.find((d) => d.id === "digital-marketing") || DOMAINS[0];
-                setSelectedDomain(dom);
-                handleCourseSelect(course);
-              }}
-            />
+            {/* Student Testimonials Slider in Step 1 (Select Domain) */}
+            <StudentTestimonialSlider />
           </div>
         )}
 
