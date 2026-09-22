@@ -1633,6 +1633,19 @@ function Skilling() {
   const [expandedCurriculumIdx, setExpandedCurriculumIdx] = useState(0);
   const [curriculumSearch, setCurriculumSearch] = useState("");
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const tabsContainerRef = useRef(null);
+
+  // Smoothly switch tab and scroll up to the tabs view
+  const switchToTab = (tabName) => {
+    setActiveDetailTab(tabName);
+    if (tabsContainerRef.current) {
+      const yOffset = -70;
+      const element = tabsContainerRef.current;
+      const y =
+        element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
 
   // Counselor Modal State
   const [showCounselorModal, setShowCounselorModal] = useState(false);
@@ -2017,6 +2030,16 @@ function Skilling() {
                 </div>
               ))}
             </div>
+
+            {/* Step 1 Quick Track Breakdown (Flagship Program Tracks) */}
+            <TrackComparisonSection
+              onSelectCourse={(course) => {
+                const dom =
+                  DOMAINS.find((d) => d.id === "digital-marketing") || DOMAINS[0];
+                setSelectedDomain(dom);
+                handleCourseSelect(course);
+              }}
+            />
           </div>
         )}
 
@@ -2320,7 +2343,7 @@ function Skilling() {
                   </div>
 
                   {/* Interactive Navigation Tabs for Course Deep Dive */}
-                  <div>
+                  <div ref={tabsContainerRef} className="scroll-mt-20">
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 text-sm font-bold no-scrollbar">
                       <button
                         onClick={() => setActiveDetailTab("curriculum")}
@@ -2586,6 +2609,304 @@ function Skilling() {
                             })
                             .filter(Boolean)}
                         </div>
+
+                        {/* ==============================================================
+                            POST-CURRICULUM QUICK EXPLORE (CROSS-TAB PREVIEWS)
+                            Shows previews of 3 Live Projects, 6 AI Tools, Learning Journey
+                            and Target Profiles with dynamic "+N More" count buttons that
+                            redirect to the tabs and scroll smoothly to the tabs bar!
+                        ============================================================== */}
+                        {selectedCourse.details && (
+                          <div className="mt-14 pt-10 border-t-2 border-slate-200 space-y-10">
+                            {/* Section Header */}
+                            <div className="text-center max-w-2xl mx-auto">
+                              <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#7C2D12] bg-orange-100 border border-orange-200 px-3 py-1 rounded-full mb-2">
+                                Beyond The Syllabus Modules
+                              </span>
+                              <h4 className="text-2xl sm:text-3xl font-black text-[#0B1220]">
+                                More Included in Your {selectedCourse.duration} Program
+                              </h4>
+                              <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                                Syllabus modules ke alawa aapko live client campaigns, modern AI tools, aur structured career support milta hai:
+                              </p>
+                            </div>
+
+                            {/* 1. LIVE BRAND PROJECTS PREVIEW (First 3 Projects + Explore More Button) */}
+                            {Array.isArray(selectedCourse.details.liveProjects) &&
+                              selectedCourse.details.liveProjects.length > 0 && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8">
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                                    <div>
+                                      <span className="text-[11px] font-black uppercase tracking-wider text-[#7C2D12] block">
+                                        Hands-On Portfolio Work
+                                      </span>
+                                      <h5 className="text-xl font-black text-[#0B1220] mt-0.5">
+                                        Live Brand Projects with Real Ad Budgets
+                                      </h5>
+                                      <p className="text-xs text-slate-500 mt-0.5">
+                                        Showing 3 of {selectedCourse.details.liveProjects.length} live client projects included in this track.
+                                      </p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => switchToTab("projects")}
+                                      className="self-start sm:self-auto bg-[#0B1220] hover:bg-[#7C2D12] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition"
+                                    >
+                                      Explore All {selectedCourse.details.liveProjects.length} Projects{" "}
+                                      {selectedCourse.details.liveProjects.length > 3
+                                        ? `(+${selectedCourse.details.liveProjects.length - 3} More)`
+                                        : ""}
+                                    </button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {selectedCourse.details.liveProjects.slice(0, 3).map((proj, pIdx) => (
+                                      <div
+                                        key={proj.num || pIdx}
+                                        className="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-between hover:border-[#7C2D12] transition shadow-xs"
+                                      >
+                                        <div>
+                                          <div className="flex items-center justify-between gap-2 mb-2.5">
+                                            <span className="w-7 h-7 rounded-lg bg-[#0B1220] text-[#D4A017] flex items-center justify-center font-black text-xs">
+                                              P{proj.num || pIdx + 1}
+                                            </span>
+                                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-[#7C2D12] border border-orange-200">
+                                              {proj.badge || "Live Campaign"}
+                                            </span>
+                                          </div>
+                                          <h6 className="font-black text-slate-900 text-sm leading-snug">
+                                            {proj.title}
+                                          </h6>
+                                          <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+                                            {proj.desc || proj.clientBrief}
+                                          </p>
+                                        </div>
+
+                                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                                          <span>{proj.duration || "Real Ad Spend"}</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => switchToTab("projects")}
+                                            className="text-[#7C2D12] hover:underline"
+                                          >
+                                            View Brief →
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Bottom Full CTA Button */}
+                                  <div className="mt-6 text-center pt-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => switchToTab("projects")}
+                                      className="inline-flex items-center gap-2 bg-[#7C2D12] hover:bg-[#60230e] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl transition shadow-sm"
+                                    >
+                                      <span>
+                                        Explore All {selectedCourse.details.liveProjects.length} Live Projects{" "}
+                                        {selectedCourse.details.liveProjects.length > 3
+                                          ? `(+${selectedCourse.details.liveProjects.length - 3} More)`
+                                          : ""}
+                                      </span>
+                                      <span>→</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                            {/* 2. AI TOOLS STACK PREVIEW (First 6 Tools + Explore More Button) */}
+                            {(() => {
+                              const clusters = selectedCourse.details.toolClusters || [];
+                              const allTools = clusters.flatMap((c) =>
+                                (c.tools || []).map((t) => ({
+                                  name: t,
+                                  category: c.name,
+                                }))
+                              );
+                              const totalCount =
+                                allTools.length ||
+                                parseInt(selectedCourse.details.aiToolsCount) ||
+                                40;
+                              const previewTools = allTools.slice(0, 6);
+                              const remainingCount = Math.max(0, totalCount - previewTools.length);
+
+                              return (
+                                <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs">
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                                    <div>
+                                      <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 block">
+                                        Next-Gen Tools & Automation
+                                      </span>
+                                      <h5 className="text-xl font-black text-[#0B1220] mt-0.5">
+                                        {selectedCourse.details.aiToolsCount || "40+"} AI Tools & Marketing Stack
+                                      </h5>
+                                      <p className="text-xs text-slate-500 mt-0.5">
+                                        Showing 6 of {totalCount} tools integrated directly into daily class exercises.
+                                      </p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => switchToTab("aiTools")}
+                                      className="self-start sm:self-auto bg-[#0B1220] hover:bg-[#7C2D12] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition"
+                                    >
+                                      Explore All {totalCount} Tools{" "}
+                                      {remainingCount > 0 ? `(+${remainingCount} More)` : ""}
+                                    </button>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                                    {(previewTools.length > 0
+                                      ? previewTools
+                                      : [
+                                          { name: "ChatGPT", category: "Generative AI" },
+                                          { name: "Google Gemini", category: "Generative AI" },
+                                          { name: "Canva Pro AI", category: "Brand Design" },
+                                          { name: "Meta Business", category: "Paid Ads" },
+                                          { name: "Google Ads", category: "PPC Engine" },
+                                          { name: "GA4 Analytics", category: "Tracking" },
+                                        ]
+                                    ).map((tool, tIdx) => (
+                                      <div
+                                        key={tIdx}
+                                        className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-center flex flex-col justify-center hover:border-purple-400 transition"
+                                      >
+                                        <span className="text-xs font-black text-slate-900 block truncate">
+                                          {tool.name}
+                                        </span>
+                                        <span className="text-[10px] text-slate-500 font-medium block truncate mt-0.5">
+                                          {tool.category}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Bottom Full CTA Button */}
+                                  <div className="mt-6 text-center pt-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => switchToTab("aiTools")}
+                                      className="inline-flex items-center gap-2 bg-[#0B1220] hover:bg-[#7C2D12] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl transition shadow-sm"
+                                    >
+                                      <span>
+                                        Explore All {totalCount} AI Tools Stack{" "}
+                                        {remainingCount > 0 ? `(+${remainingCount} More)` : ""}
+                                      </span>
+                                      <span>→</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* 3. LEARNING JOURNEY & WHO CAN JOIN (2-Column Preview Grid) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Left Box: Learning Journey Preview (First 3 Steps) */}
+                              {Array.isArray(selectedCourse.details.journeySteps) &&
+                                selectedCourse.details.journeySteps.length > 0 && (
+                                  <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col justify-between">
+                                    <div>
+                                      <div className="flex items-center justify-between gap-2 mb-3">
+                                        <span className="text-[11px] font-black uppercase tracking-wider text-[#7C2D12]">
+                                          Roadmap Timeline
+                                        </span>
+                                        <span className="text-xs font-bold text-slate-500">
+                                          {selectedCourse.details.journeySteps.length} Phases Total
+                                        </span>
+                                      </div>
+                                      <h5 className="text-lg font-black text-slate-900 mb-4">
+                                        Learning Journey from Day 1 to Placement
+                                      </h5>
+
+                                      <div className="space-y-3">
+                                        {selectedCourse.details.journeySteps.slice(0, 3).map((step, sIdx) => (
+                                          <div
+                                            key={sIdx}
+                                            className="p-3.5 bg-white rounded-xl border border-slate-200 text-xs"
+                                          >
+                                            <div className="font-bold text-slate-900">
+                                              Phase {step.step || sIdx + 1}: {step.title}
+                                            </div>
+                                            <p className="text-slate-600 mt-1 line-clamp-1">
+                                              {step.desc}
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    <div className="mt-5 pt-3 border-t border-slate-200">
+                                      <button
+                                        type="button"
+                                        onClick={() => switchToTab("journey")}
+                                        className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 transition flex items-center justify-center gap-2"
+                                      >
+                                        <span>
+                                          Explore Full Learning Journey{" "}
+                                          {selectedCourse.details.journeySteps.length > 3
+                                            ? `(+${selectedCourse.details.journeySteps.length - 3} More Steps)`
+                                            : ""}
+                                        </span>
+                                        <span>→</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+
+                              {/* Right Box: Who Should Join Preview */}
+                              {Array.isArray(selectedCourse.details.whoShouldJoin) &&
+                                selectedCourse.details.whoShouldJoin.length > 0 && (
+                                  <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col justify-between">
+                                    <div>
+                                      <div className="flex items-center justify-between gap-2 mb-3">
+                                        <span className="text-[11px] font-black uppercase tracking-wider text-[#7C2D12]">
+                                          Eligibility & Profiles
+                                        </span>
+                                        <span className="text-xs font-bold text-slate-500">
+                                          {selectedCourse.details.whoShouldJoin.length} Personas
+                                        </span>
+                                      </div>
+                                      <h5 className="text-lg font-black text-slate-900 mb-4">
+                                        Who Gets Maximum Value from this Course?
+                                      </h5>
+
+                                      <div className="space-y-3">
+                                        {selectedCourse.details.whoShouldJoin.slice(0, 3).map((prof, prIdx) => (
+                                          <div
+                                            key={prIdx}
+                                            className="p-3.5 bg-white rounded-xl border border-slate-200 text-xs"
+                                          >
+                                            <div className="font-bold text-slate-900">
+                                              {prof.title}
+                                            </div>
+                                            <p className="text-slate-600 mt-1 line-clamp-1">
+                                              {prof.desc}
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    <div className="mt-5 pt-3 border-t border-slate-200">
+                                      <button
+                                        type="button"
+                                        onClick={() => switchToTab("whoCanJoin")}
+                                        className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 transition flex items-center justify-center gap-2"
+                                      >
+                                        <span>
+                                          View All Profiles & Outcomes{" "}
+                                          {selectedCourse.details.whoShouldJoin.length > 3
+                                            ? `(+${selectedCourse.details.whoShouldJoin.length - 3} More)`
+                                            : ""}
+                                        </span>
+                                        <span>→</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -3245,6 +3566,14 @@ function Skilling() {
                 </div>
               )}
             </div>
+
+            {/* Compare other duration tracks under this domain */}
+            <TrackComparisonSection
+              courses={domainCourses}
+              selectedDomain={selectedDomain}
+              onSelectCourse={handleCourseSelect}
+              activeSpecialization={activeSpecialization}
+            />
           </div>
         )}
 

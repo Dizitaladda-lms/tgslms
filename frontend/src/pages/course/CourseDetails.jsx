@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../lib/api";
 import { FaClock, FaCheckCircle, FaPhoneAlt, FaWhatsapp, FaExternalLinkAlt } from "react-icons/fa";
 import { getCourseDescriptionUrl, getDomainContactInfo } from "../../utils/courseNavigation";
+import TrackComparisonSection from "../../components/TrackComparisonSection.jsx";
 
 const CourseDetails = () => {
   const navigate = useNavigate();
@@ -768,6 +769,11 @@ const CourseDetails = () => {
 
         </div>
 
+      </div>
+
+      {/* Course Duration Comparison Section */}
+      <div className="max-w-7xl mx-auto px-6 pb-12">
+        <TrackComparisonSection />
       </div>
 
     </div>

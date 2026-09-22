@@ -4,6 +4,7 @@ import api from "../../lib/api";
 import Features from "../../components/landing/Features";
 import logo from "../../assets/logo.png";
 import { getCourseDescriptionUrl } from "../../utils/courseNavigation";
+import TrackComparisonSection from "../../components/TrackComparisonSection.jsx";
 
 import {
   FaClock,
@@ -1484,6 +1485,13 @@ px-4
   </div>
 
 </section>
+
+{/* ==========================
+    COURSE DURATION TRACK COMPARISON MATRIX
+========================== */}
+<div className="max-w-[1800px] mx-auto px-6 py-2">
+  <TrackComparisonSection />
+</div>
 
 <Features />
  {/* ==========================

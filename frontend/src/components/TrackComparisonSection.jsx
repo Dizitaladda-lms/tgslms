@@ -1,211 +1,238 @@
-import { useState } from "react";
-import {
-  FaCheckCircle,
-  FaTimes,
-  FaStar,
-  FaRocket,
-  FaBriefcase,
-  FaGraduationCap,
-  FaUsers,
-  FaClock,
-  FaLayerGroup,
-  FaAward,
-  FaArrowRight,
-  FaShieldAlt,
-  FaLaptopCode,
-  FaLightbulb,
-  FaRobot,
-  FaCheck,
-} from "react-icons/fa";
+import { useState, Fragment } from "react";
+import { useNavigate } from "react-router-dom";
 
-/**
- * Enriched domain-specific comparison metadata fallback
- * (Specifically handles Digital Marketing 4-track nuances and provides fallback for any domain)
- */
-const TRACK_SPECIFIC_METADATA = {
-  "3-months": {
-    badge: "Foundation Track",
-    color: "amber",
-    tagline: "Fast-Track Foundational Launch",
-    idealForTitle: "Beginners, College Students & Freshers",
+// Flagship default Digital Marketing tracks for when courses prop is empty or general page usage
+const DEFAULT_FLAGSHIP_TRACKS = [
+  {
+    id: "dm-beginners",
+    durationId: "3-months",
+    duration: "3 Months",
+    title: "Digital Marketing for Beginners",
+    level: "BEGINNER LEVEL",
+    modulesCount: "30",
+    modulesType: "Core Foundational Modules",
+    aiToolsCount: "40+",
+    hoursPerWeek: "8 - 10 Hours / Week",
     liveHours: "60+ Hours Live Sessions",
-    weeklyHours: "8 - 10 Hours / Week",
+    projects: "10 Live Brand Projects",
+    certifications: "10+ Global Certifications (Google, Meta, HubSpot)",
+    mentorship: "Group Learning & Weekly Live Q&A",
+    placement: "100% Placement Assistance (Job Board Access)",
+    perfectFor: "Students, 12th Pass, Fresh Graduates & Beginners",
     searchAi: "Basic Overview (Modern AI Search)",
-    adBudgets: "Simulated Ad Budget Sandboxes",
     agencyInternship: "Simulated Agency Lab Case Studies",
+    adBudgets: "Guided Sandboxes & Campaign Setups",
     capstone: "1 Guided Portfolio Capstone",
-    mentorshipType: "Group Learning & Weekly Live Q&A",
-    mockInterviews: "1 Mock Interview + Resume Review",
-    verdictHeading: "Quick Start & Core Fundamentals",
+    mockInterviews: "1 Mock Technical Interview + Resume Critique",
+    tagline: "Fast-Track Foundational Launch",
     verdictSummary:
-      "A fast 90-day launchpad covering SEO, Meta Ads, Google Ads, Canva Pro, and 40+ AI tools. Perfect for building fundamental skills and landing entry-level marketing roles without long-term commitment.",
+      "A fast 90-day launchpad covering SEO, Meta Ads, Google Ads, Canva, and 40+ AI tools. Ideal for beginners building fundamental skills.",
     whyChoose: [
       "Fast 3-month completion time",
-      "Master essential SEO, Meta & Google Ads",
+      "Essential SEO, Meta Ads & Google Ads",
       "40+ AI tools (ChatGPT, Gemini, Canva AI)",
-      "10 Live brand projects with guided mentor reviews",
+      "10 Live brand projects with mentor feedback",
     ],
+    slug: "/skilling?domain=digital-marketing&duration=3-months&course=dm-beginners",
   },
-  "4-months": {
-    badge: "Professional Track",
-    color: "emerald",
-    tagline: "Career Upskill for Working Pros",
-    idealForTitle: "Working Professionals & Business Owners",
+  {
+    id: "dm-professionals",
+    durationId: "4-months",
+    duration: "4 Months",
+    title: "Digital Marketing for Professionals",
+    level: "PROFESSIONAL LEVEL",
+    modulesCount: "40",
+    modulesType: "Focused Professional Modules",
+    aiToolsCount: "50+",
+    hoursPerWeek: "10 - 12 Hours / Week",
     liveHours: "90+ Hours Live Sessions",
-    weeklyHours: "10 - 12 Hours / Week",
+    projects: "10 Live Brand Projects with Ad Budgets",
+    certifications: "10+ Global Certifications + Agency Certificate",
+    mentorship: "Weekly Practitioner Mentorship",
+    placement: "100% Placement Assistance (250+ Recruiters)",
+    perfectFor: "Working Professionals & Small Business Owners",
     searchAi: "Search AI & Schema Structured Data",
-    adBudgets: "Live Ad Budgets for Meta & Google",
     agencyInternship: "Paid In-House Agency Internship",
+    adBudgets: "Live Ad Budgets for Meta & Google",
     capstone: "Mini Brand Projects + Capstone",
-    mentorshipType: "Weekly Practitioner Mentorship",
     mockInterviews: "3 Mock Technical & HR Interviews",
-    verdictHeading: "Tactical Execution & Fast ROI",
+    tagline: "Career Upskill for Working Pros",
     verdictSummary:
-      "Designed specifically for working executives and business owners needing fast results. Covers 40 focused modules, performance marketing, GA4, paid agency internship, and live ad campaign execution.",
+      "Designed specifically for working professionals and business owners needing fast results. Covers 40 focused modules, performance marketing, GA4, and live ad spend.",
     whyChoose: [
       "Weekend & evening friendly 10-12 hrs/week",
       "Paid in-house agency internship experience",
       "Real ad spend on Meta & Google campaigns",
       "Advanced GA4 tracking & performance marketing",
     ],
+    slug: "/skilling?domain=digital-marketing&duration=4-months&course=dm-professionals",
   },
-  "6-months": {
-    badge: "Advanced Track • Most Popular",
-    color: "blue",
-    tagline: "Complete Career Switch & Agency Mastery",
-    idealForTitle: "Serious Career Switchers & Graduates",
+  {
+    id: "dm-advanced",
+    durationId: "6-months",
+    duration: "6 Months",
+    title: "Advanced Digital Marketing",
+    level: "ADVANCED LEVEL",
+    isPopular: true,
+    modulesCount: "60",
+    modulesType: "Detailed Specialization Modules",
+    aiToolsCount: "54+",
+    hoursPerWeek: "12 - 15 Hours / Week",
     liveHours: "150+ Hours Live Sessions",
-    weeklyHours: "12 - 15 Hours / Week",
+    projects: "10 Live Brand Campaigns with Real Client Budgets",
+    certifications: "10+ Global Certifications + ISO Verified",
+    mentorship: "Industry Expert Mentorship + 1:1 Reviews",
+    placement: "100% Placement Support (500+ Hiring Partners)",
+    perfectFor: "Serious Career Switchers & Graduates",
     searchAi: "Next-Gen Search AI (AEO & LLMO Optimization)",
-    adBudgets: "Real Client Ad Budgets Managed",
     agencyInternship: "Paid In-House Agency Internship (Live Clients)",
+    adBudgets: "Real Client Ad Budgets Managed",
     capstone: "Major Enterprise Capstone + Live Campaigns",
-    mentorshipType: "Industry Expert Mentorship + 1:1 Reviews",
     mockInterviews: "5 Full Mock Technical Interviews",
-    verdictHeading: "The Industry Standard (Best Value)",
+    tagline: "Complete Career Switch & Agency Mastery",
     verdictSummary:
-      "Our most chosen program. 60 detailed modules, 54+ AI tools, live agency internship handling real brand accounts, cutting-edge AEO/LLMO training, and 100% placement support with 500+ hiring partners.",
+      "Our most chosen program. 60 detailed modules, 54+ AI tools, live agency internship handling real brand accounts, cutting-edge AEO/LLMO training, and 100% placement support.",
     whyChoose: [
       "Next-Gen Answer Engine (AEO) & LLM Optimization (LLMO)",
       "Manage real client brand accounts with live budgets",
       "Paid in-house agency internship certificate",
       "100% placement support with 500+ hiring partners",
     ],
+    slug: "/skilling?domain=digital-marketing&duration=6-months&course=dm-advanced",
   },
-  "12-months": {
-    badge: "Expert Level Track",
-    color: "fuchsia",
-    tagline: "Complete Executive Mastery & Placement Guarantee",
-    idealForTitle: "Future Marketing Directors & Agency Founders",
+  {
+    id: "dm-expert",
+    durationId: "12-months",
+    duration: "12 Months",
+    title: "Expert in Digital Marketing",
+    level: "EXPERT LEVEL",
+    modulesCount: "70",
+    modulesType: "Comprehensive Master Modules",
+    aiToolsCount: "60+",
+    hoursPerWeek: "15 - 20 Hours / Week",
     liveHours: "300+ Hours Live Sessions",
-    weeklyHours: "15 - 20 Hours / Week",
+    projects: "10 Live Brand Campaigns + 2 Major Capstones",
+    certifications: "10+ Industry Certifications + Internship Letter",
+    mentorship: "1-on-1 Dedicated Senior Mentorship & Coaching",
+    placement: "100% Placement Guarantee (with Formal Agreement)",
+    perfectFor: "Future Marketing Directors & Agency Founders",
     searchAi: "Advanced AEO, LLMO & Custom AI Automations",
+    agencyInternship: "Senior Agency Account Lead & Paid Retainers",
     adBudgets: "Enterprise-Scale Client Ad Spend & Retainers",
-    agencyInternship: "Senior Agency Account Lead & Retainers",
     capstone: "2 Major Enterprise Capstones + Production Portfolio",
-    mentorshipType: "1-on-1 Dedicated Senior Mentorship & Coaching",
     mockInterviews: "Unlimited Mock Technical & Leadership Interviews",
-    verdictHeading: "Ultimate Mastery & Guaranteed Placement",
+    tagline: "Complete Executive Mastery & Placement Guarantee",
     verdictSummary:
-      "A year-long comprehensive master program for those aiming for leadership roles or launching their own agency. Includes 70 modules, 60+ AI tools, dedicated 1-on-1 executive mentorship, and 100% placement guarantee with formal agreement.",
+      "A year-long comprehensive master program for leadership roles or agency founders. Includes 70 modules, 60+ AI tools, dedicated 1-on-1 mentorship, and 100% placement guarantee with formal agreement.",
     whyChoose: [
       "100% Placement Guarantee (with formal agreement)",
       "1-on-1 dedicated executive mentorship & coaching",
       "Full agency management & client retainer sprints",
       "2 Major enterprise capstones & corporate letters",
     ],
+    slug: "/skilling?domain=digital-marketing&duration=12-months&course=dm-expert",
   },
-};
+];
 
 export default function TrackComparisonSection({
-  courses = [],
+  courses,
   selectedDomain,
   onSelectCourse,
   activeSpecialization,
 }) {
+  const navigate = useNavigate();
   const [filterCategory, setFilterCategory] = useState("all");
 
-  if (!courses || courses.length === 0) return null;
+  // Determine active track list
+  const trackColumns =
+    Array.isArray(courses) && courses.length > 0
+      ? courses.map((course) => {
+          const durId = course.durationId || "3-months";
+          const fallback =
+            DEFAULT_FLAGSHIP_TRACKS.find((f) => f.durationId === durId) ||
+            DEFAULT_FLAGSHIP_TRACKS[0];
 
-  // Build normalized track list
-  const trackColumns = courses.map((course) => {
-    const durId = course.durationId || "3-months";
-    const meta = TRACK_SPECIFIC_METADATA[durId] || {};
-    const isPopular =
-      course.isPopular ||
-      durId === "6-months" ||
-      course.id?.includes("advanced");
+          const isPopular =
+            course.isPopular ||
+            durId === "6-months" ||
+            course.id?.includes("advanced");
 
-    return {
-      course,
-      id: course.id,
-      durId,
-      duration: course.duration || "Track",
-      title: course.title,
-      level: course.level || meta.badge || "Certification",
-      isPopular,
-      modulesCount: course.modulesCount || "30+",
-      modulesType: course.modulesType || "Modules",
-      aiToolsCount: course.aiToolsCount || "40+",
-      hoursPerWeek: course.hoursPerWeek || meta.weeklyHours || "10 Hours/Week",
-      liveHours: meta.liveHours || "80+ Hours Live",
-      projects: course.projectsHighlight || course.projects || "Live Projects",
-      certifications:
-        course.certHighlight ||
-        course.certification ||
-        "Global Certifications",
-      mentorship: course.mentorship || meta.mentorshipType || "Expert Mentorship",
-      placement:
-        course.placementGuarantee ||
-        (durId === "12-months"
-          ? "100% Placement Guarantee (with formal agreement)"
-          : durId === "6-months"
-          ? "100% Placement Support (500+ Hiring Partners)"
-          : "100% Placement Assistance"),
-      perfectFor: course.perfectFor || meta.idealForTitle || "All Learners",
-      searchAi:
-        durId === "6-months"
-          ? "Full AEO & LLM Optimization (LLMO)"
-          : durId === "12-months"
-          ? "Advanced AEO, LLMO & Custom AI Workflows"
-          : durId === "4-months"
-          ? "Search AI & Schema Structured Data"
-          : "Basic AI Search Overview",
-      agencyInternship:
-        durId === "6-months"
-          ? "Paid In-House Agency Internship (Live Clients)"
-          : durId === "12-months"
-          ? "Senior Agency Account Lead & Paid Retainers"
-          : durId === "4-months"
-          ? "Paid In-House Agency Internship"
-          : "Simulated Agency Lab Case Studies",
-      capstone:
-        durId === "12-months"
-          ? "2 Major Enterprise Capstones + Portfolio"
-          : durId === "6-months"
-          ? "1 Major Enterprise Capstone + Live Campaigns"
-          : durId === "4-months"
-          ? "Mini Brand Projects + Capstone"
-          : "1 Guided Portfolio Capstone",
-      meta,
-    };
-  });
+          return {
+            course,
+            id: course.id || fallback.id,
+            durId,
+            duration: course.duration || fallback.duration,
+            title: course.title || fallback.title,
+            level: course.level || fallback.level,
+            isPopular,
+            modulesCount: course.modulesCount || fallback.modulesCount,
+            modulesType: course.modulesType || fallback.modulesType,
+            aiToolsCount: course.aiToolsCount || fallback.aiToolsCount,
+            hoursPerWeek: course.hoursPerWeek || fallback.hoursPerWeek,
+            liveHours: fallback.liveHours,
+            projects:
+              course.projectsHighlight ||
+              course.projects ||
+              fallback.projects,
+            certifications:
+              course.certHighlight ||
+              course.certification ||
+              fallback.certifications,
+            mentorship: course.mentorship || fallback.mentorship,
+            placement:
+              course.placementGuarantee ||
+              (durId === "12-months"
+                ? "100% Placement Guarantee (with Formal Agreement)"
+                : durId === "6-months"
+                ? "100% Placement Support (500+ Hiring Partners)"
+                : "100% Placement Assistance"),
+            perfectFor: course.perfectFor || fallback.perfectFor,
+            searchAi: fallback.searchAi,
+            agencyInternship: fallback.agencyInternship,
+            adBudgets: fallback.adBudgets,
+            capstone: fallback.capstone,
+            mockInterviews: fallback.mockInterviews,
+            tagline: fallback.tagline,
+            verdictSummary: course.shortDesc || fallback.verdictSummary,
+            whyChoose: course.featureList?.slice(0, 4) || fallback.whyChoose,
+            slug:
+              course.enrollUrl ||
+              `/skilling?domain=${selectedDomain?.id || "digital-marketing"}&duration=${durId}&course=${course.id}`,
+          };
+        })
+      : DEFAULT_FLAGSHIP_TRACKS;
 
-  // Comparison Rows Matrix
+  const handleSelect = (track) => {
+    if (onSelectCourse && track.course) {
+      onSelectCourse(track.course);
+    } else if (track.slug) {
+      navigate(track.slug);
+      window.scrollTo({ top: 400, behavior: "smooth" });
+    }
+  };
+
+  // Define Category Headers
+  const categoryHeaders = {
+    overview: "Program Overview & Schedule",
+    curriculum: "Curriculum Depth & Technology Stack",
+    practical: "Live Projects & Agency Experience",
+    mentorship: "Mentorship & Credentials",
+    placement: "Career & Placement Deliverables",
+  };
+
+  // Matrix of Rows
   const COMPARISON_ROWS = [
     // --- 1. OVERVIEW & SCHEDULE ---
     {
       category: "overview",
-      categoryName: "Program Overview & Schedule",
-      categoryIcon: <FaClock className="text-amber-500" />,
       label: "Duration & Track Level",
-      tooltip: "Official course duration and difficulty tier",
+      tooltip: "Official program length and difficulty level",
       render: (track) => (
         <div>
-          <span className="font-extrabold text-[#0B1220] block text-sm">
+          <span className="font-bold text-slate-900 block text-sm">
             {track.duration}
           </span>
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mt-0.5">
+          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mt-0.5">
             {track.level}
           </span>
         </div>
@@ -213,10 +240,10 @@ export default function TrackComparisonSection({
     },
     {
       category: "overview",
-      label: "Ideal Candidate / Best Suited For",
-      tooltip: "Who gets the maximum career benefit from this duration",
+      label: "Target Audience",
+      tooltip: "Who gets the maximum career outcome from this duration",
       render: (track) => (
-        <span className="text-xs text-slate-700 font-medium leading-relaxed block">
+        <span className="text-xs text-slate-700 font-normal leading-relaxed block">
           {track.perfectFor}
         </span>
       ),
@@ -224,18 +251,17 @@ export default function TrackComparisonSection({
     {
       category: "overview",
       label: "Weekly Time Commitment",
-      tooltip: "Estimated hours per week needed for live classes and lab practice",
+      tooltip: "Recommended study and practice hours per week",
       render: (track) => (
-        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-          <FaClock className="text-slate-400 text-[11px] flex-shrink-0" />
-          <span>{track.hoursPerWeek}</span>
-        </div>
+        <span className="text-xs font-semibold text-slate-800">
+          {track.hoursPerWeek}
+        </span>
       ),
     },
     {
       category: "overview",
       label: "Live Instructor Training",
-      tooltip: "Total live interactive classroom and online lecture hours",
+      tooltip: "Total interactive lecture and lab hours",
       render: (track) => (
         <span className="text-xs font-semibold text-slate-800">
           {track.liveHours}
@@ -244,28 +270,26 @@ export default function TrackComparisonSection({
     },
     {
       category: "overview",
-      label: "Learning Mode",
-      tooltip: "Flexible modes available for students and professionals",
+      label: "Learning Delivery Mode",
+      tooltip: "Available study formats",
       render: () => (
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-          <FaCheck className="text-[9px]" /> Classroom + Online
+        <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-300">
+          Classroom & Online Interactive
         </span>
       ),
     },
 
-    // --- 2. CURRICULUM & AI TOOLS ---
+    // --- 2. CURRICULUM & TECH STACK ---
     {
       category: "curriculum",
-      categoryName: "Curriculum Depth & AI Integration",
-      categoryIcon: <FaRobot className="text-purple-500" />,
-      label: "Curriculum Syllabus Modules",
-      tooltip: "Number of comprehensive subject modules covered",
+      label: "Curriculum Modules",
+      tooltip: "Total practical modules included",
       render: (track) => (
         <div>
-          <span className="text-base font-black text-[#7C2D12]">
+          <span className="text-sm font-black text-[#7C2D12]">
             {track.modulesCount} Modules
           </span>
-          <span className="text-[10px] text-slate-500 block font-medium">
+          <span className="text-[10px] text-slate-500 block font-normal">
             {track.modulesType}
           </span>
         </div>
@@ -274,41 +298,40 @@ export default function TrackComparisonSection({
     {
       category: "curriculum",
       label: "AI Tools & Automation Stack",
-      tooltip: "Number of artificial intelligence and automation tools taught hands-on",
+      tooltip: "Industry tools taught hands-on",
       render: (track) => (
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-black px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 border border-purple-200">
-            {track.aiToolsCount}
+        <div>
+          <span className="text-xs font-bold text-slate-900 block">
+            {track.aiToolsCount} AI Tools
           </span>
-          <span className="text-xs text-slate-700 font-semibold">AI Tools</span>
+          <span className="text-[10px] text-slate-500 block">
+            Integrated into workflows
+          </span>
         </div>
       ),
     },
     {
       category: "curriculum",
       label: "Next-Gen Search AI (AEO / LLMO)",
-      tooltip: "Answer Engine Optimization & LLM Optimization for ChatGPT, Perplexity, and Gemini",
+      tooltip: "Answer Engine Optimization & LLM search readiness",
       render: (track) => {
-        const isAdvanced =
+        const isHigh =
           track.durId === "6-months" || track.durId === "12-months";
         return (
-          <div className="text-xs leading-snug">
-            {isAdvanced ? (
-              <span className="inline-flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-                <FaCheckCircle className="text-emerald-600 flex-shrink-0" />
-                {track.searchAi}
-              </span>
-            ) : (
-              <span className="text-slate-600 font-medium">{track.searchAi}</span>
-            )}
-          </div>
+          <span
+            className={`text-xs block ${
+              isHigh ? "font-bold text-slate-900" : "text-slate-600 font-normal"
+            }`}
+          >
+            {track.searchAi}
+          </span>
         );
       },
     },
     {
       category: "curriculum",
-      label: "Curriculum Focus & Depth",
-      tooltip: "The core technical and strategic focus of this curriculum",
+      label: "Curriculum Focus",
+      tooltip: "Core specialization of this duration",
       render: (track) => {
         const highlights = {
           "3-months": "Core Foundations: SEO, Meta Ads, Google Ads, Canva & Content",
@@ -317,22 +340,20 @@ export default function TrackComparisonSection({
           "12-months": "Executive Master: 32+ Domains, Leadership, Custom AI Automations",
         };
         return (
-          <span className="text-xs text-slate-700 font-medium leading-relaxed block">
-            {highlights[track.durId] || track.course.shortDesc || "Comprehensive practical syllabus"}
+          <span className="text-xs text-slate-700 font-normal leading-relaxed block">
+            {highlights[track.durId] || "Comprehensive practical curriculum"}
           </span>
         );
       },
     },
 
-    // --- 3. PRACTICAL WORK & AGENCY INTERNSHIP ---
+    // --- 3. PRACTICAL WORK & AGENCY ---
     {
       category: "practical",
-      categoryName: "Live Projects & Agency Internship",
-      categoryIcon: <FaBriefcase className="text-blue-500" />,
       label: "Live Brand Projects",
-      tooltip: "Hands-on projects with industry data and actual client briefs",
+      tooltip: "Hands-on projects with actual company briefs",
       render: (track) => (
-        <span className="text-xs font-bold text-slate-800">
+        <span className="text-xs font-semibold text-slate-800">
           {track.projects}
         </span>
       ),
@@ -340,57 +361,33 @@ export default function TrackComparisonSection({
     {
       category: "practical",
       label: "In-House Agency Internship",
-      tooltip: "Real client agency workflow inside Dizital Adda's in-house agency",
-      render: (track) => {
-        const hasInternship =
-          track.durId === "4-months" ||
-          track.durId === "6-months" ||
-          track.durId === "12-months";
-        return (
-          <div>
-            {hasInternship ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
-                <FaBriefcase className="text-blue-600 text-xs flex-shrink-0" />
-                {track.agencyInternship}
-              </span>
-            ) : (
-              <span className="text-xs text-slate-500 font-medium">
-                {track.agencyInternship}
-              </span>
-            )}
-          </div>
-        );
-      },
+      tooltip: "Work on live client accounts inside Dizital Adda Agency",
+      render: (track) => (
+        <span
+          className={`text-xs block ${
+            track.durId === "6-months" || track.durId === "12-months" || track.durId === "4-months"
+              ? "font-bold text-slate-900"
+              : "text-slate-600 font-normal"
+          }`}
+        >
+          {track.agencyInternship}
+        </span>
+      ),
     },
     {
       category: "practical",
       label: "Live Ad Spend & Budgets",
-      tooltip: "Running campaigns with actual budget allocation",
-      render: (track) => {
-        const hasLiveBudget =
-          track.durId === "4-months" ||
-          track.durId === "6-months" ||
-          track.durId === "12-months";
-        return (
-          <div className="flex items-center gap-1.5 text-xs font-semibold">
-            {hasLiveBudget ? (
-              <span className="text-emerald-700 font-bold flex items-center gap-1">
-                <FaCheckCircle className="text-emerald-600 text-xs" />
-                {track.meta.adBudgets || "Live Ad Budgets Included"}
-              </span>
-            ) : (
-              <span className="text-slate-500 font-normal">
-                {track.meta.adBudgets || "Simulated Sandboxes"}
-              </span>
-            )}
-          </div>
-        );
-      },
+      tooltip: "Ad budget allocation for live advertising campaigns",
+      render: (track) => (
+        <span className="text-xs font-normal text-slate-800">
+          {track.adBudgets}
+        </span>
+      ),
     },
     {
       category: "practical",
-      label: "Capstone Project Depth",
-      tooltip: "Major portfolio projects evaluated for placement readiness",
+      label: "Capstone Project Scope",
+      tooltip: "Major portfolio projects evaluated for placement",
       render: (track) => (
         <span className="text-xs font-semibold text-slate-800">
           {track.capstone}
@@ -398,48 +395,43 @@ export default function TrackComparisonSection({
       ),
     },
 
-    // --- 4. MENTORSHIP & CERTIFICATIONS ---
+    // --- 4. MENTORSHIP & CREDENTIALS ---
     {
       category: "mentorship",
-      categoryName: "Mentorship & Credentials",
-      categoryIcon: <FaGraduationCap className="text-emerald-500" />,
-      label: "Mentorship Structure",
-      tooltip: "Interaction model with Dr. Gulshan Kumar and industry directors",
+      label: "Mentorship Format",
+      tooltip: "Direct guidance from senior industry practitioners",
       render: (track) => (
-        <span className="text-xs text-slate-700 font-medium block leading-snug">
+        <span className="text-xs text-slate-700 font-normal block leading-snug">
           {track.mentorship}
         </span>
       ),
     },
     {
       category: "mentorship",
-      label: "Mock Interviews & Grooming",
-      tooltip: "Technical and HR interview simulations before placement drives",
+      label: "Interview Preparation",
+      tooltip: "Mock technical and HR interview rounds",
       render: (track) => (
-        <span className="text-xs font-semibold text-slate-800">
-          {track.meta.mockInterviews || "1-5 Mock Technical Rounds"}
+        <span className="text-xs font-normal text-slate-800">
+          {track.mockInterviews}
         </span>
       ),
     },
     {
       category: "mentorship",
       label: "Certifications Awarded",
-      tooltip: "Recognized certificates received upon successful completion",
+      tooltip: "Recognized certificates upon completion",
       render: (track) => (
-        <div className="text-xs font-bold text-slate-800 space-y-1">
-          <div className="flex items-center gap-1.5">
-            <FaAward className="text-amber-600 text-xs flex-shrink-0" />
-            <span>{track.certifications}</span>
-          </div>
+        <div className="text-xs font-medium text-slate-800 space-y-0.5">
+          <div>{track.certifications}</div>
           {track.durId === "6-months" && (
-            <span className="text-[10px] text-blue-700 block font-semibold">
+            <div className="text-[10px] text-slate-500 font-normal">
               + ISO 9001:2015 Verified Certificate
-            </span>
+            </div>
           )}
           {track.durId === "12-months" && (
-            <span className="text-[10px] text-fuchsia-700 block font-semibold">
+            <div className="text-[10px] text-slate-500 font-normal">
               + Corporate Agency Internship Letter
-            </span>
+            </div>
           )}
         </div>
       ),
@@ -448,95 +440,60 @@ export default function TrackComparisonSection({
     // --- 5. CAREER & PLACEMENT DELIVERABLES ---
     {
       category: "placement",
-      categoryName: "Career & Placement Assurance",
-      categoryIcon: <FaAward className="text-[#D4A017]" />,
-      label: "Placement Support Model",
-      tooltip: "Placement commitment and dedicated hiring drives",
-      render: (track) => {
-        const isGuaranteed = track.durId === "12-months";
-        const isAdvanced = track.durId === "6-months";
-        return (
-          <div className="space-y-1">
-            {isGuaranteed ? (
-              <span className="inline-flex items-center gap-1 text-xs font-black text-fuchsia-900 bg-fuchsia-100 px-2.5 py-1 rounded-lg border border-fuchsia-300">
-                <FaShieldAlt className="text-fuchsia-700 flex-shrink-0" />
-                100% Placement Guarantee
-              </span>
-            ) : isAdvanced ? (
-              <span className="inline-flex items-center gap-1 text-xs font-black text-emerald-900 bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-300">
-                <FaCheckCircle className="text-emerald-600 flex-shrink-0" />
-                100% Placement Support
-              </span>
-            ) : (
-              <span className="text-xs font-bold text-slate-700">
-                {track.placement}
-              </span>
-            )}
-            <span className="text-[10px] text-slate-500 block">
-              {isGuaranteed
-                ? "Formal placement agreement + executive referrals"
-                : isAdvanced
-                ? "500+ Hiring Partners + Dedicated Placement Desk"
-                : "Resume Review + Job Portal Access"}
-            </span>
-          </div>
-        );
-      },
+      label: "Placement Model",
+      tooltip: "Placement commitment and dedicated hiring support",
+      render: (track) => (
+        <div className="space-y-1">
+          <span
+            className={`inline-block text-xs px-2 py-0.5 rounded font-bold ${
+              track.durId === "12-months"
+                ? "bg-slate-900 text-white"
+                : track.durId === "6-months"
+                ? "bg-[#D4A017] text-slate-950"
+                : "bg-slate-200 text-slate-800"
+            }`}
+          >
+            {track.placement}
+          </span>
+          <span className="text-[10px] text-slate-500 block">
+            {track.durId === "12-months"
+              ? "Formal placement agreement + executive referrals"
+              : track.durId === "6-months"
+              ? "500+ Hiring Partners + Dedicated Placement Desk"
+              : "Resume Review + Job Portal Access"}
+          </span>
+        </div>
+      ),
     },
   ];
 
-  // Filter rows if user chooses category tabs
+  // Filter rows based on selected tab
   const filteredRows =
     filterCategory === "all"
       ? COMPARISON_ROWS
       : COMPARISON_ROWS.filter((r) => r.category === filterCategory);
 
-  // Group filtered rows by category for rendering headers
-  const categoryHeaders = {
-    overview: {
-      name: "Program Overview & Schedule",
-      icon: <FaClock className="text-amber-500" />,
-    },
-    curriculum: {
-      name: "Curriculum Depth & AI Integration",
-      icon: <FaRobot className="text-purple-500" />,
-    },
-    practical: {
-      name: "Live Projects & Agency Internship",
-      icon: <FaBriefcase className="text-blue-500" />,
-    },
-    mentorship: {
-      name: "Mentorship & Credentials",
-      icon: <FaGraduationCap className="text-emerald-500" />,
-    },
-    placement: {
-      name: "Career & Placement Assurance",
-      icon: <FaAward className="text-[#D4A017]" />,
-    },
-  };
-
   return (
-    <section className="mt-16 pt-12 border-t-2 border-slate-200">
+    <section className="mt-16 pt-12 border-t border-slate-200">
       {/* ==========================================
-          SECTION HEADER
+          SECTION HEADER (CLEAN TYPOGRAPHY, NO ICONS, NO GRADIENTS)
       ========================================== */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider text-orange-800 bg-orange-100/90 border border-orange-300 mb-3">
-          <FaLayerGroup className="text-xs text-orange-600" />
-          <span>Step 2 Extension • Side-by-Side Track Breakdown</span>
-        </div>
+        <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#7C2D12] bg-orange-50 border border-orange-200 px-3 py-1 rounded-full mb-3">
+          Track Comparison Breakdown
+        </span>
 
         <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0B1220] tracking-tight">
-          Compare All {trackColumns.length} Tracks: Understand The Exact Differences
+          Compare All {trackColumns.length} Tracks: Choose The Exact Depth You Need
         </h3>
 
         <p className="text-slate-600 mt-3 text-sm sm:text-base leading-relaxed">
-          Har course track alag depth, practical projects aur career goals ke
+          Har course track alag depth, practical projects aur career outcomes ke
           liye design kiya gaya hai. Niche table me module count, AI tools, live
           agency internship aur placement support ka clear comparison dekhein.
         </p>
 
-        {/* Quick Filter Tabs */}
+        {/* Filter Category Pills */}
         <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
           {[
             { id: "all", label: "All Details" },
@@ -548,11 +505,12 @@ export default function TrackComparisonSection({
           ].map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setFilterCategory(tab.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                 filterCategory === tab.id
-                  ? "bg-[#0B1220] text-[#D4A017] shadow-sm"
-                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-[#0B1220] text-[#D4A017]"
+                  : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
               {tab.label}
@@ -562,70 +520,73 @@ export default function TrackComparisonSection({
       </div>
 
       {/* ==========================================
-          RESPONSIVE COMPARISON TABLE
+          RESPONSIVE COMPARISON TABLE (FIXED WIDTHS, NO SHIFT, NO BLANK SPACE)
       ========================================== */}
-      <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-xl overflow-hidden">
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300">
-          <table className="w-full text-left border-collapse min-w-[760px] lg:min-w-[980px]">
-            {/* Table Header: Track Names & Direct Selection */}
+      <div className="bg-white rounded-2xl border border-slate-300 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse table-fixed min-w-[800px]">
+            {/* Column Width Distribution: First Col 24%, 4 Track Cols 19% each = 100% */}
+            <colgroup>
+              <col className="w-[24%]" />
+              {trackColumns.map((t) => (
+                <col key={`col-${t.id}`} className="w-[19%]" />
+              ))}
+            </colgroup>
+
+            {/* Table Header Row */}
             <thead>
-              <tr className="border-b-2 border-slate-200 bg-slate-50/90">
-                {/* Sticky Parameter Column */}
-                <th className="p-5 text-xs font-black uppercase tracking-wider text-slate-500 w-1/4 min-w-[200px] sticky left-0 bg-slate-50/95 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
+              <tr className="border-b border-slate-300 bg-slate-50">
+                <th className="p-4 align-top text-xs font-black uppercase tracking-wider text-slate-500 border-r border-slate-200">
                   Feature / Parameter
                 </th>
 
                 {trackColumns.map((track) => {
                   return (
                     <th
-                      key={track.id}
-                      className={`p-5 text-center align-top relative transition-colors ${
-                        track.isPopular
-                          ? "bg-amber-50/70 border-x-2 border-amber-300"
-                          : "border-x border-slate-200"
+                      key={`th-${track.id}`}
+                      className={`p-4 text-center align-top relative border-r border-slate-200 last:border-r-0 ${
+                        track.isPopular ? "bg-amber-50/60 border-t-2 border-t-[#D4A017]" : ""
                       }`}
                     >
-                      {/* Popular Badge */}
                       {track.isPopular && (
-                        <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 bg-[#D4A017] text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-0.5 rounded-b-md shadow-sm whitespace-nowrap">
-                          ⭐ Most Popular Track
+                        <div className="inline-block mb-1.5 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[#D4A017] text-slate-950">
+                          Recommended
                         </div>
                       )}
 
-                      <div className={track.isPopular ? "pt-2" : ""}>
+                      <div>
                         <span
-                          className={`inline-block text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border mb-1.5 ${
+                          className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded border mb-1 ${
                             track.durId === "3-months"
-                              ? "bg-amber-100 text-amber-900 border-amber-300"
+                              ? "bg-amber-50 text-amber-900 border-amber-300"
                               : track.durId === "4-months"
-                              ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                              ? "bg-emerald-50 text-emerald-900 border-emerald-300"
                               : track.durId === "6-months"
-                              ? "bg-blue-100 text-blue-900 border-blue-300"
-                              : "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-300"
+                              ? "bg-blue-50 text-blue-900 border-blue-300"
+                              : "bg-purple-50 text-purple-900 border-purple-300"
                           }`}
                         >
                           {track.level}
                         </span>
 
-                        <h4 className="text-lg font-black text-[#0B1220] leading-snug">
+                        <h4 className="text-base font-black text-[#0B1220] leading-tight">
                           {track.duration}
                         </h4>
 
-                        <p className="text-xs text-slate-500 font-medium line-clamp-1 mt-0.5">
+                        <p className="text-xs text-slate-500 font-normal line-clamp-1 mt-0.5">
                           {track.title}
                         </p>
 
                         <button
                           type="button"
-                          onClick={() => onSelectCourse(track.course)}
-                          className={`mt-3 w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm ${
+                          onClick={() => handleSelect(track)}
+                          className={`mt-3 w-full py-2 px-3 rounded-lg font-bold text-xs transition-colors ${
                             track.isPopular
-                              ? "bg-[#7C2D12] hover:bg-[#63240e] text-white shadow-orange-900/20"
+                              ? "bg-[#7C2D12] hover:bg-[#60230e] text-white"
                               : "bg-[#0B1220] hover:bg-[#7C2D12] text-white"
                           }`}
                         >
-                          <span>Select Track</span>
-                          <FaArrowRight className="text-[10px]" />
+                          Select Track
                         </button>
                       </div>
                     </th>
@@ -634,82 +595,75 @@ export default function TrackComparisonSection({
               </tr>
             </thead>
 
-            {/* Table Body with Categorized Rows */}
-            <tbody className="divide-y divide-slate-100 text-sm">
+            {/* Table Body */}
+            <tbody className="divide-y divide-slate-200 text-sm">
               {filteredRows.map((row, rIdx) => {
-                // Check if this row is the start of a new category
                 const prevRow = rIdx > 0 ? filteredRows[rIdx - 1] : null;
-                const isNewCategory =
-                  !prevRow || prevRow.category !== row.category;
-                const catInfo = categoryHeaders[row.category];
+                const isNewCategory = !prevRow || prevRow.category !== row.category;
+                const categoryTitle = categoryHeaders[row.category];
 
                 return (
-                  <tr key={`${row.category}-${row.label}-${rIdx}`} className="group">
-                    {/* Render Category Subheader if new category */}
+                  <Fragment key={`row-group-${row.category}-${rIdx}`}>
+                    {/* Render Category Header in its own distinct TR if new category */}
                     {isNewCategory && filterCategory === "all" && (
-                      <td
-                        colSpan={trackColumns.length + 1}
-                        className="bg-slate-100/90 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-[#0B1220] border-t-2 border-slate-200"
-                      >
-                        <div className="flex items-center gap-2">
-                          {catInfo?.icon}
-                          <span>{catInfo?.name}</span>
-                        </div>
-                      </td>
+                      <tr className="bg-slate-100 border-t-2 border-b border-slate-300">
+                        <td
+                          colSpan={trackColumns.length + 1}
+                          className="px-4 py-2.5 text-xs font-black uppercase tracking-wider text-slate-800"
+                        >
+                          {categoryTitle}
+                        </td>
+                      </tr>
                     )}
 
-                    {/* Parameter Label (Sticky Column) */}
-                    <td className="p-4 align-middle text-xs font-bold text-slate-800 bg-white sticky left-0 z-10 border-r border-slate-200 group-hover:bg-slate-50/80 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.04)]">
-                      <span className="block">{row.label}</span>
-                      {row.tooltip && (
-                        <span className="text-[10px] text-slate-400 font-normal block mt-0.5">
-                          {row.tooltip}
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Track Columns */}
-                    {trackColumns.map((track) => (
-                      <td
-                        key={track.id}
-                        className={`p-4 align-middle text-center ${
-                          track.isPopular
-                            ? "bg-amber-50/30 border-x-2 border-amber-300 group-hover:bg-amber-50/60"
-                            : "border-x border-slate-100 group-hover:bg-slate-50/50"
-                        }`}
-                      >
-                        {row.render(track)}
+                    {/* Data Row */}
+                    <tr className="hover:bg-slate-50/70 border-b border-slate-200">
+                      <td className="p-3.5 align-middle text-xs font-bold text-slate-800 border-r border-slate-200 bg-white">
+                        <span className="block">{row.label}</span>
+                        {row.tooltip && (
+                          <span className="text-[10px] text-slate-400 font-normal block mt-0.5">
+                            {row.tooltip}
+                          </span>
+                        )}
                       </td>
-                    ))}
-                  </tr>
+
+                      {trackColumns.map((track) => (
+                        <td
+                          key={`cell-${track.id}-${row.label}`}
+                          className={`p-3.5 align-middle text-center border-r border-slate-200 last:border-r-0 ${
+                            track.isPopular ? "bg-amber-50/30" : "bg-white"
+                          }`}
+                        >
+                          {row.render(track)}
+                        </td>
+                      ))}
+                    </tr>
+                  </Fragment>
                 );
               })}
 
               {/* Bottom Action Footer Row */}
-              <tr className="bg-slate-50 border-t-2 border-slate-200">
-                <td className="p-5 align-middle text-xs font-black text-slate-700 uppercase tracking-wider sticky left-0 bg-slate-50 z-10 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
-                  Enrollment Action
+              <tr className="bg-slate-50 border-t-2 border-slate-300">
+                <td className="p-4 align-middle text-xs font-black text-slate-700 uppercase tracking-wider border-r border-slate-200">
+                  Enrollment
                 </td>
                 {trackColumns.map((track) => (
                   <td
-                    key={track.id}
-                    className={`p-5 text-center ${
-                      track.isPopular
-                        ? "bg-amber-50/70 border-x-2 border-amber-300"
-                        : "border-x border-slate-200"
+                    key={`btm-btn-${track.id}`}
+                    className={`p-4 text-center border-r border-slate-200 last:border-r-0 ${
+                      track.isPopular ? "bg-amber-50/60" : ""
                     }`}
                   >
                     <button
                       type="button"
-                      onClick={() => onSelectCourse(track.course)}
-                      className={`w-full py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md group/btn ${
+                      onClick={() => handleSelect(track)}
+                      className={`w-full py-2.5 px-3 rounded-lg font-bold text-xs transition-colors ${
                         track.isPopular
-                          ? "bg-[#7C2D12] hover:bg-[#63240e] text-white hover:shadow-xl"
-                          : "bg-[#0B1220] hover:bg-[#7C2D12] text-white hover:shadow-lg"
+                          ? "bg-[#7C2D12] hover:bg-[#60230e] text-white"
+                          : "bg-[#0B1220] hover:bg-[#7C2D12] text-white"
                       }`}
                     >
-                      <span>Choose {track.duration}</span>
-                      <FaArrowRight className="text-xs transition-transform duration-300 group-hover/btn:translate-x-1" />
+                      Choose {track.duration}
                     </button>
                   </td>
                 ))}
@@ -720,115 +674,100 @@ export default function TrackComparisonSection({
       </div>
 
       {/* ==========================================
-          TRACK VERDICT / DECISION GUIDE CARDS
-          "Konsa Program Aapke Liye Sahi Hai?"
+          TRACK VERDICT CARDS (CLEAN CORPORATE STYLE, NO GRADIENTS, NO ICONS)
       ========================================== */}
       <div className="mt-14">
         <div className="text-center max-w-2xl mx-auto mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-xs font-bold text-[#7C2D12] bg-orange-100 border border-orange-200 mb-2">
-            <FaLightbulb className="text-orange-500" />
-            <span>Track Selection Guide</span>
-          </div>
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">
+            Track Selection Guide
+          </span>
           <h4 className="text-2xl sm:text-3xl font-black text-[#0B1220]">
             Which Track is Right for Your Career Goals?
           </h4>
           <p className="text-sm text-slate-600 mt-1.5">
-            Aapke current experience aur career vision ke hisaab se sabse accurate
-            recommendation:
+            Aapke current experience aur career goals ke hisaab se recommendation:
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {trackColumns.map((track) => {
-            const meta = track.meta;
-            const borderColors = {
-              "3-months": "border-amber-300 hover:border-amber-500",
-              "4-months": "border-emerald-300 hover:border-emerald-500",
-              "6-months": "border-blue-400 hover:border-blue-600 ring-2 ring-blue-200",
-              "12-months": "border-fuchsia-300 hover:border-fuchsia-500",
-            };
-            const headerBgs = {
-              "3-months": "bg-amber-500 text-white",
-              "4-months": "bg-emerald-600 text-white",
-              "6-months": "bg-gradient-to-r from-blue-700 to-indigo-800 text-white",
-              "12-months": "bg-gradient-to-r from-purple-800 to-fuchsia-900 text-white",
+            const cardBorders = {
+              "3-months": "border-slate-300 hover:border-amber-500",
+              "4-months": "border-slate-300 hover:border-emerald-500",
+              "6-months": "border-[#D4A017] ring-1 ring-[#D4A017]/50",
+              "12-months": "border-slate-300 hover:border-purple-500",
             };
 
             return (
               <div
-                key={track.id}
-                className={`bg-white rounded-3xl border-2 ${
-                  borderColors[track.durId] || "border-slate-200"
-                } shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group`}
+                key={`verdict-${track.id}`}
+                className={`bg-white rounded-2xl border-2 ${
+                  cardBorders[track.durId] || "border-slate-300"
+                } shadow-sm transition-all duration-200 flex flex-col justify-between overflow-hidden`}
               >
-                {/* Card Top Banner */}
                 <div>
-                  <div className={`p-4 ${headerBgs[track.durId] || "bg-[#0B1220] text-white"}`}>
+                  {/* Card Header (Solid Background, Clean Typography) */}
+                  <div className="p-4 bg-[#0B1220] text-white">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-extrabold uppercase tracking-wider opacity-90">
+                      <span className="font-bold uppercase tracking-wider text-slate-300 text-[10px]">
                         {track.level}
                       </span>
                       {track.isPopular && (
-                        <span className="bg-[#D4A017] text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">
-                          ⭐ Top Pick
+                        <span className="bg-[#D4A017] text-slate-950 font-black text-[10px] px-2 py-0.5 rounded uppercase">
+                          Recommended
                         </span>
                       )}
                     </div>
-                    <h5 className="text-xl font-black mt-1">
+                    <h5 className="text-lg font-black mt-1 text-white">
                       {track.duration} Program
                     </h5>
-                    <p className="text-xs opacity-90 mt-0.5 font-medium">
-                      {meta.tagline || track.title}
+                    <p className="text-xs text-slate-300 mt-0.5 font-normal">
+                      {track.tagline}
                     </p>
                   </div>
 
                   {/* Body Content */}
                   <div className="p-5 space-y-4">
-                    {/* Verdict Heading & Summary */}
                     <div>
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         Best For
                       </span>
                       <p className="text-xs font-bold text-slate-800 mt-0.5 leading-snug">
                         {track.perfectFor}
                       </p>
                       <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                        {meta.verdictSummary || track.course.shortDesc}
+                        {track.verdictSummary}
                       </p>
                     </div>
 
-                    {/* Key Highlights */}
                     <div className="pt-3 border-t border-slate-100">
-                      <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider block mb-2">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-2">
                         Key Inclusions:
                       </span>
                       <ul className="space-y-1.5 text-xs text-slate-700">
-                        {(meta.whyChoose || track.course.featureList?.slice(0, 4) || []).map(
-                          (item, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <FaCheckCircle className="text-emerald-500 text-xs mt-0.5 flex-shrink-0" />
-                              <span className="leading-snug">{item}</span>
-                            </li>
-                          )
-                        )}
+                        {track.whyChoose.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-[#7C2D12] font-bold">•</span>
+                            <span className="leading-snug">{item}</span>
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   </div>
                 </div>
 
-                {/* Card Footer Button */}
+                {/* Footer Button */}
                 <div className="p-5 pt-0">
                   <button
                     type="button"
-                    onClick={() => onSelectCourse(track.course)}
-                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+                    onClick={() => handleSelect(track)}
+                    className={`w-full py-2.5 px-3 rounded-lg font-bold text-xs transition-colors ${
                       track.isPopular
-                        ? "bg-[#7C2D12] hover:bg-[#63240e] text-white shadow-md hover:shadow-lg"
+                        ? "bg-[#7C2D12] hover:bg-[#60230e] text-white"
                         : "bg-slate-100 hover:bg-[#0B1220] text-slate-800 hover:text-white"
                     }`}
                   >
-                    <span>Select {track.duration}</span>
-                    <FaArrowRight className="text-[11px]" />
+                    Select {track.duration}
                   </button>
                 </div>
               </div>
