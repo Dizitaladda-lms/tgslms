@@ -317,7 +317,36 @@ CREATE TABLE IF NOT EXISTS test_results (
 CREATE INDEX IF NOT EXISTS idx_test_results_student ON test_results(student_id);
 CREATE INDEX IF NOT EXISTS idx_test_results_course ON test_results(course_id);
 
--- 19. SCHEMA EVOLUTION & SAFE EXTENSIONS
+-- 19. BLOGS TABLE (SEO-Optimized Career & Tech Articles)
+CREATE TABLE IF NOT EXISTS blogs (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(500) NOT NULL,
+    slug VARCHAR(500) UNIQUE NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    meta_title VARCHAR(255),
+    meta_description TEXT,
+    keywords TEXT,
+    publisher VARCHAR(100) DEFAULT 'Dizital Adda',
+    author_name VARCHAR(100) DEFAULT 'Dr. Gulshan Kumar',
+    author_role VARCHAR(100) DEFAULT 'Founder & Master Trainer, Dizital Adda',
+    read_time VARCHAR(50) DEFAULT '6 min read',
+    featured_image TEXT,
+    summary TEXT,
+    content TEXT NOT NULL,
+    faqs JSONB DEFAULT '[]'::jsonb,
+    schema_markup JSONB,
+    tags TEXT[],
+    is_published BOOLEAN DEFAULT true,
+    views INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_blogs_slug ON blogs(slug);
+CREATE INDEX IF NOT EXISTS idx_blogs_category ON blogs(category);
+CREATE INDEX IF NOT EXISTS idx_blogs_is_published ON blogs(is_published);
+
+-- 20. SCHEMA EVOLUTION & SAFE EXTENSIONS
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS total_lectures INTEGER DEFAULT 0;
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS total_students INTEGER DEFAULT 0;
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS rating NUMERIC(3, 2) DEFAULT 4.9;

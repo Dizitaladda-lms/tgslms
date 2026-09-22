@@ -1,4 +1,9 @@
-const Redis = require("ioredis");
+let Redis = null;
+try {
+  Redis = require("ioredis");
+} catch (e) {
+  // ioredis is optional in serverless/minimal environments; fallback to in-memory store
+}
 
 /**
  * Universal High-Performance Cache Service
@@ -19,7 +24,7 @@ class CacheService {
     const redisUrl = process.env.REDIS_URL || process.env.REDIS_TLS_URL;
     const redisHost = process.env.REDIS_HOST;
 
-    if (redisUrl || redisHost) {
+    if ((redisUrl || redisHost) && Redis) {
       try {
         const config = redisUrl
           ? redisUrl

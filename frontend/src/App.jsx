@@ -42,6 +42,9 @@ import Checkout from "./pages/Checkout";
 import AdminCertificates from "./pages/admin/AdminCertificates";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import VerifyEmail from "./pages/VerifyEmail";
+import BlogListing from "./pages/blog/BlogListing";
+import BlogDetail from "./pages/blog/BlogDetail";
+import AdminBlogs from "./pages/admin/AdminBlogs";
 
 function App() {
   return (
@@ -63,6 +66,8 @@ function App() {
       <Route path="/verify-certificate" element={<VerifyCertificate />} />
       <Route path="/verify-certificate/:code" element={<VerifyCertificate />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/blogs" element={<BlogListing />} />
+      <Route path="/blog/:slug" element={<BlogDetail />} />
 
       {/* ================= STUDENT / ENROLLED ROUTES ================= */}
       <Route path="/checkout" element={<Checkout />} />
@@ -275,6 +280,14 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/blogs"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminBlogs />
           </ProtectedRoute>
         }
       />

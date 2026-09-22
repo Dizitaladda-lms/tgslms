@@ -590,7 +590,7 @@ px-4
   ========================== */}
 
   <div className="bg-[#0B1220] sticky top-0 z-50 border-b border-orange-400/20">
-  <div className="max-w-7xl mx-auto grid grid-cols-3">
+  <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-4">
 
   {/* HOME */}
 
@@ -613,7 +613,7 @@ px-4
     border-orange-400/20
     hover:bg-[#7C2D12]
     transition
-    text-lg
+    text-base sm:text-lg
     font-bold
     "
   >
@@ -634,11 +634,33 @@ px-4
     border-orange-400/20
     hover:bg-[#7C2D12]
     transition
-    text-lg
+    text-base sm:text-lg
     font-bold
     "
   >
     GOVERNMENT PARTNERS
+  </Link>
+
+  {/* BLOGS */}
+
+  <Link
+    to="/blogs"
+    className="
+    text-white
+    py-3
+    flex
+    items-center
+    justify-center
+    border
+    border-orange-400/20
+    hover:bg-[#7C2D12]
+    transition
+    text-base sm:text-lg
+    font-bold
+    text-amber-300
+    "
+  >
+    BLOGS & GUIDES
   </Link>
 
   {/* CONTACT */}
@@ -662,7 +684,7 @@ px-4
     border-orange-400/20
     hover:bg-[#7C2D12]
     transition
-    text-lg
+    text-base sm:text-lg
     font-bold
     "
   >

@@ -81,9 +81,14 @@ function Navbar() {
   to="/courses"
   className="font-medium text-slate-700 hover:text-blue-900"
 >
-
   Courses
+</Link>
 
+<Link
+  to="/blogs"
+  className="font-medium text-slate-700 hover:text-blue-900"
+>
+  Blogs
 </Link>
 
             <Link
@@ -199,13 +204,17 @@ function Navbar() {
               <a href="#home">Home</a>
             </Link>
 
-            <a href="#">
+            <Link to="/courses" className="text-slate-700 hover:text-blue-900">
               Courses
-            </a>
+            </Link>
 
-            <a href="#">
-              <a href="#about">About</a>
-            </a>
+            <Link to="/blogs" className="text-slate-700 hover:text-blue-900 font-bold">
+              Blogs
+            </Link>
+
+            <Link to="/about" className="text-slate-700 hover:text-blue-900">
+              About
+            </Link>
 
             <a href="#">
             <a href="#contact">Contact</a>

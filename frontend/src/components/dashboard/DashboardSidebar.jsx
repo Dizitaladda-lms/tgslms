@@ -5,6 +5,7 @@ import {
   FaVideo,
   FaUsers,
   FaCog,
+  FaBookOpen,
   FaSignOutAlt,
 
 } from "react-icons/fa";
@@ -84,22 +85,24 @@ function DashboardSidebar() {
             to="/admin/students"
             className="flex items-center gap-5 text-2xl font-semibold hover:text-blue-300 transition"
           >
-
             <FaUsers />
-
             Students
+          </Link>
 
+          <Link
+            to="/admin/blogs"
+            className="flex items-center gap-5 text-2xl font-semibold hover:text-blue-300 transition"
+          >
+            <FaBookOpen />
+            Blogs
           </Link>
 
           <Link
             to="/admin/settings"
             className="flex items-center gap-5 text-2xl font-semibold hover:text-blue-300 transition"
           >
-
             <FaCog />
-
             Settings
-
           </Link>
 
         </div>
