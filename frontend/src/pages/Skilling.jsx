@@ -2719,10 +2719,17 @@ function Skilling() {
                             {(() => {
                               const clusters = selectedCourse.details.toolClusters || [];
                               const allTools = clusters.flatMap((c) =>
-                                (c.tools || []).map((t) => ({
-                                  name: t,
-                                  category: c.name,
-                                }))
+                                (c.tools || []).map((t) => {
+                                  const toolName =
+                                    typeof t === "object" && t !== null
+                                      ? t.name || ""
+                                      : String(t || "");
+                                  const toolCategory = c.name || "AI & Digital Tools";
+                                  return {
+                                    name: toolName,
+                                    category: toolCategory,
+                                  };
+                                })
                               );
                               const totalCount =
                                 allTools.length ||
@@ -3018,25 +3025,42 @@ function Skilling() {
                               </div>
 
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                                {(cluster.tools || []).map((tool, tIdx) => (
-                                  <div
-                                    key={tIdx}
-                                    className="p-3.5 bg-white rounded-2xl border border-slate-200 shadow-xs hover:border-[#7C2D12] transition"
-                                  >
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span
-                                        className="w-2.5 h-2.5 rounded-full"
-                                        style={{ backgroundColor: tool.accent }}
-                                      ></span>
-                                      <span className="font-bold text-xs text-slate-900 truncate">
-                                        {tool.name}
-                                      </span>
+                                {(cluster.tools || []).map((t, tIdx) => {
+                                  const toolName =
+                                    typeof t === "object" && t !== null
+                                      ? t.name || ""
+                                      : String(t || "");
+                                  const toolDesc =
+                                    typeof t === "object" && t !== null
+                                      ? t.desc || ""
+                                      : "";
+                                  const toolAccent =
+                                    typeof t === "object" && t !== null && t.accent
+                                      ? t.accent
+                                      : "#7C2D12";
+
+                                  return (
+                                    <div
+                                      key={tIdx}
+                                      className="p-3.5 bg-white rounded-2xl border border-slate-200 shadow-xs hover:border-[#7C2D12] transition"
+                                    >
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span
+                                          className="w-2.5 h-2.5 rounded-full"
+                                          style={{ backgroundColor: toolAccent }}
+                                        ></span>
+                                        <span className="font-bold text-xs text-slate-900 truncate">
+                                          {toolName}
+                                        </span>
+                                      </div>
+                                      {toolDesc ? (
+                                        <p className="text-[11px] text-slate-500 line-clamp-2">
+                                          {toolDesc}
+                                        </p>
+                                      ) : null}
                                     </div>
-                                    <p className="text-[11px] text-slate-500 line-clamp-2">
-                                      {tool.desc}
-                                    </p>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           ))}
