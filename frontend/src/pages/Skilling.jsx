@@ -62,6 +62,7 @@ import {
 } from "../data/aiPromptEngineeringData.js";
 import TrackComparisonSection from "../components/TrackComparisonSection.jsx";
 import StudentTestimonialSlider from "../components/StudentTestimonialSlider.jsx";
+import HiringPartnersStrip from "../components/HiringPartnersStrip.jsx";
 
 // ==========================================
 // DURATION DEFINITIONS
@@ -3596,29 +3597,9 @@ function Skilling() {
         )}
 
         {/* ==========================================
-            HIRING PARTNERS STRIP (PRODUCTION PROOF)
+            HIRING PARTNERS STRIP (AUTHENTIC LOGOS & PROOF)
         ========================================== */}
-        <section className="mt-16 bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-          <div className="text-center mb-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#7C2D12]">
-              Placement & Career Network
-            </span>
-            <h3 className="text-2xl font-black text-[#0B1220] mt-1">
-              Top Companies Hiring Our Skilling Graduates
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 text-center items-center font-bold text-slate-600">
-            {["TCS", "Infosys", "Wipro", "HCL Tech", "Cognizant", "Tech Mahindra", "Amazon", "Microsoft", "Swiggy", "Zomato", "Jio", "Paytm"].map((company, idx) => (
-              <div
-                key={idx}
-                className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-[#D4A017] hover:text-[#0B1220] transition cursor-default"
-              >
-                {company}
-              </div>
-            ))}
-          </div>
-        </section>
+        <HiringPartnersStrip className="mt-16" />
 
         {/* ==========================================
             WHY CHOOSE DIZITAL ADDA SKILLING

@@ -26,6 +26,7 @@ import {
   FaBookOpen,
 } from "react-icons/fa";
 import CourseCard from "../components/course/CourseCard";
+import { COMPANY_LOGO_MAP } from "../components/HiringPartnersStrip.jsx";
 
 // ==========================================
 // BATCH TIER DEFINITIONS
@@ -1105,12 +1106,17 @@ export default function Placement() {
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 pt-2">
-                  {["Amazon", "Microsoft", "Google", "TCS", "Infosys", "Wipro", "Swiggy", "Zomato", "Deloitte", "KPMG", "Oracle", "Paytm"].map((company) => (
-                    <div key={company} className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl text-center">
-                      <div className="text-sm font-bold text-white">{company}</div>
-                      <div className="text-[10px] text-amber-400 font-semibold mt-1">Active Recruiter</div>
-                    </div>
-                  ))}
+                  {["Amazon", "Microsoft", "Google", "TCS", "Infosys", "Wipro", "Swiggy", "Zomato", "Deloitte", "Cognizant", "HCL Tech", "Paytm"].map((company) => {
+                    const LogoComp = COMPANY_LOGO_MAP[company];
+                    return (
+                      <div key={company} className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl text-center flex flex-col items-center justify-between min-h-[95px] hover:border-amber-500/50 transition">
+                        <div className="bg-white rounded-xl px-2 py-2 w-full flex items-center justify-center my-auto min-h-[38px]">
+                          {LogoComp ? <LogoComp /> : <span className="font-bold text-slate-800 text-xs">{company}</span>}
+                        </div>
+                        <div className="text-[10px] text-amber-400 font-semibold mt-2">Active Recruiter</div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl flex items-center justify-between flex-wrap gap-4 mt-6">
