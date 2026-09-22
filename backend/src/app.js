@@ -61,6 +61,7 @@ const defaultAllowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5174",
   "https://tsg-ecru.vercel.app",
+  "https://tsg-lms-lac.vercel.app",
   "https://tsg-qlb1.onrender.com",
   "https://www.nidads.com",
   "https://nidads.com",
@@ -79,10 +80,12 @@ const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllow
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow non-browser requests (mobile apps, server-to-server) or explicitly allowed origins
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      // Allow non-browser requests (mobile apps, server-to-server)
+      if (!origin) return callback(null, true);
+      // Allow explicitly whitelisted origins
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow all Vercel deployment previews (*.vercel.app) for this project
+      if (origin.endsWith(".vercel.app")) return callback(null, true);
       return callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
