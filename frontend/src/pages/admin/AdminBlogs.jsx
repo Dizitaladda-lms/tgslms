@@ -19,6 +19,7 @@ import {
   FaCode,
 } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
+import RichArticleEditor from "../../components/admin/RichArticleEditor";
 import api from "../../lib/api";
 
 const CATEGORIES = [
@@ -767,23 +768,12 @@ ${topic}
                     />
                   </div>
 
-                  {/* Content Body (Rich HTML) */}
+                  {/* Rich Article Body Editor (WYSIWYG + HTML + Image & Table Support) */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-bold text-slate-700">
-                        Content Body (HTML) *
-                      </label>
-                      <span className="text-[10px] text-amber-700 font-semibold">
-                        Strict: Use &lt;h2&gt; for main sections, &lt;h3&gt; for sub-points. NO &lt;h1&gt;.
-                      </span>
-                    </div>
-                    <textarea
-                      rows={10}
-                      required
+                    <RichArticleEditor
                       value={formData.content}
-                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                      placeholder="<h2>Your Main Section Heading</h2><p>Content text...</p>"
-                      className="w-full px-3.5 py-2.5 text-xs font-mono bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B1220]"
+                      onChange={(newContent) => setFormData((prev) => ({ ...prev, content: newContent }))}
+                      placeholder="Write your article insights here with full rich text formatting..."
                     />
                   </div>
 

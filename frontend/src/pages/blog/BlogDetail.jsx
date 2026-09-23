@@ -596,6 +596,34 @@ export default function BlogDetail() {
           color: #0F172A;
           font-weight: 700;
         }
+        .blog-prose-content figure {
+          margin: 2rem 0;
+          text-align: center;
+        }
+        .blog-prose-content img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 1.25rem;
+          margin: 1.5rem auto;
+          display: block;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+          border: 1px solid #E2E8F0;
+        }
+        .blog-prose-content figcaption {
+          font-size: 0.8rem;
+          color: #64748B;
+          margin-top: 0.5rem;
+          font-style: italic;
+        }
+        .blog-prose-content blockquote {
+          border-left: 4px solid #D4A017;
+          background: #F8FAFC;
+          padding: 1rem 1.5rem;
+          margin: 1.75rem 0;
+          border-radius: 0 1rem 1rem 0;
+          color: #475569;
+          font-style: italic;
+        }
         .blog-prose-content table {
           width: 100%;
           border-collapse: collapse;
