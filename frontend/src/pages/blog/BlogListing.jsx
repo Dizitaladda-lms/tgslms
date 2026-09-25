@@ -11,6 +11,7 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import api from "../../lib/api";
+import Footer from "../../components/Footer";
 
 const CATEGORIES = [
   "All",
@@ -366,20 +367,8 @@ export default function BlogListing() {
         </section>
       </main>
 
-      {/* FOOTER BREADCRUMB STRIP */}
-      <footer className="bg-[#0B1220] py-8 border-t border-slate-800 text-slate-400 text-xs text-center">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            © {new Date().getFullYear()} Dizital Adda LMS. Authoritative Learning & Industry Certification.
-          </div>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="hover:text-white transition">Home</Link>
-            <Link to="/courses" className="hover:text-white transition">Courses</Link>
-            <Link to="/about" className="hover:text-white transition">About</Link>
-            <Link to="/login" className="hover:text-white transition">Portal Login</Link>
-          </div>
-        </div>
-      </footer>
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }

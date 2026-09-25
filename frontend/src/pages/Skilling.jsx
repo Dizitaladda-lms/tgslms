@@ -63,6 +63,7 @@ import {
 import TrackComparisonSection from "../components/TrackComparisonSection.jsx";
 import StudentTestimonialSlider from "../components/StudentTestimonialSlider.jsx";
 import HiringPartnersStrip from "../components/HiringPartnersStrip.jsx";
+import Footer from "../components/Footer";
 
 // ==========================================
 // DURATION DEFINITIONS
@@ -3743,6 +3744,9 @@ function Skilling() {
           </div>
         </div>
       )}
+
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }

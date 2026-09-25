@@ -15,6 +15,7 @@ import {
   FaUserGraduate,
   FaExternalLinkAlt,
 } from "react-icons/fa";
+import Footer from "../components/Footer";
 
 export default function VerifyCertificate() {
   const { code: urlCode } = useParams();
@@ -249,9 +250,7 @@ export default function VerifyCertificate() {
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} TSG LMS • A Mission for Vikshit Bharat 2047. All Rights Reserved.
-      </footer>
+      <Footer />
     </div>
   );
 }

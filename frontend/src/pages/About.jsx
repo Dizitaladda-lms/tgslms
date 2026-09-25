@@ -1,8 +1,11 @@
+import Footer from "../components/Footer";
+
 function About() {
 
   return (
 
-    <div className="min-h-screen bg-slate-50 px-10 py-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+      <div className="px-10 py-20">
 
       <div className="max-w-6xl mx-auto">
 
@@ -102,6 +105,10 @@ function About() {
 
       </div>
 
+      </div>
+
+      {/* FOOTER */}
+      <Footer />
     </div>
 
   );

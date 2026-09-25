@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import CourseCard from "../components/course/CourseCard";
 import courses from "../data/courses";
 import { useLocation } from "react-router-dom";     
+import Footer from "../components/Footer";     
 
 function CourseListing() {
     
@@ -354,6 +355,8 @@ const {
   </div>
 
 </section>
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }

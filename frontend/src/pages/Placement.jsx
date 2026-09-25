@@ -27,6 +27,7 @@ import {
 } from "react-icons/fa";
 import CourseCard from "../components/course/CourseCard";
 import { COMPANY_LOGO_MAP } from "../components/HiringPartnersStrip.jsx";
+import Footer from "../components/Footer";
 
 // ==========================================
 // BATCH TIER DEFINITIONS
@@ -1376,6 +1377,9 @@ export default function Placement() {
           </div>
         </div>
       )}
+
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }

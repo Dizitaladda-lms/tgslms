@@ -20,6 +20,7 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 import api from "../../lib/api";
+import Footer from "../../components/Footer";
 
 export default function BlogDetail() {
   const { slug } = useParams();
@@ -530,19 +531,7 @@ export default function BlogDetail() {
       </div>
 
       {/* FOOTER */}
-      <footer className="bg-[#0B1220] py-8 border-t border-slate-800 text-slate-400 text-xs text-center mt-20">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            © {new Date().getFullYear()} Dizital Adda LMS. Certified Skill & Tech Placement Ecosystem.
-          </div>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="hover:text-white transition">Home</Link>
-            <Link to="/blogs" className="hover:text-white transition">All Articles</Link>
-            <Link to="/courses" className="hover:text-white transition">Courses</Link>
-            <Link to="/login" className="hover:text-white transition">Portal Login</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* INJECTED BLOG STYLES FOR RICH PROSE & TABLES */}
       <style>{`

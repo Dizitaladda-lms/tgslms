@@ -4,6 +4,7 @@ import api from "../../lib/api";
 import { FaClock, FaCheckCircle, FaPhoneAlt, FaWhatsapp, FaExternalLinkAlt } from "react-icons/fa";
 import { getCourseDescriptionUrl, getDomainContactInfo } from "../../utils/courseNavigation";
 import TrackComparisonSection from "../../components/TrackComparisonSection.jsx";
+import Footer from "../../components/Footer";
 
 const CourseDetails = () => {
   const navigate = useNavigate();
@@ -776,6 +777,8 @@ const CourseDetails = () => {
         <TrackComparisonSection />
       </div>
 
+      {/* FOOTER */}
+      <Footer />
     </div>
 
   );

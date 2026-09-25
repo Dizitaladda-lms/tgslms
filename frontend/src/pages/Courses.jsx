@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Link } from "react-router-dom";
 import CourseCard from "../components/course/CourseCard";
+import Footer from "../components/Footer";
 
 function Courses() {
 
@@ -178,6 +179,8 @@ function Courses() {
 
       </div>
 
+      {/* FOOTER */}
+      <Footer />
     </div>
 
   );

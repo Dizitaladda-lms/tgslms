@@ -25,6 +25,7 @@ import {
   Clock,
 } from "lucide-react";
 import api from "../lib/api";
+import Footer from "../components/Footer";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -1188,6 +1189,9 @@ const Checkout = () => {
           </div>
         </form>
         </main>
+
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React from "react";
+import Footer from "../components/Footer";
 
 const states = [
 
@@ -272,6 +273,8 @@ function GovernmentPartners() {
 
       </div>
 
+      {/* FOOTER */}
+      <Footer />
     </div>
 
   );

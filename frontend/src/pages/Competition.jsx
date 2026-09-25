@@ -25,6 +25,7 @@ import {
   FaBuilding,
 } from "react-icons/fa";
 import CourseCard from "../components/course/CourseCard";
+import Footer from "../components/Footer";
 
 // ==========================================
 // BATCH TIER DEFINITIONS
@@ -1376,6 +1377,9 @@ export default function Competition() {
           </div>
         </div>
       )}
+
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }

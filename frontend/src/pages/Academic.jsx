@@ -15,6 +15,7 @@ import {
   FaRegLightbulb,
 } from "react-icons/fa";
 import CourseCard from "../components/course/CourseCard";
+import Footer from "../components/Footer";
 
 const INDIAN_STATES = [
   "Andhra Pradesh",
@@ -806,6 +807,9 @@ export default function Academic() {
           </div>
         </div>
       )}
+
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }
