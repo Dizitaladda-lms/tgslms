@@ -969,15 +969,7 @@ ${topic}
                       setAiResponseText(e.target.value);
                       setAiParseError("");
                     }}
-                    placeholder={`Paste the AI reply here starting with:
-### 1. ARTICLE TITLE:
-...
-### 2. URL SLUG:
-...
-### 8. ARTICLE BODY:
-...
-### 9. JSON-LD SCHEMA:
-...`}
+                    placeholder="Paste the full AI reply here starting with:&#10;### 1. ARTICLE TITLE:&#10;...&#10;### 2. URL SLUG:&#10;...&#10;### 8. ARTICLE BODY:&#10;...&#10;### 9. JSON-LD SCHEMA:&#10;..."
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0B1220]"
                   />
                   {aiParseError && (
