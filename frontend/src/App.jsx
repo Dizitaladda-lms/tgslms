@@ -44,7 +44,8 @@ import VerifyCertificate from "./pages/VerifyCertificate";
 import VerifyEmail from "./pages/VerifyEmail";
 import BlogListing from "./pages/blog/BlogListing";
 import BlogDetail from "./pages/blog/BlogDetail";
-import AdminBlogs from "./pages/admin/AdminBlogs";
+import React, { Suspense, lazy } from "react";
+const AdminBlogs = lazy(() => import("./pages/admin/AdminBlogs"));
 
 function App() {
   return (
@@ -287,7 +288,9 @@ function App() {
         path="/admin/blogs"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminBlogs />
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Blog Portal...</div>}>
+              <AdminBlogs />
+            </Suspense>
           </ProtectedRoute>
         }
       />

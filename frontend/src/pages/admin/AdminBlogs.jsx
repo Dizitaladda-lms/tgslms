@@ -75,10 +75,6 @@ export default function AdminBlogs() {
   const [promptCopied, setPromptCopied]       = useState(false);
 
 
-  useEffect(() => {
-    fetchAdminBlogs();
-  }, []);
-
   const fetchAdminBlogs = async () => {
     try {
       setLoading(true);
@@ -92,6 +88,10 @@ export default function AdminBlogs() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchAdminBlogs();
+  }, []);
 
   const showToast = (msg) => {
     setNotification(msg);
@@ -836,7 +836,7 @@ ${topic}
                       rows={4}
                       value={formData.schema_markup || ""}
                       onChange={(e) => setFormData({ ...formData, schema_markup: e.target.value })}
-                      placeholder='{\n  "@context": "https://schema.org",\n  "@type": "FAQPage",\n  ...\n}'
+                      placeholder="Paste JSON-LD Schema (e.g. FAQPage, BlogPosting) or leave empty for auto-generation"
                       className="w-full px-3.5 py-2 text-xs font-mono bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B1220]"
                     />
                     <span className="text-[10px] text-slate-500 mt-1 block">
@@ -969,7 +969,7 @@ ${topic}
                       setAiResponseText(e.target.value);
                       setAiParseError("");
                     }}
-                    placeholder="Paste the full AI reply here starting with:&#10;### 1. ARTICLE TITLE:&#10;...&#10;### 2. URL SLUG:&#10;...&#10;### 8. ARTICLE BODY:&#10;...&#10;### 9. JSON-LD SCHEMA:&#10;..."
+                    placeholder="Paste the full AI reply here starting with: ### 1. ARTICLE TITLE ... and ### 9. JSON-LD SCHEMA"
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0B1220]"
                   />
                   {aiParseError && (
