@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../lib/api";
-import logo from "../assets/logo.png";
+const logo = "/logo.png";
 import {
   FaCheckCircle,
   FaTimesCircle,

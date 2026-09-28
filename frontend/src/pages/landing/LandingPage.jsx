@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Features from "../../components/landing/Features";
-import logo from "../../assets/logo.png";
+const logo = "/logo.png";
 import { getCourseDescriptionUrl } from "../../utils/courseNavigation";
 import TrackComparisonSection from "../../components/TrackComparisonSection.jsx";
 import Footer from "../../components/Footer";

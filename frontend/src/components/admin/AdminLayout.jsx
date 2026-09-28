@@ -16,7 +16,7 @@ import {
   FaAward,
   FaNewspaper,
 } from "react-icons/fa";
-import logo from "../../assets/logo.png";
+const logo = "/logo.png";
 import api from "../../lib/api";
 
 export default function AdminLayout({ children, title, subtitle, onSyncComplete }) {
