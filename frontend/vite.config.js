@@ -1,18 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
 
 export default defineConfig({
   plugins: [tailwindcss(), react()],
-  resolve: {
-    alias: {
-      // Force axios to use browser build on Vercel Linux Rolldown
-      'axios/lib/platform/index.js': path.resolve(
-        './node_modules/axios/lib/platform/browser/index.js'
-      ),
-    },
-  },
   build: {
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
